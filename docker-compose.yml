@@ -38,7 +38,7 @@ services:
 
 
   frontend:
-    image: node:alpine
+    # image: node:alpine
     container_name: front-manage
     build:
       context: ./frontend
