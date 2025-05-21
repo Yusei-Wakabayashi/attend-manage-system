@@ -46,10 +46,8 @@ services:
       - "5173:5173"  # Vite 開発サーバーのデフォルトポート
     volumes:
       - ./frontend:/app
-      - node_modules:/frontend/app/node_modules
     stdin_open: true
     tty: true
 
 volumes:
   mysql-data:
-  node_modules:
