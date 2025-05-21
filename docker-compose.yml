@@ -46,6 +46,8 @@ services:
       - "5173:5173"  # Vite 開発サーバーのデフォルトポート
     volumes:
       - ./frontend:/app
+      - /app/node_modules 
+
     stdin_open: true
     tty: true
 
