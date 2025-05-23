@@ -1,9 +1,13 @@
 <template>
-  <div>
+  <div class="min-h-screen bg-blue-500 flex items-center justify-center">
+    <h1 class="text-white text-4xl font-bold">
+      Tailwind CSS は動作しています！
+    </h1>
     <h1>VueとSpring連携</h1>
     <p>{{ message }}</p>
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted } from 'vue'

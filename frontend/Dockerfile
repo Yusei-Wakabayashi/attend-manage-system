@@ -11,6 +11,10 @@ RUN create-vite . --template vue-ts
 # 依存関係インストール
 RUN npm install
 
+RUN npm install -D vite-plugin-vue-devtools
+
+RUN npm install -D @tailwindcss/vite
+
 RUN apt-get update
 
 # ポート公開
