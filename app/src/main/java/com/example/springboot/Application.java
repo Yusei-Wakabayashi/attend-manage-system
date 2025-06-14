@@ -4,7 +4,6 @@ import java.util.Map;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,11 +21,6 @@ public class Application {
     public Map<String, String> getData() {
         Map<String, String> map = Map.of("message", "Hello World!");
         return map;
-    }
-    @CrossOrigin(origins = {"http://localhost:5173"})
-    @GetMapping("/message")
-    public String getMessage() {
-        return "こんにちは、Vueから来ましたね！";
     }
 }
 

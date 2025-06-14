@@ -1,15 +1,16 @@
-package com.example.demo.controller;
+package com.example.springboot.controller;
 
-import java.util.Map;
-
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 @RestController
+@SpringBootApplication
+@RequestMapping
 public class MessageController {
+    @CrossOrigin(origins = {"http://localhost:5173"})
     @GetMapping("/api/message")
     public String getMessage() {
         return "こんにちは、Vueから来ましたね！";
