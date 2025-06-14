@@ -1,7 +1,7 @@
 services:
   apache:
     image: httpd:2.4
-    container_name: web-manage
+    container_name: web-manage-t
     ports:
       - "80:80"
     volumes:
@@ -12,7 +12,7 @@ services:
 
   app:
     build: ./app
-    container_name: app-manage
+    container_name: app-manage-t
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/your_db
       SPRING_DATASOURCE_USERNAME: root
@@ -22,7 +22,7 @@ services:
 
   mysql:
     image: mysql:8.0
-    container_name: db-manage
+    container_name: db-manage-t
     environment:
       MYSQL_ROOT_PASSWORD: yourpassword
       MYSQL_DATABASE: your_db
@@ -31,7 +31,7 @@ services:
 
   mailserver:
     image: mailhog/mailhog
-    container_name: mail-manage
+    container_name: mail-manage-t
     ports:
       - "1025:1025"  # SMTP (送信用)
       - "8025:8025"  # Web UI (受信確認用)
@@ -39,7 +39,7 @@ services:
 
   frontend:
     # image: node:alpine
-    container_name: front-manage
+    container_name: front-manage-t
     build:
       context: ./frontend
     ports:

@@ -15,6 +15,8 @@ RUN npm install -D vite-plugin-vue-devtools
 
 RUN npm install -D @tailwindcss/vite
 
+RUN npm install -D vue-router
+
 RUN apt-get update
 
 # ポート公開
