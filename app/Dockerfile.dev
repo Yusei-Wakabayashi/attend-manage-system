@@ -1,0 +1,22 @@
+# ベースイメージ(JDK)
+FROM openjdk:17-jdk-slim
+
+# 作業ディレクトリ作成
+WORKDIR /app
+
+# Maven をインストールのちクリーン(apt 経由)
+RUN apt-get update && \
+    apt-get install -y maven && \
+    apt-get clean
+
+# 依存解決を早くするため、まずpom.xmlだけをコピー
+COPY pom.xml ./
+
+# 必要な依存を先に解決(キャッシュ効かせるため)
+RUN mvn dependency:go-offline
+
+# ソースをコピー(ボリュームマウントする場合は省略可能)
+COPY ./src ./src
+
+# Spring Boot DevTools のホットリロード対応を有効にした状態で起動
+CMD ["mvn", "spring-boot:run"]

@@ -11,9 +11,16 @@ services:
       - frontend
 
   app:
-    build: ./app
     container_name: app-manage
+    build:
+      context: ./app         # app ディレクトリがビルドする際のカレントディレクトリとなるよう指定
+      dockerfile: Dockerfile.dev # Dockerfileはビルド用とテスト用で分けてある
+    volumes:
+      - ./app/src:/app/src
+      - ./app/pom.xml:/app/pom.xml
+      - ./app/src/main/resources/application.properties:/app/src/main/resources/application.properties
     environment:
+      SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/your_db
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
@@ -24,7 +31,7 @@ services:
     image: mysql:8.0
     container_name: db-manage
     environment:
-      MYSQL_ROOT_PASSWORD: yourpassword
+      MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: your_db
     ports: ["3306:3306"]
     volumes: [mysql-data:/var/lib/mysql]
@@ -47,7 +54,9 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules 
-
+    environment:
+      - CHOKIDAR_USEPOLLING=1    # ファイル変更検知をポーリングに切り替え
+      - WATCHPACK_POLLING=true   # Webpack系の監視もポーリングに（CRAなど）
     stdin_open: true
     tty: true
 
