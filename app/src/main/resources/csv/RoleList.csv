@@ -1,0 +1,7 @@
+id,name,power,canapprove
+1,社長,6,true,
+2,副社長,5,true,
+3,専務取締役,4,true,
+4,部長,3,true,
+5,課長,2,true,
+6,一般社員,1,false,

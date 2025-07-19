@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 @SpringBootApplication
 @RequestMapping
 public class MessageController {
-    @CrossOrigin(origins = {"http://localhost:5173"})
+    @CrossOrigin
     @GetMapping("/api/message")
     public String getMessage() {
-        return "こんにちは、Vueから来ましたね！";
+        return "session true";
     }
 }
