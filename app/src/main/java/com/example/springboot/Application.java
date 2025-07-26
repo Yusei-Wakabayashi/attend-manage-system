@@ -81,10 +81,10 @@ public class Application
             {
                 if (line.startsWith("id,")) continue; // ヘッダー
                 shiftListResponse.setId(new Shift().processLine(line).getShiftId());
-                shiftListResponse.setBeginWork(new Shift().processLine(line).getBeginWork().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + new Shift().processLine(line).getBeginWork().format(DateTimeFormatter.ofPattern("HH/mm/ss")));
-                shiftListResponse.setEndWork(new Shift().processLine(line).getEndWork().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + new Shift().processLine(line).getEndWork().format(DateTimeFormatter.ofPattern("HH/mm/ss")));
-                shiftListResponse.setBeginBreak(new Shift().processLine(line).getBeginBreak().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + new Shift().processLine(line).getBeginBreak().format(DateTimeFormatter.ofPattern("HH/mm/ss")));
-                shiftListResponse.setEndBreak(new Shift().processLine(line).getEndBreak().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + new Shift().processLine(line).getEndBreak().format(DateTimeFormatter.ofPattern("HH/mm/ss")));
+                shiftListResponse.setBeginWork(new Shift().processLine(line).getBeginWork().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + new Shift().processLine(line).getBeginWork().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+                shiftListResponse.setEndWork(new Shift().processLine(line).getEndWork().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + new Shift().processLine(line).getEndWork().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+                shiftListResponse.setBeginBreak(new Shift().processLine(line).getBeginBreak().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + new Shift().processLine(line).getBeginBreak().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+                shiftListResponse.setEndBreak(new Shift().processLine(line).getEndBreak().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + new Shift().processLine(line).getEndBreak().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
                 shiftListResponse.setLateness(new Shift().processLine(line).getLateness());
                 shiftListResponse.setLeaveEarly(new Shift().processLine(line).getLeaveEarly());
                 shiftListResponse.setOuting(new Shift().processLine(line).getOuting());
