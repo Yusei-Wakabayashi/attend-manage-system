@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -17,8 +18,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.springboot.model.Attend;
-import com.example.springboot.dao.Shift;
+import com.example.springboot.model.Shift;
 import com.example.springboot.dto.ArrayResponse;
+import com.example.springboot.dto.AttendListResponse;
+import com.example.springboot.dto.ShiftListResponse;
 import com.example.springboot.dto.ShiftRequest;
 
 @EnableJpaAuditing
@@ -45,7 +48,7 @@ public class Application
     }
 
     @GetMapping("/reach/shiftlist")
-    public ArrayResponse<Shift> returnShifts(@ModelAttribute  ShiftRequest request) throws Exception
+    public ArrayResponse<ShiftListResponse> returnShifts(@ModelAttribute  ShiftRequest request) throws Exception
     {
         int month = request.getMonth();
         String path = "csv/";
@@ -62,7 +65,7 @@ public class Application
             return new ArrayResponse<>(0, new ArrayList<>(), "shiftlist"); // 異常値
         }
 
-        ArrayList<Shift> shiftlist = new ArrayList<>();
+        ArrayList<ShiftListResponse> shiftlist = new ArrayList<>();
 
         // resources/csv/フォルダに配置されている前提
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path + filename);
@@ -73,9 +76,20 @@ public class Application
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
-            while ((line = br.readLine()) != null) {
+            ShiftListResponse shiftListResponse = new ShiftListResponse();
+            while ((line = br.readLine()) != null)
+            {
                 if (line.startsWith("id,")) continue; // ヘッダー
-                shiftlist.add(new Shift().processLine(line));
+                shiftListResponse.setId(new Shift().processLine(line).getShiftId());
+                shiftListResponse.setBeginWork(new Shift().processLine(line).getBeginWork().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + new Shift().processLine(line).getBeginWork().format(DateTimeFormatter.ofPattern("HH/mm/ss")));
+                shiftListResponse.setEndWork(new Shift().processLine(line).getEndWork().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + new Shift().processLine(line).getEndWork().format(DateTimeFormatter.ofPattern("HH/mm/ss")));
+                shiftListResponse.setBeginBreak(new Shift().processLine(line).getBeginBreak().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + new Shift().processLine(line).getBeginBreak().format(DateTimeFormatter.ofPattern("HH/mm/ss")));
+                shiftListResponse.setEndBreak(new Shift().processLine(line).getEndBreak().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + new Shift().processLine(line).getEndBreak().format(DateTimeFormatter.ofPattern("HH/mm/ss")));
+                shiftListResponse.setLateness(new Shift().processLine(line).getLateness());
+                shiftListResponse.setLeaveEarly(new Shift().processLine(line).getLeaveEarly());
+                shiftListResponse.setOuting(new Shift().processLine(line).getOuting());
+                shiftListResponse.setOverWork(new Shift().processLine(line).getOverWork());
+                shiftlist.add(shiftListResponse);
             }
         }
 
@@ -83,7 +97,7 @@ public class Application
     }
 
     @GetMapping("/reach/attendlist")
-    public ArrayResponse<Attend> returnAttends(@ModelAttribute ShiftRequest request) throws Exception
+    public ArrayResponse<AttendListResponse> returnAttends(@ModelAttribute ShiftRequest request) throws Exception
     {
         int month = request.getMonth();
         String path = "csv/";
@@ -99,7 +113,7 @@ public class Application
             return new ArrayResponse<>(0, new ArrayList<>(), "attendlist"); // 異常値
         }
 
-        ArrayList<Attend> attendlist = new ArrayList<>();
+        ArrayList<AttendListResponse> attendlist = new ArrayList<>();
 
         // resources/csv/ フォルダに配置されている前提
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path + filename);
@@ -110,9 +124,24 @@ public class Application
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
+            AttendListResponse attendListResponse = new AttendListResponse();
+
             while ((line = br.readLine()) != null) {
                 if (line.startsWith("id,")) continue; // ヘッダー
-                attendlist.add(new Attend().processLine(line));
+                attendListResponse.setId(new Attend().processLine(line).getAttendanceId());
+                attendListResponse.setBeginWork(new Attend().processLine(line).getBeginWork().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + new Attend().processLine(line).getBeginWork().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+                attendListResponse.setEndWork(new Attend().processLine(line).getEndWork().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + new Attend().processLine(line).getEndWork().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+                attendListResponse.setBeginBreak(new Attend().processLine(line).getBeginBreak().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + new Attend().processLine(line).getBeginBreak().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+                attendListResponse.setEndBreak(new Attend().processLine(line).getEndBreak().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + new Attend().processLine(line).getEndBreak().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+                attendListResponse.setWorkTime(new Attend().processLine(line).getWorkTime());
+                attendListResponse.setBreakTime(new Attend().processLine(line).getBreakTime());
+                attendListResponse.setLateness(new Attend().processLine(line).getLateness());
+                attendListResponse.setLeaveEarly(new Attend().processLine(line).getLeaveEarly());
+                attendListResponse.setOuting(new Attend().processLine(line).getOuting());
+                attendListResponse.setOverWork(new Attend().processLine(line).getOverWork());
+                attendListResponse.setHolidayTime(new Attend().processLine(line).getHolidayWork());
+                attendListResponse.setLateNightWork(new Attend().processLine(line).getLateNightWork());
+                attendlist.add(attendListResponse);
             }
         }
 

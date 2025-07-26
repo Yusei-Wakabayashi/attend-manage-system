@@ -30,9 +30,9 @@ public class Role extends BaseTimeEntity
     @Column(name = "power", nullable = false, length = 10)
     private int power;
     @OneToMany(mappedBy = "roleId")
-    private List<Account> roleId;
+    private List<Account> accountFromRole;
     @OneToMany(mappedBy = "roleId")
-    private List<ApprovalSetting> approvalSettings;
+    private List<ApprovalSetting> approvalRelationFromRole;
     @OneToMany(mappedBy = "approvalId")
-    private List<ApprovalSetting> approvedBy;
+    private List<ApprovalSetting> approvalRelationFromApproval;
 }

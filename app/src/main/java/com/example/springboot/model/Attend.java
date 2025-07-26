@@ -63,10 +63,10 @@ public class Attend {
         Attend attend = new Attend();
         String[] arrayLine = line.split(",");
         attend.setAttendanceId(Long.valueOf(arrayLine[0]));
-        attend.setBeginWork(LocalDateTime.parse(arrayLine[1], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm")));
-        attend.setEndWork(LocalDateTime.parse(arrayLine[2], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm")));
-        attend.setBeginBreak(LocalDateTime.parse(arrayLine[3], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm")));
-        attend.setEndBreak(LocalDateTime.parse(arrayLine[4], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm")));
+        attend.setBeginWork(LocalDateTime.parse(arrayLine[1], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        attend.setEndWork(LocalDateTime.parse(arrayLine[2], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        attend.setBeginBreak(LocalDateTime.parse(arrayLine[3], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        attend.setEndBreak(LocalDateTime.parse(arrayLine[4], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
         attend.setWorkTime(Time.valueOf(arrayLine[5]));
         attend.setBreakTime(Time.valueOf(arrayLine[6]));
         attend.setLateness(Time.valueOf(arrayLine[7]));

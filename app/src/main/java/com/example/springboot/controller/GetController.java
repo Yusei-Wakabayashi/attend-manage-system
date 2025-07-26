@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.springboot.dto.ApproverListResponse;
 import com.example.springboot.dto.ArrayResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.ApprovalSetting;
@@ -33,7 +34,7 @@ public class GetController
     ApprovalSettingService approvalSettingService;
 
     @GetMapping("/reach/approverlist")
-    public ArrayResponse<Account> returnApproverList(HttpSession session)
+    public ArrayResponse<ApproverListResponse> returnApproverList(HttpSession session)
     {
         // 認証情報にあるリクエストを送ってきたユーザー名を取得
         String username = SecurityUtil.getCurrentUsername();
@@ -43,6 +44,7 @@ public class GetController
         List<ApprovalSetting> approvalSettings = approvalSettingService.getApprovalSettings(account.getRoleId());
         // 役職を基に承認者の取得
         List<Account> accounts = accountService.getAccountByApprovalSetting(approvalSettings);
-        return new ArrayResponse<>(1,accounts, "approverlist");
+        List<ApproverListResponse> approverListResponses = accountService.getApproverList(accounts);
+        return new ArrayResponse<>(1,approverListResponses, "approverlist");
     }
 }

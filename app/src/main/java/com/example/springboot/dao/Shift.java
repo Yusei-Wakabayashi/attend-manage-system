@@ -9,8 +9,9 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Shift {
-    private int id;
+public class Shift
+{
+    private Long id;
     private LocalDateTime workStart;
     private LocalDateTime workEnd;
     private LocalDateTime breakStart;
@@ -25,7 +26,7 @@ public class Shift {
         
     }
     // コンストラクタオーバーロード
-    public Shift(int id, LocalDateTime workStart, LocalDateTime workEnd, LocalDateTime breakStart,LocalDateTime breakEnd,
+    public Shift(Long id, LocalDateTime workStart, LocalDateTime workEnd, LocalDateTime breakStart,LocalDateTime breakEnd,
     Time lateness, Time leaveEarly, Time outing, Time overWork) {
         this.id = id;
         this.workStart = workStart;
@@ -40,7 +41,7 @@ public class Shift {
     public Shift processLine(String line)
     {
         String[] arrayLine = line.split(",");
-        int id = Integer.parseInt(arrayLine[0]);
+        Long id = Long.valueOf(arrayLine[0]);
         LocalDateTime workStart = LocalDateTime.parse(arrayLine[1], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm"));
         LocalDateTime workEnd = LocalDateTime.parse(arrayLine[2], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm"));
         LocalDateTime breakStart = LocalDateTime.parse(arrayLine[3], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm"));

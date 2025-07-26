@@ -1,5 +1,6 @@
 package com.example.springboot.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,6 +9,7 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.springboot.dto.ApproverListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Role;
@@ -19,6 +21,12 @@ public class AccountService
     // ここでCRUD(Create:作成,Research:検索,Update:更新,Delete:削除に関わる例外処理も行う)
     @Autowired
     private AccountRepository accountRepository;
+
+    public Account getAccountByAccountId(Long accountId)
+    {
+        return accountRepository.findById(accountId)
+            .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
+    }
     
     public Account getAccountByUsername(String username)
     {
@@ -44,6 +52,29 @@ public class AccountService
             .map(ApprovalSetting::getApprovalId)
             .collect(Collectors.toList());
         return accountRepository.findByRoleIdIn(roles);
+    }
+    public List<ApproverListResponse> getApproverList(List<Account> accounts)
+    {
+        List<ApproverListResponse> responseList = new ArrayList<>();
+
+        for (Account account : accounts)
+        {
+            // nullでなければ名前を取得
+            String roleName = account.getRoleId() != null ? account.getRoleId().getName() : null;
+            String departmentName = account.getDepartmentId() != null ? account.getDepartmentId().getName() : null;
+
+            ApproverListResponse response = new ApproverListResponse
+            (
+                account.getId(),
+                account.getName(),
+                departmentName,
+                roleName
+            );
+
+            responseList.add(response);
+        }
+
+        return responseList;
     }
 
     @Transactional

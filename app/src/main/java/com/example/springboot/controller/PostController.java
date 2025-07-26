@@ -18,10 +18,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.springboot.dto.InputPostData;
 import com.example.springboot.dto.LoginPostData;
+import com.example.springboot.dto.Response;
+import com.example.springboot.dto.IdData;
 import com.example.springboot.model.Account;
+import com.example.springboot.model.AccountApprover;
+import com.example.springboot.service.AccountApproverService;
 // import com.example.springboot.model.Salt;
 import com.example.springboot.service.AccountService;
 // import com.example.springboot.service.SaltService;
+import com.example.springboot.util.SecurityUtil;
 
 @RequestMapping("/api")
 @RestController
@@ -30,6 +35,9 @@ public class PostController
 {
     @Autowired
     private AccountService accountService;
+
+    @Autowired
+    private AccountApproverService accountApproverService;
     
     @PostMapping("/request")
     public String returns(@RequestBody InputPostData data)
@@ -39,7 +47,7 @@ public class PostController
 
     @CrossOrigin
     @PostMapping("/send/login")
-    public String login(@RequestBody LoginPostData data, HttpSession session)
+    public Response login(@RequestBody LoginPostData data, HttpSession session)
     {
         try{
             MessageDigest md = MessageDigest.getInstance("SHA256");
@@ -54,21 +62,21 @@ public class PostController
                     new UsernamePasswordAuthenticationToken(account.getUsername(), null); // 認証が完了しているためpasswordなどの情報は保存していない
                 // 認証情報を保存
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-                return "session true";
+                return new Response(1);
             }
             else
             {
-                return "tet";
+                return new Response(6);
             }
         }
         catch(NoSuchAlgorithmException ex1)
         {
-            return "アルゴリズム名が不正";
+            return new Response(4);
         }
     }
 
     @PostMapping("/send/logout")
-    public String logout(HttpServletRequest request)
+    public Response logout(HttpServletRequest request)
     {
         SecurityContextHolder.clearContext();
         HttpSession session = request.getSession(false);
@@ -76,6 +84,22 @@ public class PostController
         {
             session.invalidate(); // セッション破棄
         }
-        return "true logout";
+        return new Response(1);
+    }
+
+    @PostMapping("/send/approverset")
+    public Response approverset(@RequestBody IdData idData, HttpSession session)
+    {
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        AccountApprover accountApprover = accountApproverService.getAccountApproverByAccount(account);
+        Account newAccount = accountService.getAccountByAccountId(idData.getId());
+        accountApprover.setApproverId(newAccount);
+        String response = accountApproverService.save(accountApprover);
+        if (response.equals("ok"))
+        {
+            return new Response(1);
+        }
+        return new Response(4);
     }
 }

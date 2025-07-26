@@ -23,5 +23,5 @@ public class StylePlace extends BaseTimeEntity
     @Column(name = "style_place_name", nullable = false, length = 255)
     private String name;
     @OneToMany(mappedBy = "stylePlaceId")
-    private List<Style> stylePlaceId;
+    private List<Style> styleFromStylePlace;
 }

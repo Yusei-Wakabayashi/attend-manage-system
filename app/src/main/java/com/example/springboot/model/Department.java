@@ -28,5 +28,5 @@ public class Department extends BaseTimeEntity
     @Column(name = "department_name", nullable = false, length = 255)
     private String name;
     @OneToMany(mappedBy = "departmentId")
-    private List<Account> departmentId;
+    private List<Account> accountFromDepartment;
 }

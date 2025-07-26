@@ -1,6 +1,7 @@
 package com.example.springboot.dto;
 
-public class ShiftRequest { 
+public class ShiftRequest
+{ 
     private int year;
     private int month;
     // 入力された年のゲッター
