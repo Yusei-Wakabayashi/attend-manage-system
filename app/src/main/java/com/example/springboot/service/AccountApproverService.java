@@ -14,7 +14,6 @@ public class AccountApproverService
 {
     @Autowired
     AccountApproverRepository accountApproverRepository;
-    @Transactional
     public AccountApprover getAccountApproverByAccount(Account account)
     {
         return accountApproverRepository.findByAccountId(account)
@@ -26,6 +25,7 @@ public class AccountApproverService
         accountApproverRepository.save(accountApprover);
         return "ok";
     }
+    @Transactional
     public void resetAllTables()
     {
         accountApproverRepository.deleteAll();

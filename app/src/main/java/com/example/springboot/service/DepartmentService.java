@@ -20,6 +20,12 @@ public class DepartmentService
             .orElseThrow(() -> new RuntimeException("部署が見つかりません"));
     }
 
+    public String save(Department department)
+    {
+        departmentRepository.save(department);
+        return "ok";
+    }
+
     @Transactional
     public void resetAllTables()
     {

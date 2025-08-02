@@ -14,6 +14,11 @@ import javax.persistence.UniqueConstraint;
 
 import com.example.springboot.BaseTimeEntity;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 @Entity
 @Table(name = "styles", uniqueConstraints = {@UniqueConstraint(name = "accounts", columnNames = {"account_id"})})
 public class Style extends BaseTimeEntity

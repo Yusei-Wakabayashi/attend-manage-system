@@ -20,6 +20,12 @@ public class SaltService
             .orElseThrow(() -> new RuntimeException("ソルトが見つかりません"));
     }
 
+    public String save(Salt salt)
+    {
+        saltRepository.save(salt);
+        return "ok";
+    }
+
     @Transactional
     public void resetAllTables() {
         // データ削除

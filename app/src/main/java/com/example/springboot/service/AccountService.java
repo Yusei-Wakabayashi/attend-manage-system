@@ -2,7 +2,6 @@ package com.example.springboot.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -18,7 +17,6 @@ import com.example.springboot.repository.AccountRepository;
 @Service
 public class AccountService
 {
-    // ここでCRUD(Create:作成,Research:検索,Update:更新,Delete:削除に関わる例外処理も行う)
     @Autowired
     private AccountRepository accountRepository;
 
@@ -48,10 +46,13 @@ public class AccountService
 
     public List<Account> getAccountByApprovalSetting(List<ApprovalSetting> approvalSettings)
     {
-        List<Role> roles = approvalSettings.stream()
-            .map(ApprovalSetting::getApprovalId)
-            .collect(Collectors.toList());
-        return accountRepository.findByRoleIdIn(roles);
+        List<Role> roles = new ArrayList();
+        for(ApprovalSetting approvalSetting: approvalSettings)
+        {
+            roles.add(approvalSetting.getApprovalId());
+        }
+        List<Account> accounts = accountRepository.findByRoleIdIn(roles);
+        return accounts;
     }
     public List<ApproverListResponse> getApproverList(List<Account> accounts)
     {
@@ -75,6 +76,12 @@ public class AccountService
         }
 
         return responseList;
+    }
+
+    public String save(Account account)
+    {
+        accountRepository.save(account);
+        return "ok";
     }
 
     @Transactional

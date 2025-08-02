@@ -12,6 +12,11 @@ import javax.persistence.Table;
 
 import com.example.springboot.BaseTimeEntity;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 @Entity
 @Table(name = "style_places")
 public class StylePlace extends BaseTimeEntity

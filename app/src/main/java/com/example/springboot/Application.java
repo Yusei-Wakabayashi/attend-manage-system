@@ -61,7 +61,8 @@ public class Application
             default -> null;
         };
 
-        if (filename == null) {
+        if (filename == null)
+        {
             return new ArrayResponse<>(0, new ArrayList<>(), "shiftlist"); // 異常値
         }
 
@@ -70,11 +71,13 @@ public class Application
         // resources/csv/フォルダに配置されている前提
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path + filename);
 
-        if (inputStream == null) {
+        if (inputStream == null)
+        {
             throw new FileNotFoundException("ファイルが見つかりません: " + filename);
         }
 
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream)))
+        {
             String line;
             ShiftListResponse shiftListResponse = new ShiftListResponse();
             while ((line = br.readLine()) != null)
@@ -101,7 +104,8 @@ public class Application
     {
         int month = request.getMonth();
         String path = "csv/";
-        String filename = switch (month) {
+        String filename = switch (month)
+        {
             case 5 -> "AttendListMay.csv";
             case 6 -> "AttendListJune.csv";
             case 7 -> "AttendListJuly.csv";
@@ -109,7 +113,8 @@ public class Application
             default -> null;
         };
 
-        if (filename == null) {
+        if (filename == null)
+        {
             return new ArrayResponse<>(0, new ArrayList<>(), "attendlist"); // 異常値
         }
 
@@ -118,11 +123,13 @@ public class Application
         // resources/csv/ フォルダに配置されている前提
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path + filename);
 
-        if (inputStream == null) {
+        if (inputStream == null)
+        {
             throw new FileNotFoundException("ファイルが見つかりません: " + filename);
         }
 
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream)))
+        {
             String line;
             AttendListResponse attendListResponse = new AttendListResponse();
 

@@ -23,4 +23,9 @@ public class ApprovalSettingService
         }
         return approvalSettings;
     }
+    public String save(ApprovalSetting approvalSetting)
+    {
+        approvalSettingRepository.save(approvalSetting);
+        return "ok";
+    }
 }

@@ -1,17 +1,14 @@
 package com.example.springboot.repository;
 
-import java.util.Optional;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-import com.example.springboot.model.Style;
+import com.example.springboot.model.StylePlace;
 
-public interface StyleRepository extends JpaRepository<Style, Long>
+public interface StylePlaceRepository extends JpaRepository<StylePlace, Long>
 {
-    Optional<Style> findByAccountId(Long id);
     @Modifying
-    @Query(value = "ALTER TABLE styles AUTO_INCREMENT = 1", nativeQuery = true)
+    @Query(value = "ALTER TABLE style_places AUTO_INCREMENT = 1", nativeQuery = true)
     void resetAutoIncrement();
 }
