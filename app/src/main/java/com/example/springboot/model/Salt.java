@@ -2,9 +2,11 @@ package com.example.springboot.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import com.example.springboot.BaseTimeEntity;
@@ -24,4 +26,6 @@ public class Salt extends BaseTimeEntity
     private Long id;
     @Column(name = "text", nullable = false, length=255)
     private String text;
+    @OneToOne(mappedBy = "saltId", fetch = FetchType.LAZY)
+    private Account accountFromSalts;
 }

@@ -27,7 +27,8 @@ public class SaltService
     }
 
     @Transactional
-    public void resetAllTables() {
+    public void resetAllTables()
+    {
         // データ削除
         saltRepository.deleteAll();
         // AUTO_INCREMENTリセット(順番はDELETEの後)

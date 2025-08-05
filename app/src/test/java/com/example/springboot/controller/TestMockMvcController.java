@@ -36,9 +36,13 @@ import com.example.springboot.model.Style;
 import com.example.springboot.model.StylePlace;
 import com.example.springboot.repository.AccountRepository;
 import com.example.springboot.model.ApprovalSetting;
+import com.example.springboot.model.Department;
 import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
+import com.example.springboot.service.DepartmentService;
+import com.example.springboot.service.RoleService;
+import com.example.springboot.service.ShiftRequestService;
 import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
 
@@ -53,6 +57,15 @@ public class TestMockMvcController
 
     @MockBean
     private AccountService accountService;
+
+    @MockBean
+    private RoleService roleService;
+
+    @MockBean
+    private DepartmentService departmentService;
+
+    @MockBean
+    private ShiftRequestService shiftRequestService;
 
     @MockBean
     private ApprovalSettingService approvalSettingService;
@@ -287,5 +300,46 @@ public class TestMockMvcController
         )
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(1));
+    }
+    
+    @Test
+    void accountInfoSuccess() throws Exception
+    {
+        Long generalAccountId = 1L;
+        String generalAccountName = "testuser";
+        Long generalRoleId = 34L;
+        String generalRoleName = "kakarityou";
+        Long generalDepartmentId = 4L;
+        String generalDepartmentName = "soumu";
+        Boolean generalAccountAdmin = false;
+
+        Account account = new Account();
+        Role role = new Role();
+        Department department = new Department();
+        role.setId(generalRoleId);
+        role.setName(generalRoleName);
+        department.setId(generalDepartmentId);
+        department.setName(generalDepartmentName);
+        account.setId(generalAccountId);
+        account.setName(generalAccountName);
+        account.setRoleId(role);
+        account.setDepartmentId(department);
+
+        List<ApprovalSetting> approvalSettings = new ArrayList();
+        when(accountService.getAccountByUsername(any())).thenReturn(account);
+        when(roleService.getRoleById(any())).thenReturn(role);
+        when(departmentService.getDepartmentById(any())).thenReturn(department);
+        when(approvalSettingService.getApprovalSettingsByApprover(any())).thenReturn(approvalSettings);
+        mockMvc.perform(
+            get("/api/reach/accountinfo")
+            .with(csrf())
+            .with(user(generalAccountName))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.name").value(generalAccountName))
+        .andExpect(jsonPath("$.departmentName").value(generalDepartmentName))
+        .andExpect(jsonPath("$.roleName").value(generalRoleName))
+        .andExpect(jsonPath("$.admin").value(generalAccountAdmin));
     }
 }

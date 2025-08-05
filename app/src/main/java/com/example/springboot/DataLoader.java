@@ -21,6 +21,7 @@ import com.example.springboot.service.AccountService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.SaltService;
+import com.example.springboot.service.ShiftRequestService;
 import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
 
@@ -45,8 +46,12 @@ public class DataLoader implements CommandLineRunner
     @Autowired
     StyleService styleService;
 
+    @Autowired
+    ShiftRequestService shiftRequestService;
+    
     public void run(String... args) throws Exception
     {
+        shiftRequestService.resetAllTables();
         styleService.resetAllTables();
         accountService.resetAllTables();
         saltService.resetAllTables();

@@ -17,10 +17,12 @@ public class ApprovalSettingService
     public List<ApprovalSetting> getApprovalSettings(Role roleId)
     {
         List<ApprovalSetting> approvalSettings = approvalSettingRepository.findByRoleId(roleId);
-        if (approvalSettings.isEmpty())
-        {
-            throw new RuntimeException("対象が見つかりませんでした");
-        }
+        return approvalSettings;
+    }
+
+    public List<ApprovalSetting> getApprovalSettingsByApprover(Role roleId)
+    {
+        List<ApprovalSetting> approvalSettings = approvalSettingRepository.findByApprovalId(roleId);
         return approvalSettings;
     }
     public String save(ApprovalSetting approvalSetting)

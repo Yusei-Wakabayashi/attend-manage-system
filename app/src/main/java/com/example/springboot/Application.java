@@ -22,7 +22,7 @@ import com.example.springboot.model.Shift;
 import com.example.springboot.dto.ArrayResponse;
 import com.example.springboot.dto.AttendListResponse;
 import com.example.springboot.dto.ShiftListResponse;
-import com.example.springboot.dto.ShiftRequest;
+import com.example.springboot.dto.YearMonthParam;
 
 @EnableJpaAuditing
 @RestController
@@ -42,13 +42,13 @@ public class Application
     }
 
     @GetMapping("/form")
-    public int StringResponse(@ModelAttribute ShiftRequest request)
+    public int StringResponse(@ModelAttribute YearMonthParam request)
     {
         return request.getYear();
     }
 
     @GetMapping("/reach/shiftlist")
-    public ArrayResponse<ShiftListResponse> returnShifts(@ModelAttribute  ShiftRequest request) throws Exception
+    public ArrayResponse<ShiftListResponse> returnShifts(@ModelAttribute  YearMonthParam request) throws Exception
     {
         int month = request.getMonth();
         String path = "csv/";
@@ -100,7 +100,7 @@ public class Application
     }
 
     @GetMapping("/reach/attendlist")
-    public ArrayResponse<AttendListResponse> returnAttends(@ModelAttribute ShiftRequest request) throws Exception
+    public ArrayResponse<AttendListResponse> returnAttends(@ModelAttribute YearMonthParam request) throws Exception
     {
         int month = request.getMonth();
         String path = "csv/";

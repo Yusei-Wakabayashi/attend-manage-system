@@ -27,7 +27,7 @@ public class Style extends BaseTimeEntity
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(name = "style_id", nullable = false, length = 20)
     private Long styleId;
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     private Account accountId;
     @ManyToOne(fetch = FetchType.LAZY)

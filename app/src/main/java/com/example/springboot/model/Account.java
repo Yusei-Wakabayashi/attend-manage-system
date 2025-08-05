@@ -33,7 +33,7 @@ public class Account extends BaseTimeEntity
     private Long id;
     @Column(name = "username", nullable = false, length = 255)
     private String username;
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "salt_id", nullable = false)
     private Salt saltId;
     @Column(name = "password", nullable = false)
@@ -52,14 +52,18 @@ public class Account extends BaseTimeEntity
     private Department departmentId;
     @Column(name = "join_date", nullable = false)
     private LocalDateTime joinDate;
-    @OneToOne(mappedBy = "accountId")
+    @OneToOne(mappedBy = "accountId", fetch = FetchType.LAZY)
     private Style styleFromAccount;
-    @OneToMany(mappedBy = "accountId")
+    @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
     private List<AccountApprover> approverRelationFromAccounts;
-    @OneToMany(mappedBy = "approverId")
+    @OneToMany(mappedBy = "approverId", fetch = FetchType.LAZY)
     private List<AccountApprover> approverRelationFromApprovers;
-    @OneToMany(mappedBy = "accountId")
+    @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
     private List<Attend> attendFromAccounts;
-    @OneToMany(mappedBy = "accountId")
+    @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
     private List<Shift> shiftFromAccounts;
+    @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
+    private List<ShiftRequest> shiftRequestFromAccounts;
+    @OneToMany(mappedBy = "approver", fetch = FetchType.LAZY)
+    private List<ShiftRequest> shiftRequestFromApprovers;
 }

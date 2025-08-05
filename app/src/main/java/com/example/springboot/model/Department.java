@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -27,6 +28,6 @@ public class Department extends BaseTimeEntity
     private Long id;
     @Column(name = "department_name", nullable = false, length = 255)
     private String name;
-    @OneToMany(mappedBy = "departmentId")
+    @OneToMany(mappedBy = "departmentId", fetch = FetchType.LAZY)
     private List<Account> accountFromDepartment;
 }

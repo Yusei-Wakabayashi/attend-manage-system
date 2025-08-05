@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -29,10 +30,10 @@ public class Role extends BaseTimeEntity
     private String name;
     @Column(name = "power", nullable = false, length = 10)
     private int power;
-    @OneToMany(mappedBy = "roleId")
+    @OneToMany(mappedBy = "roleId", fetch = FetchType.LAZY)
     private List<Account> accountFromRole;
-    @OneToMany(mappedBy = "roleId")
+    @OneToMany(mappedBy = "roleId", fetch = FetchType.LAZY)
     private List<ApprovalSetting> approvalRelationFromRole;
-    @OneToMany(mappedBy = "approvalId")
+    @OneToMany(mappedBy = "approvalId", fetch = FetchType.LAZY)
     private List<ApprovalSetting> approvalRelationFromApproval;
 }

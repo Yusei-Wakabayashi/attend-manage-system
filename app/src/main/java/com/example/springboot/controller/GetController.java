@@ -13,10 +13,15 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.springboot.dto.AllStyleListResponse;
 import com.example.springboot.dto.ApproverListResponse;
 import com.example.springboot.dto.ArrayResponse;
+import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.ApprovalSetting;
+import com.example.springboot.model.Department;
+import com.example.springboot.model.Role;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
+import com.example.springboot.service.DepartmentService;
+import com.example.springboot.service.RoleService;
 import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
 import com.example.springboot.util.SecurityUtil;
@@ -33,6 +38,12 @@ public class GetController
     // }
     @Autowired
     AccountService accountService;
+
+    @Autowired
+    DepartmentService departmentService;
+
+    @Autowired
+    RoleService roleService;
 
     @Autowired
     ApprovalSettingService approvalSettingService;
@@ -70,5 +81,36 @@ public class GetController
         }
         List<AllStyleListResponse> styleListResponse = stylePlaceService.getStyleList();
         return new ArrayResponse(1, styleListResponse, "styleList");
+    }
+
+    @GetMapping("/reach/accountinfo")
+    public AccountInfoResponse returnAccountInfo(HttpSession session)
+    {
+        AccountInfoResponse accountInfo = new AccountInfoResponse();
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        // 役職情報の取得
+        Role role = roleService.getRoleById(account.getRoleId().getId());
+        // 部署情報の取得
+        Department department = departmentService.getDepartmentById(account.getDepartmentId().getId());
+        // 役職idが承認者として設定されているか確認
+        Boolean admin;
+        List<ApprovalSetting> approvalSettings = approvalSettingService.getApprovalSettingsByApprover(role);
+        if(approvalSettings.isEmpty())
+        {
+            // 配列が空なら承認者でない
+            admin = false;
+        }
+        else
+        {
+            // それ以外は設定されているので承認者
+            admin = true;
+        }
+        accountInfo.setStatus(1);
+        accountInfo.setName(account.getName());
+        accountInfo.setDepartmentName(department.getName());
+        accountInfo.setRoleName(role.getName());
+        accountInfo.setAdmin(admin);
+        return accountInfo;
     }
 }
