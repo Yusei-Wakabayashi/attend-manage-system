@@ -11,7 +11,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @JsonSerialize(using = ArrayResponseSerializer.class)
-public class ArrayResponse<T> {
+public class ArrayResponse<T>
+{
     private int status;
     private List<T> list;
     private String key;

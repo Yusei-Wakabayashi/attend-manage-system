@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -25,7 +26,7 @@ public class Attend {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(name = "attendance_id", nullable = false, length = 20)
     private Long attendanceId;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", referencedColumnName = "account_id", nullable = false)
     private Account accountId;
     @Column(name = "begin_work", nullable = false)
@@ -63,10 +64,10 @@ public class Attend {
         Attend attend = new Attend();
         String[] arrayLine = line.split(",");
         attend.setAttendanceId(Long.valueOf(arrayLine[0]));
-        attend.setBeginWork(LocalDateTime.parse(arrayLine[1], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm")));
-        attend.setEndWork(LocalDateTime.parse(arrayLine[2], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm")));
-        attend.setBeginBreak(LocalDateTime.parse(arrayLine[3], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm")));
-        attend.setEndBreak(LocalDateTime.parse(arrayLine[4], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm")));
+        attend.setBeginWork(LocalDateTime.parse(arrayLine[1], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        attend.setEndWork(LocalDateTime.parse(arrayLine[2], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        attend.setBeginBreak(LocalDateTime.parse(arrayLine[3], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        attend.setEndBreak(LocalDateTime.parse(arrayLine[4], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
         attend.setWorkTime(Time.valueOf(arrayLine[5]));
         attend.setBreakTime(Time.valueOf(arrayLine[6]));
         attend.setLateness(Time.valueOf(arrayLine[7]));

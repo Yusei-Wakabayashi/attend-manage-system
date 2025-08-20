@@ -17,17 +17,17 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@Table(name = "approval_settings", uniqueConstraints = {@UniqueConstraint(name = "roles", columnNames = {"role_id"})}) // 外部キーにユニーク制約追加
-public class ApprovalSetting
+@Table(name = "account_approvers", uniqueConstraints = {@UniqueConstraint(name = "accounts", columnNames = "account_id")})
+public class AccountApprover
 {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
-    @Column(name = "approval_setting_id", nullable = false, length = 20)
+    @Column(name = "account_approver_id", nullable = false, length = 20)
     private Long id;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id", nullable = false)
-    private Role roleId;
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account accountId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "approval_id", nullable = false)
-    private Role approvalId;
+    @JoinColumn(name = "approver_id", nullable = false)
+    private Account approverId;
 }

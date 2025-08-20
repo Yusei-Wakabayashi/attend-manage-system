@@ -1,6 +1,7 @@
 package com.example.springboot.model;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -10,6 +11,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -31,7 +33,7 @@ public class Account extends BaseTimeEntity
     private Long id;
     @Column(name = "username", nullable = false, length = 255)
     private String username;
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "salt_id", nullable = false)
     private Salt saltId;
     @Column(name = "password", nullable = false)
@@ -50,4 +52,18 @@ public class Account extends BaseTimeEntity
     private Department departmentId;
     @Column(name = "join_date", nullable = false)
     private LocalDateTime joinDate;
+    @OneToOne(mappedBy = "accountId", fetch = FetchType.LAZY)
+    private Style styleFromAccount;
+    @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
+    private List<AccountApprover> approverRelationFromAccounts;
+    @OneToMany(mappedBy = "approverId", fetch = FetchType.LAZY)
+    private List<AccountApprover> approverRelationFromApprovers;
+    @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
+    private List<Attend> attendFromAccounts;
+    @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
+    private List<Shift> shiftFromAccounts;
+    @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
+    private List<ShiftRequest> shiftRequestFromAccounts;
+    @OneToMany(mappedBy = "approver", fetch = FetchType.LAZY)
+    private List<ShiftRequest> shiftRequestFromApprovers;
 }

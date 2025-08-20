@@ -13,11 +13,26 @@ public class StyleService
 {
     @Autowired
     StyleRepository styleRepository;
+
+    @Autowired
+    StylePlaceService stylePlaceService;
     
     public Style getStyleById(Long id)
     {
         return styleRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("ソルトが見つかりません"));
+            .orElseThrow(() -> new RuntimeException("スタイルが見つかりません"));
+    }
+
+    public Style getStyleByAccountId(Long id)
+    {
+        return styleRepository.findByAccountId(id)
+            .orElseThrow(() -> new RuntimeException("スタイルが見つかりません"));
+    }
+
+    public String save(Style style)
+    {
+        styleRepository.save(style);
+        return "ok";
     }
 
     @Transactional

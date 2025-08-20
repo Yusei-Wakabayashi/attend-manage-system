@@ -15,48 +15,49 @@ import com.example.springboot.model.Department;
 import com.example.springboot.model.Role;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Salt;
-import com.example.springboot.repository.AccountRepository;
-import com.example.springboot.repository.DepartmentRepository;
-import com.example.springboot.repository.RoleRepository;
-import com.example.springboot.repository.SaltRepository;
+import com.example.springboot.model.Style;
+import com.example.springboot.model.StylePlace;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.SaltService;
+import com.example.springboot.service.ShiftRequestService;
+import com.example.springboot.service.StylePlaceService;
+import com.example.springboot.service.StyleService;
 
 @Component
 public class DataLoader implements CommandLineRunner
 {
     @Autowired
-    SaltRepository saltRepository;
-
-    @Autowired
     SaltService saltService;
-
-    @Autowired
-    RoleRepository roleRepository;
 
     @Autowired
     RoleService roleService;
 
     @Autowired
-    DepartmentRepository departmentRepository;
-
-    @Autowired
     DepartmentService departmentService;
-
-    @Autowired
-    AccountRepository accountRepository;
 
     @Autowired
     AccountService accountService;
 
+    @Autowired
+    StylePlaceService stylePlaceService;
+
+    @Autowired
+    StyleService styleService;
+
+    @Autowired
+    ShiftRequestService shiftRequestService;
+    
     public void run(String... args) throws Exception
     {
+        shiftRequestService.resetAllTables();
+        styleService.resetAllTables();
         accountService.resetAllTables();
         saltService.resetAllTables();
         roleService.resetAllTables();
         departmentService.resetAllTables();
+        stylePlaceService.resetAllTables();
         String saltPath = "csv/SaltList.csv";
         InputStream saltInputStream = getClass().getClassLoader().getResourceAsStream(saltPath);
         if (saltInputStream == null)
@@ -66,12 +67,13 @@ public class DataLoader implements CommandLineRunner
         try (BufferedReader br = new BufferedReader(new InputStreamReader(saltInputStream)))
         {
             String saltLine;
-            while ((saltLine = br.readLine()) != null) {
+            while ((saltLine = br.readLine()) != null)
+            {
                 if (saltLine.startsWith("id,")) continue; // ヘッダー
                 Salt salt = new Salt();
                 String[] saltList = saltLine.split(",");
                 salt.setText(String.valueOf(saltList[1]));
-                saltRepository.save(salt);
+                saltService.save(salt);
             }
         }
 
@@ -90,7 +92,7 @@ public class DataLoader implements CommandLineRunner
                 Department department = new Department();
                 String[] departmentList = departmentLine.split(",");
                 department.setName(String.valueOf(departmentList[1]));
-                departmentRepository.save(department);
+                departmentService.save(department);
             }
         }
 
@@ -110,7 +112,7 @@ public class DataLoader implements CommandLineRunner
                 String[] roleList = roleLine.split(",");
                 role.setName(String.valueOf(roleList[1]));
                 role.setPower(Integer.valueOf(roleList[2]));
-                roleRepository.save(role);
+                roleService.save(role);
             }
         }
         
@@ -118,7 +120,7 @@ public class DataLoader implements CommandLineRunner
         InputStream accountInputStream = getClass().getClassLoader().getResourceAsStream(accountPath);
         if (accountInputStream == null)
         {
-            throw new FileNotFoundException("ファイルが見つかりません: " + rolePath);
+            throw new FileNotFoundException("ファイルが見つかりません: " + accountPath);
         }
         try (BufferedReader br = new BufferedReader(new InputStreamReader(accountInputStream)))
         {
@@ -138,7 +140,44 @@ public class DataLoader implements CommandLineRunner
                 account.setRoleId(roleService.getRoleById(Long.valueOf(accountList[7])));
                 account.setDepartmentId(departmentService.getDepartmentById(Long.valueOf(accountList[8])));
                 account.setJoinDate(LocalDateTime.parse(accountList[9]));
-                accountRepository.save(account);
+                accountService.save(account);
+            }
+        }
+        String stylePlacePath = "csv/StylePlace.csv";
+        InputStream stylePlaceStream = getClass().getClassLoader().getResourceAsStream(stylePlacePath);
+        if (stylePlaceStream == null)
+        {
+            throw new FileNotFoundException("ファイルが見つかりません: " + stylePlacePath);
+        }
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(stylePlaceStream)))
+        {
+            String stylePlaceLine;
+            while ((stylePlaceLine = br.readLine()) != null)
+            {
+                if (stylePlaceLine.startsWith("id,")) continue;
+                StylePlace stylePlace = new StylePlace();
+                String[] stylePlaceList = stylePlaceLine.split(",");
+                stylePlace.setName(stylePlaceList[1]);
+                stylePlaceService.save(stylePlace);
+            }
+        }
+
+        String stylePath = "csv/Style.csv";
+        InputStream styleStream = getClass().getClassLoader().getResourceAsStream(stylePath);
+        if(styleStream == null)
+        {
+            throw new FileNotFoundException("ファイルが見つかりません:" + stylePath);
+        }
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(styleStream)))
+        {
+            String styleLine;
+            while ((styleLine = br.readLine()) != null)
+            {
+                if (styleLine.startsWith("id,")) continue;
+                Style style = new Style();
+                String[] styleList = styleLine.split(",");
+                style.setAccountId(accountService.getAccountByAccountId(Long.valueOf(styleList[1])));
+                styleService.save(style);
             }
         }
     }

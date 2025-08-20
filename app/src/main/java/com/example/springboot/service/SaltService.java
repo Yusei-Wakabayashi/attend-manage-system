@@ -20,8 +20,15 @@ public class SaltService
             .orElseThrow(() -> new RuntimeException("ソルトが見つかりません"));
     }
 
+    public String save(Salt salt)
+    {
+        saltRepository.save(salt);
+        return "ok";
+    }
+
     @Transactional
-    public void resetAllTables() {
+    public void resetAllTables()
+    {
         // データ削除
         saltRepository.deleteAll();
         // AUTO_INCREMENTリセット(順番はDELETEの後)

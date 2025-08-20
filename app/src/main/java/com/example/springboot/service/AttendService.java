@@ -9,7 +9,8 @@ import com.example.springboot.model.Attend;
 import com.example.springboot.repository.AttendRepository;
 
 @Service
-public class AttendService {
+public class AttendService
+{
     @Autowired
     AttendRepository attendRepository;
 
@@ -17,6 +18,12 @@ public class AttendService {
     {
         return attendRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("出勤簿が見つかりません"));
+    }
+
+    public String save(Attend attend)
+    {
+        attendRepository.save(attend);
+        return "ok";
     }
 
     @Transactional

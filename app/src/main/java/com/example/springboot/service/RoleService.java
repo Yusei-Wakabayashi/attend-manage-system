@@ -18,6 +18,12 @@ public class RoleService
         return roleRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("役職が見つかりません"));
     }
+
+    public String save(Role role)
+    {
+        roleRepository.save(role);
+        return "ok";
+    }
     @Transactional
     public void resetAllTables()
     {
