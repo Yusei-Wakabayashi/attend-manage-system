@@ -1,92 +1,92 @@
 <script setup>
-// import { ref, computed, onMounted, watch } from "vue";
-// import axios from "axios";
-// import NavList from "../components/NavList.vue";
-// import Popup from "../components/Popup.vue";
+import { ref, computed, onMounted, watch } from "vue";
+import axios from "axios";
+import NavList from "../components/NavList.vue";
+import Popup from "../components/Popup.vue";
 
-// const viewType = ref("shift");
-// const showPopup = ref(false);
-// const togglePopup = () => {
-//   showPopup.value = !showPopup.value;
-//   console.log(showPopup.value);
-// };
+const viewType = ref("shift");
+const showPopup = ref(false);
+const togglePopup = () => {
+  showPopup.value = !showPopup.value;
+  console.log(showPopup.value);
+};
 
-// const today = new Date();
-// const currentYear = today.getFullYear();
-// const currentMonth = today.getMonth();
-// const currentDate = today.getDate();
+const today = new Date();
+const currentYear = today.getFullYear();
+const currentMonth = today.getMonth();
+const currentDate = today.getDate();
 
-// const year = ref(currentYear);
-// const month = ref(currentMonth);
-// const isCurrentMonth = computed(() => year.value === currentYear && month.value === currentMonth);
-// const prevMonth = () => { month.value === 0 ? (year.value--, month.value = 11) : month.value--; };
-// const nextMonth = () => { month.value === 11 ? (year.value++, month.value = 0) : month.value++; };
+const year = ref(currentYear);
+const month = ref(currentMonth);
+const isCurrentMonth = computed(() => year.value === currentYear && month.value === currentMonth);
+const prevMonth = () => { month.value === 0 ? (year.value--, month.value = 11) : month.value--; };
+const nextMonth = () => { month.value === 11 ? (year.value++, month.value = 0) : month.value++; };
 
-// const monthKey = computed(() => `${year.value}-${String(month.value + 1).padStart(2, "0")}`);
-// const firstDate = computed(() => new Date(year.value, month.value, 1));
-// const daysInMonth = computed(() => new Date(year.value, month.value + 1, 0).getDate());
-// const firstDayOfWeek = computed(() => firstDate.value.getDay());
-// const emptyCells = computed(() => Array.from({ length: firstDayOfWeek.value }));
-// const calendarDays = computed(() => Array.from({ length: daysInMonth.value }, (_, i) => i + 1));
-// const monthLabel = computed(() => `${year.value}年${month.value + 1}月`);
+const monthKey = computed(() => `${year.value}-${String(month.value + 1).padStart(2, "0")}`);
+const firstDate = computed(() => new Date(year.value, month.value, 1));
+const daysInMonth = computed(() => new Date(year.value, month.value + 1, 0).getDate());
+const firstDayOfWeek = computed(() => firstDate.value.getDay());
+const emptyCells = computed(() => Array.from({ length: firstDayOfWeek.value }));
+const calendarDays = computed(() => Array.from({ length: daysInMonth.value }, (_, i) => i + 1));
+const monthLabel = computed(() => `${year.value}年${month.value + 1}月`);
 
-// const shiftData = ref({});
+const shiftData = ref({});
 
-// const attendanceData = {
-//   "2025-06": {
-//     5: { start: "09:02", end: "18:10", breakStart: "12:05", breakEnd: "13:00" },
-//     20: { start: "10:01", end: "17:45", breakStart: "12:00", breakEnd: "13:00" },
-//   },
-//   "2025-07": {
-//     3: { start: "09:33", end: "17:32", breakStart: "12:00", breakEnd: "13:00" },
-//     10: { start: "10:05", end: "18:05", breakStart: "13:00", breakEnd: "14:00" },
-//   },
-// };
+const attendanceData = {
+  "2025-06": {
+    5: { start: "09:02", end: "18:10", breakStart: "12:05", breakEnd: "13:00" },
+    20: { start: "10:01", end: "17:45", breakStart: "12:00", breakEnd: "13:00" },
+  },
+  "2025-07": {
+    3: { start: "09:33", end: "17:32", breakStart: "12:00", breakEnd: "13:00" },
+    10: { start: "10:05", end: "18:05", breakStart: "13:00", breakEnd: "14:00" },
+  },
+};
 
-// const getShiftData = async () => {
-//   try {
-//     const res = await axios.get(
-//       `http://localhost:8080/api/reach/shiftlist?year=${year.value}&month=${month.value + 1}`
-//     );
+const getShiftData = async () => {
+  try {
+    const res = await axios.get(
+      `http://localhost:8080/api/reach/shiftlist?year=${year.value}&month=${month.value + 1}`
+    );
 
-//     const rawList = res.data.shiftlist;
+    const rawList = res.data.shiftlist;
 
-//     const mapped = {};
-//     rawList.forEach(item => {
-//       const date = new Date(item.workStart).getDate();
-//       mapped[date] = {
-//         start: item.workStart.slice(11, 16),       
-//         end: item.workEnd.slice(11, 16),           
-//         breakStart: item.breakStart.slice(11, 16),
-//         breakEnd: item.breakEnd.slice(11, 16)     
-//       };
-//     });
+    const mapped = {};
+    rawList.forEach(item => {
+      const date = new Date(item.workStart).getDate();
+      mapped[date] = {
+        start: item.workStart.slice(11, 16),       
+        end: item.workEnd.slice(11, 16),           
+        breakStart: item.breakStart.slice(11, 16),
+        breakEnd: item.breakEnd.slice(11, 16)     
+      };
+    });
 
-//     shiftData.value[monthKey.value] = mapped;
-//     console.log("shiftData:", mapped);
-//   } catch (error) {
-//     console.error("エラーが発生しました:", error);
-//   }
-// };
+    shiftData.value[monthKey.value] = mapped;
+    console.log("shiftData:", mapped);
+  } catch (error) {
+    console.error("エラーが発生しました:", error);
+  }
+};
 
 
 
-// const label = (day) => {
-//   const data =
-//     viewType.value === "shift"
-//       ? shiftData.value[monthKey.value]
-//       : attendanceData[monthKey.value];
-//   return data?.[day] ?? null;
-// };
+const label = (day) => {
+  const data =
+    viewType.value === "shift"
+      ? shiftData.value[monthKey.value]
+      : attendanceData[monthKey.value];
+  return data?.[day] ?? null;
+};
 
-// onMounted(() => {
-//   getShiftData();
-// });
+onMounted(() => {
+  getShiftData();
+});
 
-// // 月変更でデータ取得
-// watch([year, month], () => {
-//   getShiftData();
-// });
+// 月変更でデータ取得
+watch([year, month], () => {
+  getShiftData();
+});
 </script>
 
 
