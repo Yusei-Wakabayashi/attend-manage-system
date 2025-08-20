@@ -17,6 +17,8 @@ RUN npm install -D @tailwindcss/vite
 
 RUN npm install -D vue-router
 
+RUN npm install -D axios
+
 RUN apt-get update
 
 # ポート公開
