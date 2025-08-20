@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import axios from "axios";
 
 const router = useRouter();
 
@@ -8,18 +9,31 @@ const loginId = ref("");
 const password = ref("");
 const error = ref("");
 
-const login = () => {
-  if (loginId.value === "yokoji" && password.value === "123") {
-    router.push("/application");
-  } else {
-    error.value = "ログインIDまたはパスワードが違います";
+//仮ID wakabayashi@karaage.com
+//仮パスワード password
+const login = async () => {
+  try {
+    await axios.post("http://localhost:8080/api/send/login", {
+      loginId: loginId.value,
+      password: password.value,
+    });
+    console.log(loginId.value, password.value)
+  } catch (error) {
+    console.log(`ログインエラー${error}`);
   }
-}
+  // if (loginId.value === "yokoji" && password.value === "123") {
+  //   router.push("/application");
+  // } else {
+  //   error.value = "ログインIDまたはパスワードが違います";
+  // }
+};
 </script>
 
 <template>
   <div class="flex items-center justify-center min-h-screen bg-gray-200">
-    <div class="bg-white w-full max-w-70 rounded-md p-5 shadow-md md:max-w-md lg:max-w-lg">
+    <div
+      class="bg-white w-full max-w-70 rounded-md p-5 shadow-md md:max-w-md lg:max-w-lg"
+    >
       <h2 class="text-center font-medium md:text-lg lg:text-xl">ログイン</h2>
       <form @submit.prevent="login">
         <div class="pt-5 pb-2.5">
