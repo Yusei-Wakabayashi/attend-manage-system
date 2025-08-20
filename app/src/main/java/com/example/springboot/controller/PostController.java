@@ -70,7 +70,7 @@ public class PostController
     {
         try{
             MessageDigest md = MessageDigest.getInstance("SHA256");
-            String username = data.getUsername();
+            String username = data.getId();
             String password = data.getPassword();
             Account account = accountService.getAccountByUsername(username);
             byte[] perfectPassword = md.digest((password + account.getSaltId().getText()).getBytes());

@@ -7,6 +7,6 @@ import lombok.Setter;
 @Setter
 public class LoginPostData
 {
-    private String username;
+    private String id;
     private String password;
 }
