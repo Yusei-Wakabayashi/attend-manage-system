@@ -8,7 +8,7 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.example.springboot.dto.ApproverListResponse;
+import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Role;

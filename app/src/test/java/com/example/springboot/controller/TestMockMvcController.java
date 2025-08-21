@@ -1,6 +1,7 @@
 package com.example.springboot.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -11,6 +12,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 
 import java.security.MessageDigest;
+import java.sql.Time;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 // import java.util.stream.Collectors;
@@ -27,14 +31,15 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.springboot.Config;
 import com.example.springboot.dto.AllStyleListResponse;
-import com.example.springboot.dto.ApproverListResponse;
+import com.example.springboot.dto.response.ApproverListResponse;
+import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
 import com.example.springboot.model.Role;
 import com.example.springboot.model.Salt;
+import com.example.springboot.model.Shift;
 import com.example.springboot.model.Style;
 import com.example.springboot.model.StylePlace;
-import com.example.springboot.repository.AccountRepository;
 import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Department;
 import com.example.springboot.service.AccountApproverService;
@@ -43,6 +48,7 @@ import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.ShiftRequestService;
+import com.example.springboot.service.ShiftService;
 import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
 
@@ -74,18 +80,19 @@ public class TestMockMvcController
     private AccountApproverService accountApproverService;
 
     @MockBean
-    private AccountRepository accountRepository;
-
-    @MockBean
     private StyleService styleService;
 
     @MockBean
     private StylePlaceService stylePlaceService;
 
+    @MockBean
+    private ShiftService shiftService;
+
     @Test
     void loginSuccess() throws Exception
     {
         Salt salt = new Salt();
+        salt.setId(1L);
         salt.setText("somesalt");
 
         Account account = new Account();
@@ -94,7 +101,7 @@ public class TestMockMvcController
         byte[] hashed = MessageDigest.getInstance("SHA-256").digest("passwordsomesalt".getBytes());
         account.setPassword(hashed);
 
-        when(accountService.getAccountByUsername("testuser")).thenReturn(account);
+        when(accountService.getAccountByUsername(any())).thenReturn(account);
         mockMvc.perform(
             post("/api/send/login")
             .contentType(MediaType.APPLICATION_JSON)
@@ -341,5 +348,67 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.departmentName").value(generalDepartmentName))
         .andExpect(jsonPath("$.roleName").value(generalRoleName))
         .andExpect(jsonPath("$.admin").value(generalAccountAdmin));
+    }
+
+    @Test
+    void shiftListSuccess() throws Exception
+    {
+        Long generalAccountId = 1L;
+        String generalAccountName = "testuser";
+        String time = "00:00:00";
+        Long generalShiftId = 1L;
+        LocalDateTime generalShiftBeginWork = LocalDateTime.parse("2025/06/21/08/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime generalShiftEndWork = LocalDateTime.parse("2025/06/21/17/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime generalShiftBeginBreak = LocalDateTime.parse("2025/06/21/11/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime generalShiftEndBreak = LocalDateTime.parse("2025/06/21/12/30/30",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        Time generalShiftLateness = Time.valueOf(time);
+        Time generalShiftLeaveEarly = Time.valueOf(time);
+        Time generalShiftOuting = Time.valueOf(time);
+        Time generalShiftOverWork = Time.valueOf(time);
+        Account generalAccount = new Account();
+        generalAccount.setId(generalAccountId);
+        generalAccount.setName(generalAccountName);
+        Shift generalShift = new Shift
+        (
+            generalShiftId, generalAccount, generalShiftBeginWork,
+            generalShiftEndWork, generalShiftBeginBreak, generalShiftEndBreak,
+            generalShiftLateness, generalShiftLeaveEarly, generalShiftOuting, generalShiftOverWork
+        );
+        ShiftListResponse generalShiftListResponse = new ShiftListResponse
+        (
+            generalShiftId,
+            generalShiftBeginWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalShiftBeginWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            generalShiftEndWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalShiftEndWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            generalShiftBeginBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalShiftBeginBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            generalShiftEndBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalShiftEndBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            generalShiftLateness,
+            generalShiftLeaveEarly,
+            generalShiftOuting,
+            generalShiftOverWork
+        );
+        List<Shift> generalShifts = new ArrayList();
+        generalShifts.add(generalShift);
+        List<ShiftListResponse> generalShiftList = new ArrayList();
+        generalShiftList.add(shiftService.shiftToShiftListResponse(generalShift));
+
+        when(accountService.getAccountByUsername(any())).thenReturn(generalAccount);
+        when(shiftService.findByAccountId(anyLong())).thenReturn(generalShifts);
+        when(shiftService.shiftToShiftListResponse(any())).thenReturn(generalShiftListResponse);
+        mockMvc.perform(
+            get("/api/reach/shiftlist")
+            .with(csrf())
+            .with(user(generalAccountName))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.shiftList[0].id").value(generalShiftListResponse.getId()))
+        .andExpect(jsonPath("$.shiftList[0].beginWork").value(generalShiftListResponse.getBeginWork()))
+        .andExpect(jsonPath("$.shiftList[0].endWork").value(generalShiftListResponse.getEndWork()))
+        .andExpect(jsonPath("$.shiftList[0].beginBreak").value(generalShiftListResponse.getBeginBreak()))
+        .andExpect(jsonPath("$.shiftList[0].endBreak").value(generalShiftListResponse.getEndBreak()))
+        .andExpect(jsonPath("$.shiftList[0].lateness").value(String.valueOf(generalShiftListResponse.getLateness())))
+        .andExpect(jsonPath("$.shiftList[0].leaveEarly").value(String.valueOf(generalShiftListResponse.getLeaveEarly())))
+        .andExpect(jsonPath("$.shiftList[0].outing").value(String.valueOf(generalShiftListResponse.getOuting())))
+        .andExpect(jsonPath("$.shiftList[0].overWork").value(String.valueOf(generalShiftListResponse.getOverWork())));
     }
 }

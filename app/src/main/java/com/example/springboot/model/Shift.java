@@ -16,10 +16,12 @@ import javax.persistence.Table;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.AllArgsConstructor;
 
 @Getter
 @Setter
 @Entity
+@AllArgsConstructor
 @Table(name="shift_lists")
 public class Shift
 {

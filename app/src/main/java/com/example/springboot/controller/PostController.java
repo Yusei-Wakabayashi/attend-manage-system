@@ -40,7 +40,7 @@ import com.example.springboot.util.SecurityUtil;
 
 @RequestMapping("/api")
 @RestController
-@CrossOrigin(origins = {"http://localhost:5173"})
+// @CrossOrigin(origins = {"http://localhost:5173"})
 public class PostController
 {
     @Autowired

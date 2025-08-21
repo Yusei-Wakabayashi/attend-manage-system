@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
+import java.sql.Time;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,22 +20,25 @@ import org.springframework.test.context.ContextConfiguration;
 
 import com.example.springboot.Config;
 import com.example.springboot.dto.AllStyleListResponse;
-import com.example.springboot.dto.ApproverListResponse;
+import com.example.springboot.dto.response.ApproverListResponse;
+import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Department;
 import com.example.springboot.model.Role;
+import com.example.springboot.model.Shift;
 import com.example.springboot.model.StylePlace;
 import com.example.springboot.repository.AccountRepository;
+import com.example.springboot.repository.ShiftRepository;
 import com.example.springboot.repository.StylePlaceRepository;
-import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
-import com.example.springboot.service.ApprovalSettingService;
+import com.example.springboot.service.ShiftService;
 import com.example.springboot.service.StylePlaceService;
 
 @ContextConfiguration(classes = Config.class)
 @AutoConfigureMockMvc
-@Import({AccountService.class, StylePlaceService.class})
+// 使用するserviceを追記
+@Import({AccountService.class, StylePlaceService.class, ShiftService.class})
 @SpringBootTest
 public class TestJpaController
 {
@@ -42,17 +48,17 @@ public class TestJpaController
     @Autowired
     private StylePlaceService stylePlaceService;
 
-    @MockBean
-    private ApprovalSettingService approvalSettingService;
-
-    @MockBean
-    private AccountApproverService accountApproverService;
+    @Autowired
+    private ShiftService shiftService;
 
     @MockBean
     private AccountRepository accountRepository;
 
     @MockBean
     private StylePlaceRepository stylePlaceRepository;
+
+    @MockBean
+    private ShiftRepository shiftRepository;
     @Test
     void accountServiceGetApproverListSuccess()
     {
@@ -142,5 +148,34 @@ public class TestJpaController
         assertNotNull(response);
         assertEquals(workStyleName, response.get(0).getName());
         assertEquals(homeStyleName, response.get(1).getName());
+    }
+
+    void shiftToShiftListResponseSuccess()
+    {
+        Long generalAccountId = 1L;
+        Account generalAccount = new Account();
+        generalAccount.setId(generalAccountId);
+        Long generalShiftId = 1L;
+        String time = "00:00:00";
+        String beginWork = "2025/06/21/08/30/00";
+        String endWork = "2025/06/21/17/30/00";
+        String beginBreak = "2025/06/21/11/30/00";
+        String endBreak = "2025/06/21/12/30/30";
+        LocalDateTime generalShiftBeginWork = LocalDateTime.parse(beginWork,DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime generalShiftEndWork = LocalDateTime.parse(endWork,DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime generalShiftBeginBreak = LocalDateTime.parse(beginBreak,DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime generalShiftEndBreak = LocalDateTime.parse(endBreak,DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        Time generalShiftLateness = Time.valueOf(time);
+        Time generalShiftLeaveEarly = Time.valueOf(time);
+        Time generalShiftOuting = Time.valueOf(time);
+        Time generalShiftOverWork = Time.valueOf(time);
+        Shift generalShift = new Shift
+        (
+            generalShiftId, generalAccount, generalShiftBeginWork,
+            generalShiftEndWork, generalShiftBeginBreak, generalShiftEndBreak,
+            generalShiftLateness, generalShiftLeaveEarly, generalShiftOuting, generalShiftOverWork
+        );
+        ShiftListResponse shiftListResponse = shiftService.shiftToShiftListResponse(generalShift);
+        assertNotNull(shiftListResponse);
     }
 }

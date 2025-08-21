@@ -11,17 +11,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.springboot.dto.AllStyleListResponse;
-import com.example.springboot.dto.ApproverListResponse;
+import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.dto.ArrayResponse;
 import com.example.springboot.dto.response.AccountInfoResponse;
+import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Department;
 import com.example.springboot.model.Role;
+import com.example.springboot.model.Shift;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.RoleService;
+import com.example.springboot.service.ShiftService;
 import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
 import com.example.springboot.util.SecurityUtil;
@@ -53,6 +56,9 @@ public class GetController
 
     @Autowired
     StylePlaceService stylePlaceService;
+
+    @Autowired
+    ShiftService shiftService;
 
     @GetMapping("/reach/approverlist")
     public ArrayResponse<ApproverListResponse> returnApproverList(HttpSession session)
@@ -112,5 +118,19 @@ public class GetController
         accountInfo.setRoleName(role.getName());
         accountInfo.setAdmin(admin);
         return accountInfo;
+    }
+    @GetMapping("/reach/shiftlist")
+    public ArrayResponse returnShiftList(HttpSession session)
+    {
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        // accountidを基にshift_listテーブルを検索、shiftListResponseに格納
+        List<ShiftListResponse> shiftListResponse = new ArrayList();
+        List<Shift> shiftList = shiftService.findByAccountId(account.getId());
+        for(Shift shift : shiftList)
+        {
+            shiftListResponse.add(shiftService.shiftToShiftListResponse(shift));
+        }
+        return new ArrayResponse(1, shiftListResponse, "shiftList");
     }
 }

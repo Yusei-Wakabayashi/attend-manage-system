@@ -11,7 +11,7 @@ import java.util.Map;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import org.springframework.web.bind.annotation.CrossOrigin;
+// import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,14 +21,14 @@ import com.example.springboot.model.Attend;
 import com.example.springboot.model.Shift;
 import com.example.springboot.dto.ArrayResponse;
 import com.example.springboot.dto.AttendListResponse;
-import com.example.springboot.dto.ShiftListResponse;
+import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.dto.YearMonthParam;
 
 @EnableJpaAuditing
 @RestController
 @SpringBootApplication
-@RequestMapping("/api")
-@CrossOrigin(origins = {"http://localhost:80","http://localhost:5173"})
+@RequestMapping("/dummy")
+// @CrossOrigin(origins = {"http://localhost:80","http://localhost:5173"})
 public class Application
 {
     public static void main(String[] args) {

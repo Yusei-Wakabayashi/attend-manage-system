@@ -18,12 +18,16 @@ import javax.persistence.UniqueConstraint;
 
 import com.example.springboot.BaseTimeEntity;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Setter
 @Getter
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "accounts", uniqueConstraints = {@UniqueConstraint(name = "salts", columnNames = {"salt_id"})}) // 外部キーにユニーク制約追加
 public class Account extends BaseTimeEntity
 {

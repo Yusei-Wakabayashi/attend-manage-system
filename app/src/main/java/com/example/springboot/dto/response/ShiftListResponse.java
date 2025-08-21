@@ -1,12 +1,14 @@
-package com.example.springboot.dto;
+package com.example.springboot.dto.response;
 
 import java.sql.Time;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@AllArgsConstructor
 public class ShiftListResponse
 {
     private Long id;
