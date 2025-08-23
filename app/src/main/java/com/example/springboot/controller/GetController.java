@@ -6,13 +6,16 @@ import java.util.List;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.springboot.dto.AllStyleListResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.dto.ArrayResponse;
+import com.example.springboot.dto.YearMonthParam;
 import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
@@ -31,6 +34,7 @@ import com.example.springboot.util.SecurityUtil;
 
 @RequestMapping("/api")
 @RestController
+@CrossOrigin(origins = {"http://localhost:5173"})
 public class GetController
 {
     // @GetMapping("/reach/sl")
@@ -120,13 +124,14 @@ public class GetController
         return accountInfo;
     }
     @GetMapping("/reach/shiftlist")
-    public ArrayResponse returnShiftList(HttpSession session)
+    public ArrayResponse returnShiftList(HttpSession session, @ModelAttribute YearMonthParam request)
     {
         String username = SecurityUtil.getCurrentUsername();
         Account account = accountService.getAccountByUsername(username);
         // accountidを基にshift_listテーブルを検索、shiftListResponseに格納
         List<ShiftListResponse> shiftListResponse = new ArrayList();
-        List<Shift> shiftList = shiftService.findByAccountId(account.getId());
+        // List<Shift> shiftList = shiftService.findByAccountId(account.getId());
+        List<Shift> shiftList = shiftService.findByAccountIdAndBeginWorkBetween(account.getId(), request.getYear(), request.getMonth());
         for(Shift shift : shiftList)
         {
             shiftListResponse.add(shiftService.shiftToShiftListResponse(shift));

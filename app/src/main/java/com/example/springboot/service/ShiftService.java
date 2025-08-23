@@ -1,5 +1,8 @@
 package com.example.springboot.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -27,6 +30,28 @@ public class ShiftService
     public List<Shift> findByAccountId(Account id)
     {
         return shiftRepository.findByAccountId(id);
+    }
+    public List<Shift> findByAccountIdAndBeginWorkBetween(Long id, int year, int month)
+    {
+        Account accountId = new Account();
+        accountId.setId(id);
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);
+        LocalDate lastDay = yearMonth.atEndOfMonth();
+        LocalDateTime startPeriod = firstDay.atStartOfDay();
+        LocalDateTime endPeriod = lastDay.atTime(23,59,59);
+        List<Shift> shiftList = shiftRepository.findByAccountIdAndBeginWorkBetween(accountId, startPeriod, endPeriod);
+        return shiftList;
+    }
+    public List<Shift> findByAccountIdAndBeginWorkBetween(Account id, int year, int month)
+    {
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);
+        LocalDate lastDay = yearMonth.atEndOfMonth();
+        LocalDateTime startPeriod = firstDay.atStartOfDay();
+        LocalDateTime endPeriod = lastDay.atTime(23,59,59);
+        List<Shift> shiftList = shiftRepository.findByAccountIdAndBeginWorkBetween(id, startPeriod, endPeriod);
+        return shiftList;
     }
 
     public ShiftListResponse shiftToShiftListResponse(Shift shift)

@@ -1,6 +1,7 @@
 package com.example.springboot.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
@@ -392,10 +393,13 @@ public class TestMockMvcController
         generalShiftList.add(shiftService.shiftToShiftListResponse(generalShift));
 
         when(accountService.getAccountByUsername(any())).thenReturn(generalAccount);
-        when(shiftService.findByAccountId(anyLong())).thenReturn(generalShifts);
+        // when(shiftService.findByAccountId(anyLong())).thenReturn(generalShifts);
+        when(shiftService.findByAccountIdAndBeginWorkBetween(anyLong(), anyInt(), anyInt())).thenReturn(generalShifts);
         when(shiftService.shiftToShiftListResponse(any())).thenReturn(generalShiftListResponse);
         mockMvc.perform(
             get("/api/reach/shiftlist")
+            .param("year", "2025")
+            .param("month", "6")
             .with(csrf())
             .with(user(generalAccountName))
         )
