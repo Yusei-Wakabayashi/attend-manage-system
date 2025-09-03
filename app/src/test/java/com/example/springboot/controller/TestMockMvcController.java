@@ -3,6 +3,7 @@ package com.example.springboot.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -39,14 +40,17 @@ import com.example.springboot.model.AccountApprover;
 import com.example.springboot.model.Role;
 import com.example.springboot.model.Salt;
 import com.example.springboot.model.Shift;
+import com.example.springboot.model.ShiftRequest;
 import com.example.springboot.model.Style;
 import com.example.springboot.model.StylePlace;
 import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Department;
+import com.example.springboot.model.LegalTime;
 import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.DepartmentService;
+import com.example.springboot.service.LegalTimeService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.ShiftRequestService;
 import com.example.springboot.service.ShiftService;
@@ -88,6 +92,9 @@ public class TestMockMvcController
 
     @MockBean
     private ShiftService shiftService;
+
+    @MockBean
+    private LegalTimeService legalTimeService;
 
     @Test
     void loginSuccess() throws Exception
@@ -414,5 +421,79 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.shiftList[0].leaveEarly").value(String.valueOf(generalShiftListResponse.getLeaveEarly())))
         .andExpect(jsonPath("$.shiftList[0].outing").value(String.valueOf(generalShiftListResponse.getOuting())))
         .andExpect(jsonPath("$.shiftList[0].overWork").value(String.valueOf(generalShiftListResponse.getOverWork())));
+    }
+
+    @Test
+    void shiftSetSuccess() throws Exception
+    {
+        String generalBeginWork = "2025/09/02T09:00:00";
+        String generalBeginBreak = "2025/09/02T12:00:00";
+        String generalEndBreak = "2025/09/02T13:00:00";
+        String generalEndWork = "2025/09/02T18:00:00";
+        String generalRequestComment = "";
+        String generalRequestDate = "2025/08/02T00:00:11";
+        String json = String.format
+        ("""
+            {
+                "beginWork": "%s",
+                "beginBreak": "%s",
+                "endBreak": "%s",
+                "endWork": "%s",
+                "requestComment": "%s",
+                "requestDate": "%s"
+            }
+        """,
+        generalBeginWork, generalBeginBreak, generalEndBreak, generalEndWork, generalRequestComment, generalRequestDate
+        );
+
+        LegalTime legalTime = new LegalTime();
+        Long legalTimeId = 1L;
+        LocalDateTime legalTimeBegin = LocalDateTime.parse(LocalDateTime.parse("2025/08/08T21:00:00",DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        Time legalTimeScheduleWorkTime = Time.valueOf("08:00:00");
+        Time legalTimeWeeklyWorkTime = Time.valueOf("40:00:00");
+        Time legalTimeMonthlyOverWork = Time.valueOf("45:00:00");
+        Time legalTimeYearOverWork = Time.valueOf("360:00:00");
+        Time legalTimeMaxOverWorkTime = Time.valueOf("100:00:00");
+        Time legalTimeMonthlyOverWorkAverage = Time.valueOf("80:00:00");
+        Time legalTimeLateNightWorkTimeBegin = Time.valueOf("22:00:00");
+        Time legalTimeLateNightWorkTimeEnd = Time.valueOf("05:00:00");
+        Time legalTimeScheduleBreakTime = Time.valueOf("01:00:00");
+
+        legalTime.setLegalTimeId(legalTimeId);
+        legalTime.setBegin(legalTimeBegin);
+        legalTime.setScheduleWorkTime(legalTimeScheduleWorkTime);
+        legalTime.setWeeklyWorkTime(legalTimeWeeklyWorkTime);
+        legalTime.setMonthlyOverWorkTime(legalTimeMonthlyOverWork);
+        legalTime.setYearOverWorkTime(legalTimeYearOverWork);
+        legalTime.setMaxOverWorkTime(legalTimeMaxOverWorkTime);
+        legalTime.setMonthlyOverWorkAverage(legalTimeMonthlyOverWorkAverage);
+        legalTime.setLateNightWorkBegin(legalTimeLateNightWorkTimeBegin);
+        legalTime.setLateNightWorkEnd(legalTimeLateNightWorkTimeEnd);
+        legalTime.setScheduleBreakTime(legalTimeScheduleBreakTime);
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 1L;
+        String generalAccountName = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setName(generalAccountName);
+
+        List<Shift> shifts = new ArrayList();
+        List<ShiftRequest> shiftRequests = new ArrayList();
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(shiftService.findByAccountIdAndDayBeginWorkBetween(any(Account.class), any(LocalDateTime.class))).thenReturn(shifts);
+        when(shiftRequestService.getAccountIdAndBeginWorkBetweenDay(any(Account.class), any(LocalDateTime.class))).thenReturn(shiftRequests);
+        when(legalTimeService.getFirstByOrderByBeginDesc()).thenReturn(legalTime);
+        when(shiftService.findByAccountIdAndBeginWorkBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(shifts);
+        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn("ok");
+        mockMvc.perform(
+            post("/api/send/shift")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountName))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
     }
 }

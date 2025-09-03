@@ -1,0 +1,32 @@
+package com.example.springboot.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.example.springboot.model.LegalTime;
+import com.example.springboot.repository.LegalTimeRepository;
+
+@Service
+public class LegalTimeService
+{
+    @Autowired
+    private LegalTimeRepository legalTimeRepository;
+
+    public LegalTime getFirstByOrderByBeginDesc()
+    {
+        return legalTimeRepository.findFirstByOrderByBeginDesc()
+            .orElseThrow(() -> new RuntimeException("データが見つかりません"));
+    }
+
+    public LegalTime getLegalTimeByLegalTimeId(Long id)
+    {
+        return legalTimeRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("データが見つかりません"));
+    }
+
+    public void resetAllTables()
+    {
+        legalTimeRepository.deleteAll();
+        legalTimeRepository.resetAutoIncrement();
+    }
+}

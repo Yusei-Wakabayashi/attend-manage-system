@@ -1,6 +1,7 @@
 package com.example.springboot.service;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import javax.transaction.Transactional;
@@ -25,6 +26,14 @@ public class ShiftRequestService
 
     public List<ShiftRequest> getAccountIdAndBeginWorkBetween(Account accountId, LocalDateTime beginWork, LocalDateTime endWork)
     {
+        return shiftRequestRepository.findByAccountIdAndBeginWorkBetween(accountId, beginWork, endWork);
+    }
+
+    public List<ShiftRequest> getAccountIdAndBeginWorkBetweenDay(Account accountId, LocalDateTime begin)
+    {
+        // 始業時間から1日の開始と終了を作成
+        LocalDateTime beginWork = LocalDateTime.of(begin.toLocalDate(), LocalTime.MIN);
+        LocalDateTime endWork = LocalDateTime.of(begin.toLocalDate(), LocalTime.MAX);
         return shiftRequestRepository.findByAccountIdAndBeginWorkBetween(accountId, beginWork, endWork);
     }
 

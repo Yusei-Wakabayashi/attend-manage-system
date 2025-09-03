@@ -13,11 +13,13 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
 @Table(name = "shift_requests")
 public class ShiftRequest
 {
@@ -49,15 +51,4 @@ public class ShiftRequest
     private LocalDateTime approvalTime;
     @Column(name = "approver_comment", nullable = true, length = 255)
     private String approverComment;
-
-    public ShiftRequest()
-    {
-
-    }
-    public ShiftRequest(Long shiftRequestId, Account accountId, LocalDateTime beginWork, LocalDateTime endWork,
-        LocalDateTime beginBreak, LocalDateTime endBreak, String requestComment, LocalDateTime requestDate, 
-        int requestStatus, Account approver, LocalDateTime approvalTime, String approverComment)
-    {
-
-    }
 }

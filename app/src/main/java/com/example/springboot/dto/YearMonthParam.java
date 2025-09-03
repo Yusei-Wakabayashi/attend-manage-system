@@ -7,6 +7,6 @@ import lombok.Setter;
 @Setter
 public class YearMonthParam
 {
-    private int year;
-    private int month;
+    private Integer year;
+    private Integer month;
 }

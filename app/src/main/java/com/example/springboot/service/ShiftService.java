@@ -1,9 +1,12 @@
 package com.example.springboot.service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 import javax.transaction.Transactional;
@@ -31,6 +34,7 @@ public class ShiftService
     {
         return shiftRepository.findByAccountId(id);
     }
+    // 一月ごとの取得
     public List<Shift> findByAccountIdAndBeginWorkBetween(Long id, int year, int month)
     {
         Account accountId = new Account();
@@ -53,7 +57,45 @@ public class ShiftService
         List<Shift> shiftList = shiftRepository.findByAccountIdAndBeginWorkBetween(id, startPeriod, endPeriod);
         return shiftList;
     }
+    // 1日ごと
+    public List<Shift> findByAccountIdAndDayBeginWorkBetween(Account id, LocalDateTime begin)
+    {
+        // 始業時間から1日の開始と終了を作成
+        LocalDateTime beginWork = LocalDateTime.of(begin.toLocalDate(), LocalTime.MIN);
+        LocalDateTime endWork = LocalDateTime.of(begin.toLocalDate(), LocalTime.MAX);
+        List<Shift> shiftList = shiftRepository.findByAccountIdAndBeginWorkBetween(id, beginWork, endWork);
+        return shiftList;
+    }
 
+    public List<Shift> findByAccountIdAndDayBeginWorkBetween(Long id, LocalDateTime begin)
+    {
+        Account account = new Account();
+        account.setId(id);
+        // 始業時間から1日の開始と終了を作成
+        LocalDateTime beginWork = LocalDateTime.of(begin.toLocalDate(), LocalTime.MIN);
+        LocalDateTime endWork = LocalDateTime.of(begin.toLocalDate(), LocalTime.MAX);
+        List<Shift> shiftList = shiftRepository.findByAccountIdAndBeginWorkBetween(account, beginWork, endWork);
+        return shiftList;
+    }
+    // 1週ごと
+    public List<Shift> findByAccountIdAndBeginWorkBetweenWeek(Long id, LocalDateTime begin)
+    {
+        Account account = new Account();
+        account.setId(id);
+        LocalDateTime beginWork = begin.toLocalDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay();
+        LocalDateTime endWork = begin.toLocalDate().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).atTime(LocalTime.MAX);
+        List<Shift> shifts = shiftRepository.findByAccountIdAndBeginWorkBetween(account, beginWork, endWork);
+        return shifts;
+    }
+
+    public List<Shift> findByAccountIdAndBeginWorkBetweenWeek(Account id, LocalDateTime begin)
+    {
+        LocalDateTime beginWork = begin.toLocalDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay();
+        LocalDateTime endWork = begin.toLocalDate().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).atTime(LocalTime.MAX);
+        List<Shift> shifts = shiftRepository.findByAccountIdAndBeginWorkBetween(id, beginWork, endWork);
+        return shifts;
+    }
+    
     public ShiftListResponse shiftToShiftListResponse(Shift shift)
     {
         ShiftListResponse shiftListResponse = new ShiftListResponse();
@@ -68,6 +110,13 @@ public class ShiftService
         shiftListResponse.setOverWork(shift.getOverWork());
         return shiftListResponse;
     }
+
+    public String save(Shift shift)
+    {
+        shiftRepository.save(shift);
+        return "ok";
+    }
+
     @Transactional
     public void resetAllTables()
     {
