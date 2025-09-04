@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
@@ -14,6 +13,7 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Shift;
@@ -33,6 +33,19 @@ public class ShiftService
     public List<Shift> findByAccountId(Account id)
     {
         return shiftRepository.findByAccountId(id);
+    }
+    public Shift findByAccountIdAndShiftId(Account account, Long id)
+    {
+        return shiftRepository.findByAccountIdAndShiftId(account, id)
+            .orElseThrow(() -> new RuntimeException("シフトが見つかりません"));
+    }
+
+    public Shift findByAccountIdAndShiftId(Long accountId, Long id)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        return shiftRepository.findByAccountIdAndShiftId(account, id)
+            .orElseThrow(() -> new RuntimeException("シフトが見つかりません"));
     }
     // 一月ごとの取得
     public List<Shift> findByAccountIdAndBeginWorkBetween(Long id, int year, int month)
@@ -98,12 +111,13 @@ public class ShiftService
     
     public ShiftListResponse shiftToShiftListResponse(Shift shift)
     {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         ShiftListResponse shiftListResponse = new ShiftListResponse();
         shiftListResponse.setId(shift.getShiftId());
-        shiftListResponse.setBeginWork(shift.getBeginWork().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + shift.getBeginWork().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-        shiftListResponse.setEndWork(shift.getEndWork().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + shift.getEndWork().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-        shiftListResponse.setBeginBreak(shift.getBeginBreak().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + shift.getBeginBreak().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-        shiftListResponse.setEndBreak(shift.getEndBreak().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + shift.getEndBreak().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        shiftListResponse.setBeginWork(localDateTimeToString.localDateTimeToString(shift.getBeginWork()));
+        shiftListResponse.setEndWork(localDateTimeToString.localDateTimeToString(shift.getEndWork()));
+        shiftListResponse.setBeginBreak(localDateTimeToString.localDateTimeToString(shift.getBeginBreak()));
+        shiftListResponse.setEndBreak(localDateTimeToString.localDateTimeToString(shift.getEndBreak()));
         shiftListResponse.setLateness(shift.getLateness());
         shiftListResponse.setLeaveEarly(shift.getLeaveEarly());
         shiftListResponse.setOuting(shift.getOuting());

@@ -37,6 +37,20 @@ public class ShiftRequestService
         return shiftRequestRepository.findByAccountIdAndBeginWorkBetween(accountId, beginWork, endWork);
     }
 
+    public ShiftRequest findByAccountIdAndShiftRequestId(Account account, Long id)
+    {
+        return shiftRequestRepository.findByAccountIdAndShiftRequestId(account, id)
+            .orElseThrow(() -> new RuntimeException("シフト申請が見つかりません"));
+    }
+
+    public ShiftRequest findByAccountIdAndShiftRequestId(Long accountId, Long id)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        return shiftRequestRepository.findByAccountIdAndShiftRequestId(account, id)
+            .orElseThrow(() -> new RuntimeException("シフト申請が見つかりません"));
+    }
+
     public String save(ShiftRequest shiftRequest)
     {
         shiftRequestRepository.save(shiftRequest);

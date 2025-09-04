@@ -20,6 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 // import java.util.stream.Collectors;
+import java.util.Objects;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.springboot.Config;
 import com.example.springboot.dto.AllStyleListResponse;
+import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
@@ -495,5 +497,68 @@ public class TestMockMvcController
         )
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void shiftRequestDetilSuccess() throws Exception
+    {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        Account generalAccount = new Account();
+        String generalAccountUsername = "testuser";
+        Long generalAccountId = 1L;
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Account adminAccount = new Account();
+        String adminAccountName = "かまどたかしろう";
+        Long adminAccountId = 2L;
+        adminAccount.setId(adminAccountId);
+        adminAccount.setName(adminAccountName);
+
+        ShiftRequest shiftRequest = new ShiftRequest();
+        Long shiftRequestId = 1L;
+        LocalDateTime beginWork = LocalDateTime.parse("2025/08/08/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endWork = LocalDateTime.parse("2025/08/08/12/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime beginBreak = LocalDateTime.parse("2025/08/13/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endBreak = LocalDateTime.parse("2025/08/08/18/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        String requestComment = "";
+        LocalDateTime requestDate = LocalDateTime.parse("2025/07/07/00/00/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        int requestStatus = 1;
+        LocalDateTime approvalTime = null;
+        String approverComment = null;
+        shiftRequest.setShiftRequestId(shiftRequestId);
+        shiftRequest.setAccountId(generalAccount);
+        shiftRequest.setBeginWork(beginWork);
+        shiftRequest.setEndWork(endWork);
+        shiftRequest.setBeginBreak(beginBreak);
+        shiftRequest.setEndBreak(endBreak);
+        shiftRequest.setRequestComment(requestComment);
+        shiftRequest.setRequestDate(requestDate);
+        shiftRequest.setRequestStatus(requestStatus);
+        shiftRequest.setApprover(adminAccount);
+        shiftRequest.setApproverComment(approverComment);
+        shiftRequest.setApprovalTime(approvalTime);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(shiftRequestService.findByAccountIdAndShiftRequestId(any(Account.class),anyLong())).thenReturn(shiftRequest);
+        mockMvc.perform(
+            get("/api/reach/requestdetil/shift")
+            .param("requestId","1")
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.beginWork").value(localDateTimeToString.localDateTimeToString(beginWork)))
+        .andExpect(jsonPath("$.endWork").value(localDateTimeToString.localDateTimeToString(endWork)))
+        .andExpect(jsonPath("$.beginBreak").value(localDateTimeToString.localDateTimeToString(beginBreak)))
+        .andExpect(jsonPath("$.endBreak").value(localDateTimeToString.localDateTimeToString(endBreak)))
+        .andExpect(jsonPath("$.requestComment").value(requestComment))
+        .andExpect(jsonPath("$.requestDate").value(localDateTimeToString.localDateTimeToString(requestDate)))
+        .andExpect(jsonPath("$.requestStatus").value(requestStatus))
+        .andExpect(jsonPath("$.approverId").value(adminAccountId.intValue()))
+        .andExpect(jsonPath("$.approverName").value(adminAccountName))
+        .andExpect(jsonPath("$.approverComment").value(approverComment))
+        .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : localDateTimeToString.localDateTimeToString(approvalTime)));
     }
 }

@@ -2,6 +2,7 @@ package com.example.springboot.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.servlet.http.HttpSession;
 
@@ -14,8 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.springboot.dto.AllStyleListResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
+import com.example.springboot.dto.response.RequestDetilShiftResponse;
 import com.example.springboot.dto.ArrayResponse;
 import com.example.springboot.dto.YearMonthParam;
+import com.example.springboot.dto.change.LocalDateTimeToString;
+import com.example.springboot.dto.input.RequestIdInput;
 import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
@@ -23,10 +27,12 @@ import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Department;
 import com.example.springboot.model.Role;
 import com.example.springboot.model.Shift;
+import com.example.springboot.model.ShiftRequest;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.RoleService;
+import com.example.springboot.service.ShiftRequestService;
 import com.example.springboot.service.ShiftService;
 import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
@@ -63,6 +69,9 @@ public class GetController
 
     @Autowired
     ShiftService shiftService;
+
+    @Autowired
+    ShiftRequestService shiftRequestService;
 
     @GetMapping("/reach/approverlist")
     public ArrayResponse<ApproverListResponse> returnApproverList(HttpSession session)
@@ -137,5 +146,42 @@ public class GetController
             shiftListResponse.add(shiftService.shiftToShiftListResponse(shift));
         }
         return new ArrayResponse(1, shiftListResponse, "shiftList");
+    }
+
+    @GetMapping("/reach/requestdetil/shift")
+    public RequestDetilShiftResponse returnShiftDetil(HttpSession session, RequestIdInput request)
+    {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        int status = 0;
+        // securityutilから名前を取得
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        // 認証情報がなければエラー
+        if(account.equals(null))
+        {
+            RequestDetilShiftResponse requestDetilShiftResponse = new RequestDetilShiftResponse();
+            status = 5;
+            requestDetilShiftResponse.setStatus(status);
+            return requestDetilShiftResponse;
+        }
+        // 名前から取得したアカウントとidで検索にかけ取得できれば返す取得できなければエラー
+        ShiftRequest shiftRequest = shiftRequestService.findByAccountIdAndShiftRequestId(account, request.getRequestId());
+        status = 1;
+        RequestDetilShiftResponse requestDetilShiftResponse = new RequestDetilShiftResponse
+        (
+            status,
+            localDateTimeToString.localDateTimeToString(shiftRequest.getBeginWork()),
+            localDateTimeToString.localDateTimeToString(shiftRequest.getEndWork()),
+            localDateTimeToString.localDateTimeToString(shiftRequest.getBeginBreak()),
+            localDateTimeToString.localDateTimeToString(shiftRequest.getEndBreak()),
+            shiftRequest.getRequestComment(),
+            localDateTimeToString.localDateTimeToString(shiftRequest.getRequestDate()),
+            shiftRequest.getRequestStatus(),
+            shiftRequest.getApprover().getId().intValue(),
+            shiftRequest.getApprover().getName(),
+            shiftRequest.getApproverComment(),
+            Objects.isNull(shiftRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(shiftRequest.getApprovalTime())
+        );
+        return requestDetilShiftResponse;
     }
 }
