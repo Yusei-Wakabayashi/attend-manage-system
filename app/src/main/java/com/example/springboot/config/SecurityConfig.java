@@ -25,9 +25,14 @@ public class SecurityConfig
                 new AntPathRequestMatcher("/api/send/logout"),
                 new AntPathRequestMatcher("/api/send/approverset"),
                 new AntPathRequestMatcher("/api/send/style"),
+                new AntPathRequestMatcher("/api/send/shift"),
                 new AntPathRequestMatcher("/api/reach/approverlist"),
                 new AntPathRequestMatcher("/api/reach/allstylelist"),
-                new AntPathRequestMatcher("/api/reach/accountinfo")
+                new AntPathRequestMatcher("/api/reach/accountinfo"),
+                new AntPathRequestMatcher("/api/reach/requestdetil/shift"),
+                new AntPathRequestMatcher("/dummy/reach/shiftlist"),
+                new AntPathRequestMatcher("/dymmy/reach/attendlist")
+
             )
             .permitAll()
         )
