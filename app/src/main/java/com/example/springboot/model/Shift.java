@@ -54,6 +54,8 @@ public class Shift extends BaseTimeEntity
     private Time overWork;
     @OneToMany(mappedBy = "shiftId", fetch = FetchType.LAZY)
     private List<ShiftChangeRequest> shiftChangeRequestFromShifts;
+    @OneToMany(mappedBy = "shiftId", fetch = FetchType.LAZY)
+    private List<StampRequest> stampRequestFromShifts;
     public Shift
     (
         Long shiftId, Account accountId, LocalDateTime beginWork, LocalDateTime endWork,

@@ -44,6 +44,7 @@ import com.example.springboot.model.Salt;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
 import com.example.springboot.model.ShiftRequest;
+import com.example.springboot.model.StampRequest;
 import com.example.springboot.model.Style;
 import com.example.springboot.model.StylePlace;
 import com.example.springboot.model.ApprovalSetting;
@@ -58,6 +59,7 @@ import com.example.springboot.service.RoleService;
 import com.example.springboot.service.ShiftChangeRequestService;
 import com.example.springboot.service.ShiftRequestService;
 import com.example.springboot.service.ShiftService;
+import com.example.springboot.service.StampRequestService;
 import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
 
@@ -102,6 +104,9 @@ public class TestMockMvcController
 
     @MockBean
     private ShiftChangeRequestService shiftChangeRequestService;
+
+    @MockBean
+    private StampRequestService stampRequestService;
 
     @Test
     void loginSuccess() throws Exception
@@ -568,7 +573,7 @@ public class TestMockMvcController
     }
 
     @Test
-    void shiftChangeRequest() throws Exception
+    void shiftChangeRequestDetilSuccess() throws Exception
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         Account generalAccount = new Account();
@@ -622,6 +627,7 @@ public class TestMockMvcController
         )
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.shiftId").value(shiftId))
         .andExpect(jsonPath("$.beginWork").value(localDateTimeToString.localDateTimeToString(beginWork)))
         .andExpect(jsonPath("$.endWork").value(localDateTimeToString.localDateTimeToString(endWork)))
         .andExpect(jsonPath("$.beginBreak").value(localDateTimeToString.localDateTimeToString(beginBreak)))
@@ -632,7 +638,75 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.approverId").value(adminAccountId))
         .andExpect(jsonPath("$.approverName").value(adminAccountName))
         .andExpect(jsonPath("$.approverComment").value(approverComment))
-        .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : localDateTimeToString.localDateTimeToString(approvalTime)))
-        .andExpect(jsonPath("$.shiftId").value(shiftId));
+        .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : localDateTimeToString.localDateTimeToString(approvalTime)));
     }
+    @Test
+    void stampRequestDetilSuccess() throws Exception
+    {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        Account generalAccount = new Account();
+        String generalAccountUsername = "testuser";
+        Long generalAccountId = 1L;
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Account adminAccount = new Account();
+        String adminAccountName = "かまどたかしろう";
+        Long adminAccountId = 2L;
+        adminAccount.setId(adminAccountId);
+        adminAccount.setName(adminAccountName);
+
+        Shift shift = new Shift();
+        Long shiftId = 1L;
+        shift.setShiftId(shiftId);
+
+        StampRequest stampRequest = new StampRequest();
+        Long shiftRequestId = 1L;
+        LocalDateTime beginWork = LocalDateTime.parse("2025/08/08/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endWork = LocalDateTime.parse("2025/08/08/12/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime beginBreak = LocalDateTime.parse("2025/08/13/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endBreak = LocalDateTime.parse("2025/08/08/18/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        String requestComment = "";
+        LocalDateTime requestDate = LocalDateTime.parse("2025/07/07/00/00/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        int requestStatus = 1;
+        LocalDateTime approvalTime = null;
+        String approverComment = null;
+        stampRequest.setShiftChangeId(shiftRequestId);
+        stampRequest.setAccountId(generalAccount);
+        stampRequest.setBeginWork(beginWork);
+        stampRequest.setEndWork(endWork);
+        stampRequest.setBeginBreak(beginBreak);
+        stampRequest.setEndBreak(endBreak);
+        stampRequest.setRequestComment(requestComment);
+        stampRequest.setRequestDate(requestDate);
+        stampRequest.setRequestStatus(requestStatus);
+        stampRequest.setApprover(adminAccount);
+        stampRequest.setApproverComment(approverComment);
+        stampRequest.setApprovalTime(approvalTime);
+        stampRequest.setShiftId(shift);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(stampRequestService.findByAccountIdAndStampId(any(Account.class),anyLong())).thenReturn(stampRequest);
+        mockMvc.perform(
+            get("/api/reach/requestdetil/stamp")
+            .param("requestId","1")
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.shiftId").value(shiftId))
+        .andExpect(jsonPath("$.beginWork").value(localDateTimeToString.localDateTimeToString(beginWork)))
+        .andExpect(jsonPath("$.endWork").value(localDateTimeToString.localDateTimeToString(endWork)))
+        .andExpect(jsonPath("$.beginBreak").value(localDateTimeToString.localDateTimeToString(beginBreak)))
+        .andExpect(jsonPath("$.endBreak").value(localDateTimeToString.localDateTimeToString(endBreak)))
+        .andExpect(jsonPath("$.requestComment").value(requestComment))
+        .andExpect(jsonPath("$.requestDate").value(localDateTimeToString.localDateTimeToString(requestDate)))
+        .andExpect(jsonPath("$.requestStatus").value(requestStatus))
+        .andExpect(jsonPath("$.approverId").value(adminAccountId))
+        .andExpect(jsonPath("$.approverName").value(adminAccountName))
+        .andExpect(jsonPath("$.approverComment").value(approverComment))
+        .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : localDateTimeToString.localDateTimeToString(approvalTime)));
+    }
+
 }

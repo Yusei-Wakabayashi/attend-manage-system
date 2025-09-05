@@ -17,6 +17,7 @@ import com.example.springboot.dto.AllStyleListResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.dto.response.RequestDetilShiftChangeResponse;
 import com.example.springboot.dto.response.RequestDetilShiftResponse;
+import com.example.springboot.dto.response.RequestDetilStampResponse;
 import com.example.springboot.dto.ArrayResponse;
 import com.example.springboot.dto.YearMonthParam;
 import com.example.springboot.dto.change.LocalDateTimeToString;
@@ -30,6 +31,7 @@ import com.example.springboot.model.Role;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
 import com.example.springboot.model.ShiftRequest;
+import com.example.springboot.model.StampRequest;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.DepartmentService;
@@ -37,6 +39,7 @@ import com.example.springboot.service.RoleService;
 import com.example.springboot.service.ShiftChangeRequestService;
 import com.example.springboot.service.ShiftRequestService;
 import com.example.springboot.service.ShiftService;
+import com.example.springboot.service.StampRequestService;
 import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
 import com.example.springboot.util.SecurityUtil;
@@ -72,6 +75,9 @@ public class GetController
 
     @Autowired
     ShiftChangeRequestService shiftChangeRequestService;
+
+    @Autowired
+    StampRequestService stampRequestService;
 
     @GetMapping("/reach/approverlist")
     public ArrayResponse<ApproverListResponse> returnApproverList(HttpSession session)
@@ -209,6 +215,7 @@ public class GetController
         }
         status = 1;
         requestDetilShiftChangeResponse.setStatus(status);
+        requestDetilShiftChangeResponse.setShiftId(shiftChangeRequest.getShiftId().getShiftId().intValue());
         requestDetilShiftChangeResponse.setBeginWork(localDateTimeToString.localDateTimeToString(shiftChangeRequest.getBeginWork()));
         requestDetilShiftChangeResponse.setEndWork(localDateTimeToString.localDateTimeToString(shiftChangeRequest.getEndWork()));
         requestDetilShiftChangeResponse.setBeginBreak(localDateTimeToString.localDateTimeToString(shiftChangeRequest.getBeginBreak()));
@@ -220,8 +227,48 @@ public class GetController
         requestDetilShiftChangeResponse.setApproverName(shiftChangeRequest.getApprover().getName());
         requestDetilShiftChangeResponse.setApproverComment(shiftChangeRequest.getApproverComment());
         requestDetilShiftChangeResponse.setApprovalTime(Objects.isNull(shiftChangeRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(shiftChangeRequest.getApprovalTime()));
-        requestDetilShiftChangeResponse.setShiftId(shiftChangeRequest.getShiftId().getShiftId().intValue());
 
         return requestDetilShiftChangeResponse;
+    }
+
+    @GetMapping("/reach/requestdetil/stamp")
+    public RequestDetilStampResponse returnStampDetil(HttpSession session, RequestIdInput request)
+    {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        int status = 0;
+        // securityutilから名前を取得
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        RequestDetilStampResponse requestDetilStampResponse = new RequestDetilStampResponse();
+        // 認証情報がなければエラー
+        if(account.equals(null))
+        {
+            status = 5;
+            requestDetilStampResponse.setStatus(status);
+            return requestDetilStampResponse;
+        }
+        StampRequest stampRequest = stampRequestService.findByAccountIdAndStampId(account, request.getRequestId());
+        // 名前から取得したアカウントとidで検索にかけ取得できれば返す取得できなければエラー
+        if(stampRequest.equals(null))
+        {
+            status = 5;
+            requestDetilStampResponse.setStatus(status);
+            return requestDetilStampResponse;
+        }
+        status = 1;
+        requestDetilStampResponse.setStatus(status);
+        requestDetilStampResponse.setShiftId(stampRequest.getShiftId().getShiftId().intValue());
+        requestDetilStampResponse.setBeginWork(localDateTimeToString.localDateTimeToString(stampRequest.getBeginWork()));
+        requestDetilStampResponse.setEndWork(localDateTimeToString.localDateTimeToString(stampRequest.getEndWork()));
+        requestDetilStampResponse.setBeginBreak(localDateTimeToString.localDateTimeToString(stampRequest.getBeginBreak()));
+        requestDetilStampResponse.setEndBreak(localDateTimeToString.localDateTimeToString(stampRequest.getEndBreak()));
+        requestDetilStampResponse.setRequestComment(stampRequest.getRequestComment());
+        requestDetilStampResponse.setRequestDate(localDateTimeToString.localDateTimeToString(stampRequest.getRequestDate()));
+        requestDetilStampResponse.setRequestStatus(stampRequest.getRequestStatus());
+        requestDetilStampResponse.setApproverId(stampRequest.getApprover().getId().intValue());
+        requestDetilStampResponse.setApproverName(stampRequest.getApprover().getName());
+        requestDetilStampResponse.setApproverComment(stampRequest.getApproverComment());
+        requestDetilStampResponse.setApprovalTime(Objects.isNull(stampRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(stampRequest.getApprovalTime()));
+        return requestDetilStampResponse;
     }
 }
