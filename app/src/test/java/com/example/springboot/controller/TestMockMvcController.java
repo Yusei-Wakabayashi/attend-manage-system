@@ -42,6 +42,7 @@ import com.example.springboot.model.AccountApprover;
 import com.example.springboot.model.Role;
 import com.example.springboot.model.Salt;
 import com.example.springboot.model.Shift;
+import com.example.springboot.model.ShiftChangeRequest;
 import com.example.springboot.model.ShiftRequest;
 import com.example.springboot.model.Style;
 import com.example.springboot.model.StylePlace;
@@ -54,6 +55,7 @@ import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.LegalTimeService;
 import com.example.springboot.service.RoleService;
+import com.example.springboot.service.ShiftChangeRequestService;
 import com.example.springboot.service.ShiftRequestService;
 import com.example.springboot.service.ShiftService;
 import com.example.springboot.service.StylePlaceService;
@@ -97,6 +99,9 @@ public class TestMockMvcController
 
     @MockBean
     private LegalTimeService legalTimeService;
+
+    @MockBean
+    private ShiftChangeRequestService shiftChangeRequestService;
 
     @Test
     void loginSuccess() throws Exception
@@ -560,5 +565,74 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.approverName").value(adminAccountName))
         .andExpect(jsonPath("$.approverComment").value(approverComment))
         .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : localDateTimeToString.localDateTimeToString(approvalTime)));
+    }
+
+    @Test
+    void shiftChangeRequest() throws Exception
+    {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        Account generalAccount = new Account();
+        String generalAccountUsername = "testuser";
+        Long generalAccountId = 1L;
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Account adminAccount = new Account();
+        String adminAccountName = "かまどたかしろう";
+        Long adminAccountId = 2L;
+        adminAccount.setId(adminAccountId);
+        adminAccount.setName(adminAccountName);
+
+        Shift shift = new Shift();
+        Long shiftId = 1L;
+        shift.setShiftId(shiftId);
+
+        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
+        Long shiftRequestId = 1L;
+        LocalDateTime beginWork = LocalDateTime.parse("2025/08/08/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endWork = LocalDateTime.parse("2025/08/08/12/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime beginBreak = LocalDateTime.parse("2025/08/13/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endBreak = LocalDateTime.parse("2025/08/08/18/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        String requestComment = "";
+        LocalDateTime requestDate = LocalDateTime.parse("2025/07/07/00/00/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        int requestStatus = 1;
+        LocalDateTime approvalTime = null;
+        String approverComment = null;
+        shiftChangeRequest.setShiftChangeId(shiftRequestId);
+        shiftChangeRequest.setAccountId(generalAccount);
+        shiftChangeRequest.setBeginWork(beginWork);
+        shiftChangeRequest.setEndWork(endWork);
+        shiftChangeRequest.setBeginBreak(beginBreak);
+        shiftChangeRequest.setEndBreak(endBreak);
+        shiftChangeRequest.setRequestComment(requestComment);
+        shiftChangeRequest.setRequestDate(requestDate);
+        shiftChangeRequest.setRequestStatus(requestStatus);
+        shiftChangeRequest.setApprover(adminAccount);
+        shiftChangeRequest.setApproverComment(approverComment);
+        shiftChangeRequest.setApprovalTime(approvalTime);
+        shiftChangeRequest.setShiftId(shift);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(shiftChangeRequestService.findByAccountIdAndShiftChangeRequestId(any(Account.class),anyLong())).thenReturn(shiftChangeRequest);
+        mockMvc.perform(
+            get("/api/reach/requestdetil/changetime")
+            .param("requestId","1")
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.beginWork").value(localDateTimeToString.localDateTimeToString(beginWork)))
+        .andExpect(jsonPath("$.endWork").value(localDateTimeToString.localDateTimeToString(endWork)))
+        .andExpect(jsonPath("$.beginBreak").value(localDateTimeToString.localDateTimeToString(beginBreak)))
+        .andExpect(jsonPath("$.endBreak").value(localDateTimeToString.localDateTimeToString(endBreak)))
+        .andExpect(jsonPath("$.requestComment").value(requestComment))
+        .andExpect(jsonPath("$.requestDate").value(localDateTimeToString.localDateTimeToString(requestDate)))
+        .andExpect(jsonPath("$.requestStatus").value(requestStatus))
+        .andExpect(jsonPath("$.approverId").value(adminAccountId))
+        .andExpect(jsonPath("$.approverName").value(adminAccountName))
+        .andExpect(jsonPath("$.approverComment").value(approverComment))
+        .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : localDateTimeToString.localDateTimeToString(approvalTime)))
+        .andExpect(jsonPath("$.shiftId").value(shiftId));
     }
 }

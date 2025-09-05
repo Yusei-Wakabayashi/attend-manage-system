@@ -3,6 +3,7 @@ package com.example.springboot.model;
 import java.sql.Time;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -12,18 +13,21 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.example.springboot.BaseTimeEntity;
+
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.AllArgsConstructor;
 
 @Getter
 @Setter
 @Entity
-@AllArgsConstructor
+@NoArgsConstructor
 @Table(name="shift_lists")
-public class Shift
+public class Shift extends BaseTimeEntity
 {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -48,10 +52,25 @@ public class Shift
     private Time outing;
     @Column(name = "over_work", nullable = false)
     private Time overWork;
-
-    public Shift()
+    @OneToMany(mappedBy = "shiftId", fetch = FetchType.LAZY)
+    private List<ShiftChangeRequest> shiftChangeRequestFromShifts;
+    public Shift
+    (
+        Long shiftId, Account accountId, LocalDateTime beginWork, LocalDateTime endWork,
+        LocalDateTime beginBreak, LocalDateTime endBreak, Time lateness, Time leaveEarly,
+        Time outing, Time overWork
+    )
     {
-
+        this.shiftId = shiftId;
+        this.accountId = accountId;
+        this.beginWork = beginWork;
+        this.endWork = endWork;
+        this.beginBreak = beginBreak;
+        this.endBreak = endBreak;
+        this.lateness = lateness;
+        this.leaveEarly = leaveEarly;
+        this.outing = outing;
+        this.overWork = overWork;
     }
 
     public Shift processLine(String line)
