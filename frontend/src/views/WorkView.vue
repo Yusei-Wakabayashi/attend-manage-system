@@ -46,7 +46,7 @@ const attendanceData = {
 const getShiftData = async () => {
   try {
     const res = await axios.get(
-      `http://localhost:8080/api/reach/shiftlist?year=${year.value}&month=${month.value + 1}`
+      `/dummy/reach/shiftlist?year=${year.value}&month=${month.value + 1}`
     );
 
     const rawList = res.data.shiftlist;
