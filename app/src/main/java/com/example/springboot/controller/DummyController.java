@@ -132,6 +132,6 @@ public class DummyController
             }
         }
 
-        return new ArrayResponse<>(1, attendlist, "shiftlist");
+        return new ArrayResponse<>(1, attendlist, "attendlist");
     }
 }
