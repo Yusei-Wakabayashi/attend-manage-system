@@ -26,7 +26,7 @@ public class StampRequest
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(name = "stamp_id", nullable = false)
-    private Long shiftChangeId;
+    private Long stampId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     private Account accountId;

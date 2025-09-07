@@ -15,14 +15,14 @@ public class ShiftChangeRequestService
 
     public ShiftChangeRequest findByAccountIdAndShiftChangeRequestId(Account account, Long id)
     {
-        return shiftChangeRequestRepository.findByAccountIdAndShiftChangeRequest(account, id)
+        return shiftChangeRequestRepository.findByAccountIdAndShiftChangeId(account, id)
             .orElseThrow(() -> new RuntimeException("シフト時間変更申請が見つかりません"));
     }
     public ShiftChangeRequest findByAccountIdAndShiftChangeRequestId(Long accountId, Long id)
     {
         Account account = new Account();
         account.setId(accountId);
-        return shiftChangeRequestRepository.findByAccountIdAndShiftChangeRequest(account, id)
+        return shiftChangeRequestRepository.findByAccountIdAndShiftChangeId(account, id)
             .orElseThrow(() -> new RuntimeException("シフト時間変更申請が見つかりません"));
     }
 }

@@ -9,5 +9,5 @@ import com.example.springboot.model.ShiftChangeRequest;
 
 public interface ShiftChangeRequestRepository extends JpaRepository<ShiftChangeRequest, Long>
 {
-    Optional<ShiftChangeRequest> findByAccountIdAndShiftChangeRequest(Account accountId, Long id);
+    Optional<ShiftChangeRequest> findByAccountIdAndShiftChangeId(Account accountId, Long id);
 }
