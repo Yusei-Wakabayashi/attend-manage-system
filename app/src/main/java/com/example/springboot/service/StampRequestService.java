@@ -1,14 +1,13 @@
 package com.example.springboot.service;
 
-import javax.persistence.Entity;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.example.springboot.model.Account;
 import com.example.springboot.model.StampRequest;
 import com.example.springboot.repository.StampRequestRepository;
 
-@Entity
+@Service
 public class StampRequestService
 {
     @Autowired

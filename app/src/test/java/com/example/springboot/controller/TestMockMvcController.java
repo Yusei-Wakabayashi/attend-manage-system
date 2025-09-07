@@ -671,7 +671,7 @@ public class TestMockMvcController
         int requestStatus = 1;
         LocalDateTime approvalTime = null;
         String approverComment = null;
-        stampRequest.setShiftChangeId(shiftRequestId);
+        stampRequest.setStampId(shiftRequestId);
         stampRequest.setAccountId(generalAccount);
         stampRequest.setBeginWork(beginWork);
         stampRequest.setEndWork(endWork);
