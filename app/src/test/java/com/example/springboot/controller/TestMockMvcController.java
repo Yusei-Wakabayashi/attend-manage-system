@@ -36,6 +36,7 @@ import com.example.springboot.Config;
 import com.example.springboot.dto.AllStyleListResponse;
 import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.response.ApproverListResponse;
+import com.example.springboot.dto.response.AttendListResponse;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
@@ -48,11 +49,13 @@ import com.example.springboot.model.StampRequest;
 import com.example.springboot.model.Style;
 import com.example.springboot.model.StylePlace;
 import com.example.springboot.model.ApprovalSetting;
+import com.example.springboot.model.Attend;
 import com.example.springboot.model.Department;
 import com.example.springboot.model.LegalTime;
 import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
+import com.example.springboot.service.AttendService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.LegalTimeService;
 import com.example.springboot.service.RoleService;
@@ -107,6 +110,9 @@ public class TestMockMvcController
 
     @MockBean
     private StampRequestService stampRequestService;
+
+    @MockBean
+    private AttendService attendService;
 
     @Test
     void loginSuccess() throws Exception
@@ -373,6 +379,7 @@ public class TestMockMvcController
     @Test
     void shiftListSuccess() throws Exception
     {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         Long generalAccountId = 1L;
         String generalAccountName = "testuser";
         String time = "00:00:00";
@@ -397,10 +404,10 @@ public class TestMockMvcController
         ShiftListResponse generalShiftListResponse = new ShiftListResponse
         (
             generalShiftId,
-            generalShiftBeginWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalShiftBeginWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
-            generalShiftEndWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalShiftEndWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
-            generalShiftBeginBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalShiftBeginBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
-            generalShiftEndBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalShiftEndBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            localDateTimeToString.localDateTimeToString(generalShiftBeginWork),
+            localDateTimeToString.localDateTimeToString(generalShiftEndWork),
+            localDateTimeToString.localDateTimeToString(generalShiftBeginBreak),
+            localDateTimeToString.localDateTimeToString(generalShiftEndBreak),
             generalShiftLateness,
             generalShiftLeaveEarly,
             generalShiftOuting,
@@ -408,13 +415,11 @@ public class TestMockMvcController
         );
         List<Shift> generalShifts = new ArrayList();
         generalShifts.add(generalShift);
-        List<ShiftListResponse> generalShiftList = new ArrayList();
-        generalShiftList.add(shiftService.shiftToShiftListResponse(generalShift));
 
-        when(accountService.getAccountByUsername(any())).thenReturn(generalAccount);
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
         // when(shiftService.findByAccountId(anyLong())).thenReturn(generalShifts);
         when(shiftService.findByAccountIdAndBeginWorkBetween(anyLong(), anyInt(), anyInt())).thenReturn(generalShifts);
-        when(shiftService.shiftToShiftListResponse(any())).thenReturn(generalShiftListResponse);
+        when(shiftService.shiftToShiftListResponse(any(Shift.class))).thenReturn(generalShiftListResponse);
         mockMvc.perform(
             get("/api/reach/shiftlist")
             .param("year", "2025")
@@ -709,4 +714,157 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : localDateTimeToString.localDateTimeToString(approvalTime)));
     }
 
+    @Test
+    void shiftChangeRequestSuccess() throws Exception
+    {
+        String generalBeginWork = "2025/09/02T09:00:00";
+        String generalBeginBreak = "2025/09/02T12:00:00";
+        String generalEndBreak = "2025/09/02T13:00:00";
+        String generalEndWork = "2025/09/02T18:00:00";
+        String generalRequestComment = "";
+        String generalRequestDate = "2025/08/02T00:00:11";
+        int generalShiftId = 1;
+        String json = String.format
+        ("""
+            {
+                "beginWork": "%s",
+                "beginBreak": "%s",
+                "endBreak": "%s",
+                "endWork": "%s",
+                "requestComment": "%s",
+                "requestDate": "%s",
+                "shiftId": "%s"
+            }
+        """,
+        generalBeginWork, generalBeginBreak, generalEndBreak, generalEndWork, generalRequestComment, generalRequestDate, generalShiftId
+        );
+
+        LegalTime legalTime = new LegalTime();
+        Long legalTimeId = 1L;
+        LocalDateTime legalTimeBegin = LocalDateTime.parse(LocalDateTime.parse("2025/08/08T21:00:00",DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        Time legalTimeScheduleWorkTime = Time.valueOf("08:00:00");
+        Time legalTimeWeeklyWorkTime = Time.valueOf("40:00:00");
+        Time legalTimeMonthlyOverWork = Time.valueOf("45:00:00");
+        Time legalTimeYearOverWork = Time.valueOf("360:00:00");
+        Time legalTimeMaxOverWorkTime = Time.valueOf("100:00:00");
+        Time legalTimeMonthlyOverWorkAverage = Time.valueOf("80:00:00");
+        Time legalTimeLateNightWorkTimeBegin = Time.valueOf("22:00:00");
+        Time legalTimeLateNightWorkTimeEnd = Time.valueOf("05:00:00");
+        Time legalTimeScheduleBreakTime = Time.valueOf("01:00:00");
+
+        legalTime.setLegalTimeId(legalTimeId);
+        legalTime.setBegin(legalTimeBegin);
+        legalTime.setScheduleWorkTime(legalTimeScheduleWorkTime);
+        legalTime.setWeeklyWorkTime(legalTimeWeeklyWorkTime);
+        legalTime.setMonthlyOverWorkTime(legalTimeMonthlyOverWork);
+        legalTime.setYearOverWorkTime(legalTimeYearOverWork);
+        legalTime.setMaxOverWorkTime(legalTimeMaxOverWorkTime);
+        legalTime.setMonthlyOverWorkAverage(legalTimeMonthlyOverWorkAverage);
+        legalTime.setLateNightWorkBegin(legalTimeLateNightWorkTimeBegin);
+        legalTime.setLateNightWorkEnd(legalTimeLateNightWorkTimeEnd);
+        legalTime.setScheduleBreakTime(legalTimeScheduleBreakTime);
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 1L;
+        String generalAccountName = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setName(generalAccountName);
+
+        Shift shift = new Shift();
+        Long shiftId = 1L;
+        shift.setShiftId(shiftId);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(shift);
+        when(legalTimeService.getFirstByOrderByBeginDesc()).thenReturn(legalTime);
+        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn("ok");
+        mockMvc.perform(
+            post("/api/send/changetime")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountName))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+    @Test
+    void attendListSuccess() throws Exception
+    {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        Long generalAccountId = 1L;
+        String generalAccountName = "testuser";
+        String time = "00:00:00";
+        String workTime = "08:00:00";
+        String breakTime = "01:00:00";
+        Long generalAttendId = 1L;
+        LocalDateTime generalAttendBeginWork = LocalDateTime.parse("2025/06/21/08/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime generalAttendEndWork = LocalDateTime.parse("2025/06/21/17/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime generalAttendBeginBreak = LocalDateTime.parse("2025/06/21/11/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime generalAttendEndBreak = LocalDateTime.parse("2025/06/21/12/30/30",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        Time generalAttendLateness = Time.valueOf(time);
+        Time generalAttendLeaveEarly = Time.valueOf(time);
+        Time generalAttendOuting = Time.valueOf(time);
+        Time generalAttendWorkTime = Time.valueOf(workTime);
+        Time generalAttendBreakTime = Time.valueOf(breakTime);
+        Time generalAttendOverWork = Time.valueOf(time);
+        Time generalAttendHolidayWork = Time.valueOf(time);
+        Time generalAttendLateNightWork = Time.valueOf(time);
+
+        Account generalAccount = new Account();
+        generalAccount.setId(generalAccountId);
+        generalAccount.setName(generalAccountName);
+
+        Attend generalAttend = new Attend
+        (
+            generalAttendId, generalAccount, generalAttendBeginWork,
+            generalAttendEndWork, generalAttendBeginBreak, generalAttendEndBreak,
+            generalAttendLateness, generalAttendLeaveEarly, generalAttendOuting, generalAttendWorkTime,
+            generalAttendBreakTime, generalAttendOverWork, generalAttendHolidayWork, generalAttendLateNightWork
+        );
+
+        AttendListResponse generalAttendListResponse = new AttendListResponse(
+            generalAttendId,
+            localDateTimeToString.localDateTimeToString(generalAttendBeginWork),
+            localDateTimeToString.localDateTimeToString(generalAttendEndWork),
+            localDateTimeToString.localDateTimeToString(generalAttendBeginBreak),
+            localDateTimeToString.localDateTimeToString(generalAttendEndBreak),
+            generalAttendWorkTime,
+            generalAttendBreakTime,
+            generalAttendLateness,
+            generalAttendLeaveEarly,
+            generalAttendOuting,
+            generalAttendOverWork,
+            generalAttendHolidayWork,
+            generalAttendLateNightWork
+        );
+
+        List<Attend> generalAttends = new ArrayList();
+        generalAttends.add(generalAttend);
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(attendService.findByAccountIdAndBeginWorkBetween(anyLong(), anyInt(), anyInt())).thenReturn(generalAttends);
+        when(attendService.attendToAttendListResponse(any(Attend.class))).thenReturn(generalAttendListResponse);
+        mockMvc.perform(
+            get("/api/reach/attendlist")
+            .param("year", "2025")
+            .param("month", "6")
+            .with(csrf())
+            .with(user(generalAccountName))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.attendList[0].id").value(generalAttendListResponse.getId()))
+        .andExpect(jsonPath("$.attendList[0].beginWork").value(generalAttendListResponse.getBeginWork()))
+        .andExpect(jsonPath("$.attendList[0].endWork").value(generalAttendListResponse.getEndWork()))
+        .andExpect(jsonPath("$.attendList[0].beginBreak").value(generalAttendListResponse.getBeginBreak()))
+        .andExpect(jsonPath("$.attendList[0].endBreak").value(generalAttendListResponse.getEndBreak()))
+        .andExpect(jsonPath("$.attendList[0].workTime").value(String.valueOf(generalAttendListResponse.getWorkTime())))
+        .andExpect(jsonPath("$.attendList[0].breakTime").value(String.valueOf(generalAttendListResponse.getBreakTime())))
+        .andExpect(jsonPath("$.attendList[0].lateness").value(String.valueOf(generalAttendListResponse.getLateness())))
+        .andExpect(jsonPath("$.attendList[0].leaveEarly").value(String.valueOf(generalAttendListResponse.getLeaveEarly())))
+        .andExpect(jsonPath("$.attendList[0].outing").value(String.valueOf(generalAttendListResponse.getOuting())))
+        .andExpect(jsonPath("$.attendList[0].overWork").value(String.valueOf(generalAttendListResponse.getOverWork())))
+        .andExpect(jsonPath("$.attendList[0].holidayWork").value(String.valueOf(generalAttendListResponse.getHolidayWork())))
+        .andExpect(jsonPath("$.attendList[0].lateNightWork").value(String.valueOf(generalAttendListResponse.getLateNightWork())));
+    }
 }

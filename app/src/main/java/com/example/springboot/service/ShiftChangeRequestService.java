@@ -1,5 +1,7 @@
 package com.example.springboot.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,10 @@ public class ShiftChangeRequestService
     @Autowired
     private ShiftChangeRequestRepository shiftChangeRequestRepository;
 
+    public List<ShiftChangeRequest> getAllShiftChangeRequest()
+    {
+        return shiftChangeRequestRepository.findAll();
+    }
     public ShiftChangeRequest findByAccountIdAndShiftChangeRequestId(Account account, Long id)
     {
         return shiftChangeRequestRepository.findByAccountIdAndShiftChangeId(account, id)
@@ -24,5 +30,11 @@ public class ShiftChangeRequestService
         account.setId(accountId);
         return shiftChangeRequestRepository.findByAccountIdAndShiftChangeId(account, id)
             .orElseThrow(() -> new RuntimeException("シフト時間変更申請が見つかりません"));
+    }
+
+    public String save(ShiftChangeRequest shiftChangeRequest)
+    {
+        shiftChangeRequestRepository.save(shiftChangeRequest);
+        return "ok";
     }
 }

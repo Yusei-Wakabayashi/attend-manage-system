@@ -1,12 +1,16 @@
-package com.example.springboot.dto;
+package com.example.springboot.dto.response;
 
 import java.sql.Time;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class AttendListResponse
 {
     private Long id;
@@ -20,10 +24,6 @@ public class AttendListResponse
     private Time leaveEarly;
     private Time outing;
     private Time overWork;
-    private Time holidayTime;
+    private Time holidayWork;
     private Time lateNightWork;
-    public AttendListResponse ()
-    {
-
-    }
 }

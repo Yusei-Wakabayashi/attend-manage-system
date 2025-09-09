@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 @RestController
 @SpringBootApplication
 @RequestMapping
-public class MessageController {
+public class MessageController
+{
     @CrossOrigin
     @GetMapping("/api/message")
     public String getMessage() {

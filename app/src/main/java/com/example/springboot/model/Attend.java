@@ -15,11 +15,13 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
 @Table(name="attendance_lists")
 public class Attend {
     @Id
@@ -54,9 +56,27 @@ public class Attend {
     @Column(name = "late_night_work", nullable = false)
     private Time lateNightWork;
     // コンストラクタ定義
-    public Attend()
+    public Attend
+    (
+        Long attendanceId, Account accountId, LocalDateTime beginWork, LocalDateTime endWork,
+        LocalDateTime beginBreak, LocalDateTime endBreak, Time lateness, Time leaveEarly,
+        Time outing, Time workTime, Time breakTime, Time overWork, Time holidayWork, Time lateNightWork
+    )
     {
-        
+        this.attendanceId = attendanceId;
+        this.accountId = accountId;
+        this.beginWork = beginWork;
+        this.endWork = endWork;
+        this.beginBreak = beginBreak;
+        this.endBreak = endBreak;
+        this.lateness = lateness;
+        this.leaveEarly = leaveEarly;
+        this.outing = outing;
+        this.workTime = workTime;
+        this.breakTime = breakTime;
+        this.overWork = overWork;
+        this.holidayWork = holidayWork;
+        this.lateNightWork = lateNightWork;
     }
 
     public Attend processLine(String line)

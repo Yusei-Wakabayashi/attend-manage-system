@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.springboot.dto.ArrayResponse;
-import com.example.springboot.dto.AttendListResponse;
+import com.example.springboot.dto.response.AttendListResponse;
 import com.example.springboot.dto.YearMonthParam;
 import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.response.ShiftListResponse;
@@ -126,7 +126,7 @@ public class DummyController
                 attendListResponse.setLeaveEarly(new Attend().processLine(line).getLeaveEarly());
                 attendListResponse.setOuting(new Attend().processLine(line).getOuting());
                 attendListResponse.setOverWork(new Attend().processLine(line).getOverWork());
-                attendListResponse.setHolidayTime(new Attend().processLine(line).getHolidayWork());
+                attendListResponse.setHolidayWork(new Attend().processLine(line).getHolidayWork());
                 attendListResponse.setLateNightWork(new Attend().processLine(line).getLateNightWork());
                 attendlist.add(attendListResponse);
             }
