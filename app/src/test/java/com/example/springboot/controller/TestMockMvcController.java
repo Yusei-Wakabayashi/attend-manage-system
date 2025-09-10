@@ -48,6 +48,8 @@ import com.example.springboot.model.ShiftRequest;
 import com.example.springboot.model.StampRequest;
 import com.example.springboot.model.Style;
 import com.example.springboot.model.StylePlace;
+import com.example.springboot.model.VacationRequest;
+import com.example.springboot.model.VacationType;
 import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Attend;
 import com.example.springboot.model.Department;
@@ -65,6 +67,7 @@ import com.example.springboot.service.ShiftService;
 import com.example.springboot.service.StampRequestService;
 import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
+import com.example.springboot.service.VacationRequestService;
 
 @ContextConfiguration(classes = Config.class)
 @WebMvcTest({PostController.class,GetController.class})
@@ -113,6 +116,9 @@ public class TestMockMvcController
 
     @MockBean
     private AttendService attendService;
+
+    @MockBean
+    private VacationRequestService vacationRequestService;
 
     @Test
     void loginSuccess() throws Exception
@@ -186,7 +192,7 @@ public class TestMockMvcController
         adminAccount.setUsername(adminAccountName);
         accounts.add(adminAccount);
         ApproverListResponse approverListResponse = new ApproverListResponse(adminAccountId, adminAccountName, adminDepartmentName, adminRoleName);
-        List<ApproverListResponse> approverListResponses = new ArrayList();
+        List<ApproverListResponse> approverListResponses = new ArrayList<ApproverListResponse>();
         approverListResponses.add(approverListResponse);
 
         when(accountService.getAccountByUsername(generalAccountName)).thenReturn(generalAccount);
@@ -261,7 +267,7 @@ public class TestMockMvcController
         Long homeStylePlaceId = 2L;
         String workStylePlaceName = "work";
         String homeStylePlaceName = "home";
-        List<AllStyleListResponse> styleListResponse = new ArrayList();
+        List<AllStyleListResponse> styleListResponse = new ArrayList<AllStyleListResponse>();
         AllStyleListResponse styleTypeWork = new AllStyleListResponse();
         AllStyleListResponse styleTypeHome = new AllStyleListResponse();
         styleTypeWork.setId(workStylePlaceId);
@@ -358,7 +364,7 @@ public class TestMockMvcController
         account.setRoleId(role);
         account.setDepartmentId(department);
 
-        List<ApprovalSetting> approvalSettings = new ArrayList();
+        List<ApprovalSetting> approvalSettings = new ArrayList<ApprovalSetting>();
         when(accountService.getAccountByUsername(any())).thenReturn(account);
         when(roleService.getRoleById(any())).thenReturn(role);
         when(departmentService.getDepartmentById(any())).thenReturn(department);
@@ -413,7 +419,7 @@ public class TestMockMvcController
             generalShiftOuting,
             generalShiftOverWork
         );
-        List<Shift> generalShifts = new ArrayList();
+        List<Shift> generalShifts = new ArrayList<Shift>();
         generalShifts.add(generalShift);
 
         when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
@@ -494,8 +500,8 @@ public class TestMockMvcController
         generalAccount.setId(generalAccountId);
         generalAccount.setName(generalAccountName);
 
-        List<Shift> shifts = new ArrayList();
-        List<ShiftRequest> shiftRequests = new ArrayList();
+        List<Shift> shifts = new ArrayList<Shift>();
+        List<ShiftRequest> shiftRequests = new ArrayList<ShiftRequest>();
 
         when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftService.findByAccountIdAndDayBeginWorkBetween(any(Account.class), any(LocalDateTime.class))).thenReturn(shifts);
@@ -598,7 +604,7 @@ public class TestMockMvcController
         shift.setShiftId(shiftId);
 
         ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
-        Long shiftRequestId = 1L;
+        Long shiftChangeRequestId = 1L;
         LocalDateTime beginWork = LocalDateTime.parse("2025/08/08/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
         LocalDateTime endWork = LocalDateTime.parse("2025/08/08/12/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
         LocalDateTime beginBreak = LocalDateTime.parse("2025/08/13/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
@@ -608,7 +614,7 @@ public class TestMockMvcController
         int requestStatus = 1;
         LocalDateTime approvalTime = null;
         String approverComment = null;
-        shiftChangeRequest.setShiftChangeId(shiftRequestId);
+        shiftChangeRequest.setShiftChangeId(shiftChangeRequestId);
         shiftChangeRequest.setAccountId(generalAccount);
         shiftChangeRequest.setBeginWork(beginWork);
         shiftChangeRequest.setEndWork(endWork);
@@ -666,7 +672,7 @@ public class TestMockMvcController
         shift.setShiftId(shiftId);
 
         StampRequest stampRequest = new StampRequest();
-        Long shiftRequestId = 1L;
+        Long stampId = 1L;
         LocalDateTime beginWork = LocalDateTime.parse("2025/08/08/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
         LocalDateTime endWork = LocalDateTime.parse("2025/08/08/12/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
         LocalDateTime beginBreak = LocalDateTime.parse("2025/08/13/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
@@ -676,7 +682,7 @@ public class TestMockMvcController
         int requestStatus = 1;
         LocalDateTime approvalTime = null;
         String approverComment = null;
-        stampRequest.setStampId(shiftRequestId);
+        stampRequest.setStampId(stampId);
         stampRequest.setAccountId(generalAccount);
         stampRequest.setBeginWork(beginWork);
         stampRequest.setEndWork(endWork);
@@ -839,7 +845,7 @@ public class TestMockMvcController
             generalAttendLateNightWork
         );
 
-        List<Attend> generalAttends = new ArrayList();
+        List<Attend> generalAttends = new ArrayList<Attend>();
         generalAttends.add(generalAttend);
         when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
         when(attendService.findByAccountIdAndBeginWorkBetween(anyLong(), anyInt(), anyInt())).thenReturn(generalAttends);
@@ -866,5 +872,73 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.attendList[0].overWork").value(String.valueOf(generalAttendListResponse.getOverWork())))
         .andExpect(jsonPath("$.attendList[0].holidayWork").value(String.valueOf(generalAttendListResponse.getHolidayWork())))
         .andExpect(jsonPath("$.attendList[0].lateNightWork").value(String.valueOf(generalAttendListResponse.getLateNightWork())));
+    }
+
+    @Test
+    void vacationRequestDetilSuccess() throws Exception
+    {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        Account generalAccount = new Account();
+        String generalAccountUsername = "testuser";
+        Long generalAccountId = 1L;
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Account adminAccount = new Account();
+        String adminAccountName = "かまどたかしろう";
+        Long adminAccountId = 2L;
+        adminAccount.setId(adminAccountId);
+        adminAccount.setName(adminAccountName);
+
+        Shift shift = new Shift();
+        Long shiftId = 1L;
+        shift.setShiftId(shiftId);
+
+        VacationType vacationType = new VacationType();
+        Long vacationTypeId = 1L;
+        vacationType.setVacationTypeId(vacationTypeId);
+
+        VacationRequest vacationRequest = new VacationRequest();
+        Long vacationRequestId = 1L;
+        LocalDateTime beginVacation = LocalDateTime.parse("2025/08/08/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endVacation = LocalDateTime.parse("2025/08/08/12/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        String requestComment = "";
+        LocalDateTime requestDate = LocalDateTime.parse("2025/07/07/00/00/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        int requestStatus = 1;
+        LocalDateTime approvalTime = null;
+        String approverComment = null;
+        vacationRequest.setVacationId(vacationRequestId);
+        vacationRequest.setAccountId(generalAccount);
+        vacationRequest.setVacationTypeId(vacationType);
+        vacationRequest.setBeginVacation(beginVacation);
+        vacationRequest.setEndVacation(endVacation);
+        vacationRequest.setRequestComment(requestComment);
+        vacationRequest.setRequestDate(requestDate);
+        vacationRequest.setRequestStatus(requestStatus);
+        vacationRequest.setApprover(adminAccount);
+        vacationRequest.setApproverComment(approverComment);
+        vacationRequest.setApprovalTime(approvalTime);
+        vacationRequest.setShiftId(shift);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(vacationRequestService.findByAccountIdAndVacationId(any(Account.class),anyLong())).thenReturn(vacationRequest);
+        mockMvc.perform(
+            get("/api/reach/requestdetil/vacation")
+            .param("requestId","1")
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.shiftId").value(shiftId))
+        .andExpect(jsonPath("$.beginVacation").value(localDateTimeToString.localDateTimeToString(beginVacation)))
+        .andExpect(jsonPath("$.endVacation").value(localDateTimeToString.localDateTimeToString(endVacation)))
+        .andExpect(jsonPath("$.requestComment").value(requestComment))
+        .andExpect(jsonPath("$.requestDate").value(localDateTimeToString.localDateTimeToString(requestDate)))
+        .andExpect(jsonPath("$.requestStatus").value(requestStatus))
+        .andExpect(jsonPath("$.approverId").value(adminAccountId))
+        .andExpect(jsonPath("$.approverName").value(adminAccountName))
+        .andExpect(jsonPath("$.approverComment").value(approverComment))
+        .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : localDateTimeToString.localDateTimeToString(approvalTime)));
     }
 }

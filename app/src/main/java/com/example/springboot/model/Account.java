@@ -72,5 +72,8 @@ public class Account extends BaseTimeEntity
     private List<ShiftChangeRequest> shiftChangeRequestFromAccounts;
     @OneToMany(mappedBy = "approver", fetch = FetchType.LAZY)
     private List<ShiftChangeRequest> shiftChangeRequestFromApprovers;
-    
+    @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
+    private List<VacationRequest> vacationRequestFromAccounts;
+    @OneToMany(mappedBy = "approver", fetch = FetchType.LAZY)
+    private List<VacationRequest> vacationRequestFromApprovers;
 }

@@ -19,6 +19,7 @@ import com.example.springboot.dto.response.AttendListResponse;
 import com.example.springboot.dto.response.RequestDetilShiftChangeResponse;
 import com.example.springboot.dto.response.RequestDetilShiftResponse;
 import com.example.springboot.dto.response.RequestDetilStampResponse;
+import com.example.springboot.dto.response.RequestDetilVacationResponse;
 import com.example.springboot.dto.ArrayResponse;
 import com.example.springboot.dto.YearMonthParam;
 import com.example.springboot.dto.change.LocalDateTimeToString;
@@ -34,6 +35,7 @@ import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
 import com.example.springboot.model.ShiftRequest;
 import com.example.springboot.model.StampRequest;
+import com.example.springboot.model.VacationRequest;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.AttendService;
@@ -45,6 +47,7 @@ import com.example.springboot.service.ShiftService;
 import com.example.springboot.service.StampRequestService;
 import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
+import com.example.springboot.service.VacationRequestService;
 import com.example.springboot.util.SecurityUtil;
 
 @RequestMapping("/api")
@@ -85,6 +88,9 @@ public class GetController
     @Autowired
     AttendService attendService;
 
+    @Autowired
+    VacationRequestService vacationRequestService;
+
     @GetMapping("/reach/approverlist")
     public ArrayResponse<ApproverListResponse> returnApproverList(HttpSession session)
     {
@@ -106,12 +112,20 @@ public class GetController
         // ログイン済みか確認
         String username = SecurityUtil.getCurrentUsername();
         Account account = accountService.getAccountByUsername(username);
+        List<AllStyleListResponse> styleListResponse = new ArrayList<AllStyleListResponse>();
+        ArrayResponse<AllStyleListResponse> arrayResponse = new ArrayResponse<AllStyleListResponse>();
         if(account.equals(null))
         {
-            return new ArrayResponse(4, new ArrayList(), "styleList");
+            arrayResponse.setStatus(4);
+            arrayResponse.setList(styleListResponse);
+            arrayResponse.setKey("styleList");
+            return arrayResponse;
         }
-        List<AllStyleListResponse> styleListResponse = stylePlaceService.getStyleList();
-        return new ArrayResponse(1, styleListResponse, "styleList");
+        styleListResponse = stylePlaceService.getStyleList();
+        arrayResponse.setStatus(1);
+        arrayResponse.setList(styleListResponse);
+        arrayResponse.setKey("styleList");
+        return arrayResponse;
     }
 
     @GetMapping("/reach/accountinfo")
@@ -145,19 +159,23 @@ public class GetController
         return accountInfo;
     }
     @GetMapping("/reach/shiftlist")
-    public ArrayResponse returnShiftList(HttpSession session, @ModelAttribute YearMonthParam request)
+    public ArrayResponse<ShiftListResponse> returnShiftList(HttpSession session, @ModelAttribute YearMonthParam request)
     {
         String username = SecurityUtil.getCurrentUsername();
         Account account = accountService.getAccountByUsername(username);
         // accountidを基にshift_listテーブルを検索、shiftListResponseに格納
-        List<ShiftListResponse> shiftListResponse = new ArrayList();
+        List<ShiftListResponse> shiftListResponse = new ArrayList<ShiftListResponse>();
+        ArrayResponse<ShiftListResponse> arrayResponse = new ArrayResponse<ShiftListResponse>();
         // List<Shift> shiftList = shiftService.findByAccountId(account.getId());
         List<Shift> shiftList = shiftService.findByAccountIdAndBeginWorkBetween(account.getId(), request.getYear(), request.getMonth());
         for(Shift shift : shiftList)
         {
             shiftListResponse.add(shiftService.shiftToShiftListResponse(shift));
         }
-        return new ArrayResponse(1, shiftListResponse, "shiftList");
+        arrayResponse.setStatus(1);
+        arrayResponse.setList(shiftListResponse);
+        arrayResponse.setKey("shiftList");
+        return arrayResponse;
     }
 
     @GetMapping("/reach/requestdetil/shift")
@@ -247,7 +265,7 @@ public class GetController
         Account account = accountService.getAccountByUsername(username);
         RequestDetilStampResponse requestDetilStampResponse = new RequestDetilStampResponse();
         // 認証情報がなければエラー
-        if(account.equals(null))
+        if(Objects.isNull(account))
         {
             status = 5;
             requestDetilStampResponse.setStatus(status);
@@ -278,17 +296,58 @@ public class GetController
         return requestDetilStampResponse;
     }
     @GetMapping("/reach/attendlist")
-    public ArrayResponse returnAttendList(HttpSession session, @ModelAttribute YearMonthParam request)
+    public ArrayResponse<AttendListResponse> returnAttendList(HttpSession session, @ModelAttribute YearMonthParam request)
     {
         String username = SecurityUtil.getCurrentUsername();
         Account account = accountService.getAccountByUsername(username);
-        List<AttendListResponse> attendListResponse = new ArrayList();
+        List<AttendListResponse> attendListResponse = new ArrayList<AttendListResponse>();
         List<Attend> attendList = attendService.findByAccountIdAndBeginWorkBetween(account.getId(), request.getYear(), request.getMonth());
-
+        ArrayResponse<AttendListResponse> arrayResponse = new ArrayResponse<AttendListResponse>();
         for(Attend attend : attendList)
         {
             attendListResponse.add(attendService.attendToAttendListResponse(attend));
         }
-        return new ArrayResponse(1, attendListResponse, "attendList");
+        arrayResponse.setStatus(1);
+        arrayResponse.setList(attendListResponse);
+        arrayResponse.setKey("attendList");
+        return arrayResponse;
+    }
+
+    @GetMapping("/reach/requestdetil/vacation")
+    public RequestDetilVacationResponse returnVacationDetil(HttpSession session, RequestIdInput request)
+    {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        RequestDetilVacationResponse requestDetilVacation = new RequestDetilVacationResponse();
+        // securityutilから名前を取得
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        int status = 0;
+        if(Objects.isNull(account))
+        {
+            status = 4;
+            requestDetilVacation.setStatus(status);
+            return requestDetilVacation;
+        }
+        VacationRequest vacationRequest = vacationRequestService.findByAccountIdAndVacationId(account, request.getRequestId());
+        if(Objects.isNull(vacationRequest))
+        {
+            status = 4;
+            requestDetilVacation.setStatus(status);
+            return requestDetilVacation;
+        }
+        status = 1;
+        requestDetilVacation.setStatus(status);
+        requestDetilVacation.setShiftId(vacationRequest.getShiftId().getShiftId().intValue());
+        requestDetilVacation.setVacationType(vacationRequest.getVacationTypeId().getVacationTypeId().intValue());
+        requestDetilVacation.setBeginVacation(localDateTimeToString.localDateTimeToString(vacationRequest.getBeginVacation()));
+        requestDetilVacation.setEndVacation(localDateTimeToString.localDateTimeToString(vacationRequest.getEndVacation()));
+        requestDetilVacation.setRequestComment(vacationRequest.getRequestComment());
+        requestDetilVacation.setRequestDate(localDateTimeToString.localDateTimeToString(vacationRequest.getRequestDate()));
+        requestDetilVacation.setRequestStatus(vacationRequest.getRequestStatus());
+        requestDetilVacation.setApproverId(vacationRequest.getApprover().getId().intValue());
+        requestDetilVacation.setApproverName(vacationRequest.getApprover().getName());
+        requestDetilVacation.setApproverComment(vacationRequest.getApproverComment());
+        requestDetilVacation.setApprovalTime(Objects.isNull(vacationRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(vacationRequest.getApprovalTime()));
+        return requestDetilVacation;
     }
 }
