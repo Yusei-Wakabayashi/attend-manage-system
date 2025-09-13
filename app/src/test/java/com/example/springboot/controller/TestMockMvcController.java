@@ -54,12 +54,14 @@ import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Attend;
 import com.example.springboot.model.Department;
 import com.example.springboot.model.LegalTime;
+import com.example.springboot.model.OverTimeRequest;
 import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.AttendService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.LegalTimeService;
+import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.ShiftChangeRequestService;
 import com.example.springboot.service.ShiftRequestService;
@@ -119,6 +121,9 @@ public class TestMockMvcController
 
     @MockBean
     private VacationRequestService vacationRequestService;
+
+    @MockBean
+    private OverTimeRequestService overTimeRequestService;
 
     @Test
     void loginSuccess() throws Exception
@@ -931,8 +936,72 @@ public class TestMockMvcController
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(1))
         .andExpect(jsonPath("$.shiftId").value(shiftId))
+        .andExpect(jsonPath("$.vacationType").value(vacationTypeId))
         .andExpect(jsonPath("$.beginVacation").value(localDateTimeToString.localDateTimeToString(beginVacation)))
         .andExpect(jsonPath("$.endVacation").value(localDateTimeToString.localDateTimeToString(endVacation)))
+        .andExpect(jsonPath("$.requestComment").value(requestComment))
+        .andExpect(jsonPath("$.requestDate").value(localDateTimeToString.localDateTimeToString(requestDate)))
+        .andExpect(jsonPath("$.requestStatus").value(requestStatus))
+        .andExpect(jsonPath("$.approverId").value(adminAccountId))
+        .andExpect(jsonPath("$.approverName").value(adminAccountName))
+        .andExpect(jsonPath("$.approverComment").value(approverComment))
+        .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : localDateTimeToString.localDateTimeToString(approvalTime)));
+    }
+
+    @Test
+    void overTimeRequestDetilSuccess() throws Exception
+    {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        Account generalAccount = new Account();
+        String generalAccountUsername = "testuser";
+        Long generalAccountId = 1L;
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Account adminAccount = new Account();
+        String adminAccountName = "かまどたかしろう";
+        Long adminAccountId = 2L;
+        adminAccount.setId(adminAccountId);
+        adminAccount.setName(adminAccountName);
+
+        Shift shift = new Shift();
+        Long shiftId = 1L;
+        shift.setShiftId(shiftId);
+
+        OverTimeRequest overTimeRequest = new OverTimeRequest();
+        Long overTimeRequestId = 1L;
+        LocalDateTime beginOverWork = LocalDateTime.parse("2025/08/08/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endOverWork = LocalDateTime.parse("2025/08/08/12/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        String requestComment = "";
+        LocalDateTime requestDate = LocalDateTime.parse("2025/07/07/00/00/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        int requestStatus = 1;
+        LocalDateTime approvalTime = null;
+        String approverComment = null;
+        overTimeRequest.setOverTimeId(overTimeRequestId);
+        overTimeRequest.setAccountId(generalAccount);
+        overTimeRequest.setBeginWork(beginOverWork);
+        overTimeRequest.setEndWork(endOverWork);
+        overTimeRequest.setRequestComment(requestComment);
+        overTimeRequest.setRequestDate(requestDate);
+        overTimeRequest.setRequestStatus(requestStatus);
+        overTimeRequest.setApprover(adminAccount);
+        overTimeRequest.setApproverComment(approverComment);
+        overTimeRequest.setApprovalTime(approvalTime);
+        overTimeRequest.setShiftId(shift);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(overTimeRequestService.findByAccountIdAndOverTimeRequestId(any(Account.class),anyLong())).thenReturn(overTimeRequest);
+        mockMvc.perform(
+            get("/api/reach/requestdetil/overtime")
+            .param("requestId","1")
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.shiftId").value(shiftId))
+        .andExpect(jsonPath("$.beginOverWork").value(localDateTimeToString.localDateTimeToString(beginOverWork)))
+        .andExpect(jsonPath("$.endOverWork").value(localDateTimeToString.localDateTimeToString(endOverWork)))
         .andExpect(jsonPath("$.requestComment").value(requestComment))
         .andExpect(jsonPath("$.requestDate").value(localDateTimeToString.localDateTimeToString(requestDate)))
         .andExpect(jsonPath("$.requestStatus").value(requestStatus))

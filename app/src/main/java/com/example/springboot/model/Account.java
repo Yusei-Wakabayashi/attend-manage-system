@@ -73,7 +73,15 @@ public class Account extends BaseTimeEntity
     @OneToMany(mappedBy = "approver", fetch = FetchType.LAZY)
     private List<ShiftChangeRequest> shiftChangeRequestFromApprovers;
     @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
+    private List<StampRequest> stampRequestFromAccounts;
+    @OneToMany(mappedBy = "approver", fetch = FetchType.LAZY)
+    private List<StampRequest> stampRequestFromApprovers;
+    @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
     private List<VacationRequest> vacationRequestFromAccounts;
     @OneToMany(mappedBy = "approver", fetch = FetchType.LAZY)
     private List<VacationRequest> vacationRequestFromApprovers;
+    @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
+    private List<OverTimeRequest> overTimeRequestFromAccounts;
+    @OneToMany(mappedBy = "approver", fetch = FetchType.LAZY)
+    private List<OverTimeRequest> overTimerequestFromApprovers;
 }

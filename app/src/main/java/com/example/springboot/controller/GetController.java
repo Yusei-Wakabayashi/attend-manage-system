@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.springboot.dto.AllStyleListResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.dto.response.AttendListResponse;
+import com.example.springboot.dto.response.RequestDetilOverTimeResponse;
 import com.example.springboot.dto.response.RequestDetilShiftChangeResponse;
 import com.example.springboot.dto.response.RequestDetilShiftResponse;
 import com.example.springboot.dto.response.RequestDetilStampResponse;
@@ -30,6 +31,7 @@ import com.example.springboot.model.Account;
 import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Attend;
 import com.example.springboot.model.Department;
+import com.example.springboot.model.OverTimeRequest;
 import com.example.springboot.model.Role;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
@@ -40,6 +42,7 @@ import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.AttendService;
 import com.example.springboot.service.DepartmentService;
+import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.ShiftChangeRequestService;
 import com.example.springboot.service.ShiftRequestService;
@@ -90,6 +93,9 @@ public class GetController
 
     @Autowired
     VacationRequestService vacationRequestService;
+
+    @Autowired
+    OverTimeRequestService overTimeRequestService;
 
     @GetMapping("/reach/approverlist")
     public ArrayResponse<ApproverListResponse> returnApproverList(HttpSession session)
@@ -349,5 +355,42 @@ public class GetController
         requestDetilVacation.setApproverComment(vacationRequest.getApproverComment());
         requestDetilVacation.setApprovalTime(Objects.isNull(vacationRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(vacationRequest.getApprovalTime()));
         return requestDetilVacation;
+    }
+
+    @GetMapping("/reach/requestdetil/overtime")
+    public RequestDetilOverTimeResponse returnOverTimeDetil(HttpSession session, RequestIdInput request)
+    {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        RequestDetilOverTimeResponse requestDetilOverTimeResponse = new RequestDetilOverTimeResponse();
+        // securityutilから名前を取得
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        int status = 0;
+        if(Objects.isNull(account))
+        {
+            status = 4;
+            requestDetilOverTimeResponse.setStatus(status);
+            return requestDetilOverTimeResponse;
+        }
+        OverTimeRequest overTimeRequest = overTimeRequestService.findByAccountIdAndOverTimeRequestId(account, request.getRequestId());
+        if(Objects.isNull(overTimeRequest))
+        {
+            status = 4;
+            requestDetilOverTimeResponse.setStatus(status);
+            return requestDetilOverTimeResponse;
+        }
+        status = 1;
+        requestDetilOverTimeResponse.setStatus(status);
+        requestDetilOverTimeResponse.setShiftId(overTimeRequest.getShiftId().getShiftId().intValue());
+        requestDetilOverTimeResponse.setBeginOverWork(localDateTimeToString.localDateTimeToString(overTimeRequest.getBeginWork()));
+        requestDetilOverTimeResponse.setEndOverWork(localDateTimeToString.localDateTimeToString(overTimeRequest.getEndWork()));
+        requestDetilOverTimeResponse.setRequestComment(overTimeRequest.getRequestComment());
+        requestDetilOverTimeResponse.setRequestDate(localDateTimeToString.localDateTimeToString(overTimeRequest.getRequestDate()));
+        requestDetilOverTimeResponse.setRequestStatus(overTimeRequest.getRequestStatus());
+        requestDetilOverTimeResponse.setApproverId(Objects.isNull(overTimeRequest.getApprover()) ? null : overTimeRequest.getApprover().getId().intValue());
+        requestDetilOverTimeResponse.setApproverName(Objects.isNull(overTimeRequest.getApprover()) ? "" : overTimeRequest.getApprover().getName());
+        requestDetilOverTimeResponse.setApproverComment(overTimeRequest.getApproverComment());
+        requestDetilOverTimeResponse.setApprovalTime(Objects.isNull(overTimeRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(overTimeRequest.getApprovalTime()));
+        return requestDetilOverTimeResponse;
     }
 }

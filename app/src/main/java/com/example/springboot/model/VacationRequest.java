@@ -37,18 +37,18 @@ public class VacationRequest
     private LocalDateTime beginVacation;
     @Column(name = "end_vacation", nullable = false)
     private LocalDateTime endVacation;
-    @Column(name = "request_comment", nullable = false, length = 255)
+    @Column(name = "request_comment", nullable = true, length = 255)
     private String requestComment;
     @Column(name = "request_date", nullable = false)
     private LocalDateTime requestDate;
     @Column(name = "request_status", nullable = false, length = 10)
     private int requestStatus;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "approver", referencedColumnName = "account_id", nullable = false)
+    @JoinColumn(name = "approver", referencedColumnName = "account_id", nullable = true)
     private Account approver;
-    @Column(name = "approval_time", nullable = false)
+    @Column(name = "approval_time", nullable = true)
     private LocalDateTime approvalTime;
-    @Column(name = "approver_comment", nullable = false, length = 255)
+    @Column(name = "approver_comment", nullable = true, length = 255)
     private String approverComment;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shift_id", referencedColumnName = "shift_id", nullable = false)
