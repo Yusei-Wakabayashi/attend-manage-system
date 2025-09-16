@@ -84,4 +84,8 @@ public class Account extends BaseTimeEntity
     private List<OverTimeRequest> overTimeRequestFromAccounts;
     @OneToMany(mappedBy = "approver", fetch = FetchType.LAZY)
     private List<OverTimeRequest> overTimerequestFromApprovers;
+    @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
+    private List<AttendanceExceptionRequest> attendanceExceptionRequestFromAccounts;
+    @OneToMany(mappedBy = "approver", fetch = FetchType.LAZY)
+    private List<AttendanceExceptionRequest> attendanceExceptionRequestFromApprovers;
 }

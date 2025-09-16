@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.springboot.dto.AllStyleListResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.dto.response.AttendListResponse;
+import com.example.springboot.dto.response.RequestDetilOtherTimeResponse;
 import com.example.springboot.dto.response.RequestDetilOverTimeResponse;
 import com.example.springboot.dto.response.RequestDetilShiftChangeResponse;
 import com.example.springboot.dto.response.RequestDetilShiftResponse;
@@ -30,6 +31,7 @@ import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Attend;
+import com.example.springboot.model.AttendanceExceptionRequest;
 import com.example.springboot.model.Department;
 import com.example.springboot.model.OverTimeRequest;
 import com.example.springboot.model.Role;
@@ -41,6 +43,7 @@ import com.example.springboot.model.VacationRequest;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.AttendService;
+import com.example.springboot.service.AttendanceExceptionRequestService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.RoleService;
@@ -96,6 +99,9 @@ public class GetController
 
     @Autowired
     OverTimeRequestService overTimeRequestService;
+
+    @Autowired
+    AttendanceExceptionRequestService attendanceExceptionRequestService;
 
     @GetMapping("/reach/approverlist")
     public ArrayResponse<ApproverListResponse> returnApproverList(HttpSession session)
@@ -392,5 +398,42 @@ public class GetController
         requestDetilOverTimeResponse.setApproverComment(overTimeRequest.getApproverComment());
         requestDetilOverTimeResponse.setApprovalTime(Objects.isNull(overTimeRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(overTimeRequest.getApprovalTime()));
         return requestDetilOverTimeResponse;
+    }
+    @GetMapping("/reach/requestdetil/othertime")
+    public RequestDetilOtherTimeResponse returnOtherTimeDetil(HttpSession session, RequestIdInput request)
+    {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        RequestDetilOtherTimeResponse requestDetilOtherTimeResponse = new RequestDetilOtherTimeResponse();
+        // securityutilから名前を取得
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        int status = 0;
+        if(Objects.isNull(account))
+        {
+            status = 4;
+            requestDetilOtherTimeResponse.setStatus(status);
+            return requestDetilOtherTimeResponse;
+        }
+        AttendanceExceptionRequest attendanceExceptionRequest = attendanceExceptionRequestService.findByAccountIdAndAttendanceExceptionId(account, request.getRequestId());
+        if(Objects.isNull(attendanceExceptionRequest))
+        {
+            status = 4;
+            requestDetilOtherTimeResponse.setStatus(status);
+            return requestDetilOtherTimeResponse;
+        }
+        status = 1;
+        requestDetilOtherTimeResponse.setStatus(status);
+        requestDetilOtherTimeResponse.setShiftId(attendanceExceptionRequest.getShiftId().getShiftId().intValue());
+        requestDetilOtherTimeResponse.setTypeId(attendanceExceptionRequest.getAttendanceExceptionTypeId().getAttedanceExceptionTypeId().intValue());
+        requestDetilOtherTimeResponse.setBeginOtherTime(localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getBeginTime()));
+        requestDetilOtherTimeResponse.setEndOtherTime(localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getEndTime()));
+        requestDetilOtherTimeResponse.setRequestComment(attendanceExceptionRequest.getRequestComment());
+        requestDetilOtherTimeResponse.setRequestDate(localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getRequestDate()));
+        requestDetilOtherTimeResponse.setRequestStatus(attendanceExceptionRequest.getRequestStatus());
+        requestDetilOtherTimeResponse.setApproverId(Objects.isNull(attendanceExceptionRequest.getApprover()) ? null : attendanceExceptionRequest.getApprover().getId().intValue());
+        requestDetilOtherTimeResponse.setApproverName(Objects.isNull(attendanceExceptionRequest.getApprover()) ? "" : attendanceExceptionRequest.getApprover().getName());
+        requestDetilOtherTimeResponse.setApproverComment(attendanceExceptionRequest.getApproverComment());
+        requestDetilOtherTimeResponse.setApprovalTime(Objects.isNull(attendanceExceptionRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getApprovalTime()));
+        return requestDetilOtherTimeResponse;
     }
 }

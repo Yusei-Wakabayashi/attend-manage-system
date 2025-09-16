@@ -60,7 +60,9 @@ public class Shift extends BaseTimeEntity
     private List<VacationRequest> vacationRequestFromShifts;
     @OneToMany(mappedBy = "shiftId", fetch = FetchType.LAZY)
     private List<OverTimeRequest> overTimeRequestFromShifts;
-
+    @OneToMany(mappedBy = "shiftId", fetch = FetchType.LAZY)
+    private List<AttendanceExceptionRequest> attendanceExceptionRequestFromShifts;
+    
     public Shift
     (
         Long shiftId, Account accountId, LocalDateTime beginWork, LocalDateTime endWork,

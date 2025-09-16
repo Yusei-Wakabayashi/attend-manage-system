@@ -52,6 +52,8 @@ import com.example.springboot.model.VacationRequest;
 import com.example.springboot.model.VacationType;
 import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Attend;
+import com.example.springboot.model.AttendanceExceptionRequest;
+import com.example.springboot.model.AttendanceExceptionType;
 import com.example.springboot.model.Department;
 import com.example.springboot.model.LegalTime;
 import com.example.springboot.model.OverTimeRequest;
@@ -59,6 +61,7 @@ import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.AttendService;
+import com.example.springboot.service.AttendanceExceptionRequestService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.LegalTimeService;
 import com.example.springboot.service.OverTimeRequestService;
@@ -124,6 +127,9 @@ public class TestMockMvcController
 
     @MockBean
     private OverTimeRequestService overTimeRequestService;
+
+    @MockBean
+    private AttendanceExceptionRequestService attendanceExceptionRequestService;
 
     @Test
     void loginSuccess() throws Exception
@@ -1009,5 +1015,75 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.approverName").value(adminAccountName))
         .andExpect(jsonPath("$.approverComment").value(approverComment))
         .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : localDateTimeToString.localDateTimeToString(approvalTime)));
+    }
+
+    @Test
+    void otherTimeRequestDetilSuccess() throws Exception
+    {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        Account generalAccount = new Account();
+        String generalAccountUsername = "testuser";
+        Long generalAccountId = 1L;
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Account adminAccount = new Account();
+        String adminAccountName = "かまどたかしろう";
+        Long adminAccountId = 2L;
+        adminAccount.setId(adminAccountId);
+        adminAccount.setName(adminAccountName);
+
+        Shift shift = new Shift();
+        Long shiftId = 1L;
+        shift.setShiftId(shiftId);
+
+        AttendanceExceptionType attendanceExceptionType = new AttendanceExceptionType();
+        Long attendanceExceptionTypeId = 12L;
+        attendanceExceptionType.setAttedanceExceptionTypeId(attendanceExceptionTypeId);
+
+        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        Long attendanceExceptionRequestId = 1L;
+        LocalDateTime beginTime = LocalDateTime.parse("2025/08/08/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endTime = LocalDateTime.parse("2025/08/08/12/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        String requestComment = "";
+        LocalDateTime requestDate = LocalDateTime.parse("2025/07/07/00/00/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        int requestStatus = 1;
+        LocalDateTime approvalTime = null;
+        String approverComment = null;
+        attendanceExceptionRequest.setAttendanceExceptionId(attendanceExceptionRequestId);
+        attendanceExceptionRequest.setAccountId(generalAccount);
+        attendanceExceptionRequest.setAttendanceExceptionTypeId(attendanceExceptionType);
+        attendanceExceptionRequest.setBeginTime(beginTime);
+        attendanceExceptionRequest.setEndTime(endTime);
+        attendanceExceptionRequest.setRequestComment(requestComment);
+        attendanceExceptionRequest.setRequestDate(requestDate);
+        attendanceExceptionRequest.setRequestStatus(requestStatus);
+        attendanceExceptionRequest.setApprover(adminAccount);
+        attendanceExceptionRequest.setApproverComment(approverComment);
+        attendanceExceptionRequest.setApprovalTime(approvalTime);
+        attendanceExceptionRequest.setShiftId(shift);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(attendanceExceptionRequestService.findByAccountIdAndAttendanceExceptionId(any(Account.class),anyLong())).thenReturn(attendanceExceptionRequest);
+        mockMvc.perform(
+            get("/api/reach/requestdetil/othertime")
+            .param("requestId","1")
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.shiftId").value(shiftId))
+        .andExpect(jsonPath("$.typeId").value(attendanceExceptionTypeId))
+        .andExpect(jsonPath("$.beginOtherTime").value(localDateTimeToString.localDateTimeToString(beginTime)))
+        .andExpect(jsonPath("$.endOtherTime").value(localDateTimeToString.localDateTimeToString(endTime)))
+        .andExpect(jsonPath("$.requestComment").value(requestComment))
+        .andExpect(jsonPath("$.requestDate").value(localDateTimeToString.localDateTimeToString(requestDate)))
+        .andExpect(jsonPath("$.requestStatus").value(requestStatus))
+        .andExpect(jsonPath("$.approverId").value(adminAccountId))
+        .andExpect(jsonPath("$.approverName").value(adminAccountName))
+        .andExpect(jsonPath("$.approverComment").value(approverComment))
+        .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : localDateTimeToString.localDateTimeToString(approvalTime)));
+
     }
 }

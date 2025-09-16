@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.springboot.dto.InputPostData;
 import com.example.springboot.dto.LoginPostData;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.response.Response;
@@ -76,12 +75,6 @@ public class PostController
     @Autowired
     private ShiftChangeRequestService shiftChangeRequestService;
     
-    @PostMapping("/request")
-    public String returns(@RequestBody InputPostData data)
-    {
-        return data.getText();
-    }
-
     @CrossOrigin
     @PostMapping("/send/login")
     public Response login(@RequestBody LoginPostData data, HttpSession session)
@@ -308,11 +301,10 @@ public class PostController
             return new Response(status);
         }
 
-        // 始業時間が前後1年までは許容する
+        // 始業時間が1年先までは許容する
         LocalDateTime nextYear = nowTime.plusYears(1L);
-        LocalDateTime prevYear = nowTime.minusYears(1L);
         // 1年前(prevYear)より後かつ1年後(nextYear)より前
-        if(beginWork.isAfter(prevYear) && beginWork.isBefore(nextYear))
+        if(beginWork.isBefore(nextYear))
         {
             // 条件に従っていれば何もしない
         }
