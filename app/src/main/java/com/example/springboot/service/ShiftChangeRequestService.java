@@ -1,11 +1,16 @@
 package com.example.springboot.service;
 
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.springboot.model.Account;
+import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
 import com.example.springboot.repository.ShiftChangeRequestRepository;
 
@@ -30,6 +35,53 @@ public class ShiftChangeRequestService
         account.setId(accountId);
         return shiftChangeRequestRepository.findByAccountIdAndShiftChangeId(account, id)
             .orElseThrow(() -> new RuntimeException("シフト時間変更申請が見つかりません"));
+    }
+
+    public List<ShiftChangeRequest> findByAccountIdAndShiftIdAndRequestStatusWait(Account account, Long id)
+    {
+        int requestStatus = 1;
+        Shift shift = new Shift();
+        shift.setShiftId(id);
+        List<ShiftChangeRequest> shiftChangeRequests = shiftChangeRequestRepository.findByAccountIdAndShiftIdAndRequestStatus(account, shift, requestStatus);
+        return shiftChangeRequests;
+    }
+
+    public List<ShiftChangeRequest> findByAccountIdAndShiftIdAndRequestStatusWait(Long accountId, Long id)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        int requestStatus = 1;
+        Shift shift = new Shift();
+        shift.setShiftId(id);
+        List<ShiftChangeRequest> shiftChangeRequests = shiftChangeRequestRepository.findByAccountIdAndShiftIdAndRequestStatus(account, shift, requestStatus);
+        return shiftChangeRequests;
+    }
+
+    public List<ShiftChangeRequest> getAccountIdAndBeginWorkBetweenAndRequestStatusWaitWeek(Account account, LocalDateTime begin)
+    {
+        LocalDateTime beginWork = begin.toLocalDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay();
+        LocalDateTime endWork = begin.toLocalDate().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).atTime(LocalTime.MAX);
+        int requestStatus = 1;
+        List<ShiftChangeRequest> shiftChangeRequests = shiftChangeRequestRepository.findByAccountIdAndBeginWorkBetweenAndRequestStatus(account, beginWork, endWork, requestStatus);
+        return shiftChangeRequests;
+    }
+
+    public List<ShiftChangeRequest> getAccountIdAndBeginWorkBetweenAndRequestStatusWaitWeek(Long id, LocalDateTime begin)
+    {
+        Account account = new Account();
+        account.setId(id);
+        LocalDateTime beginWork = begin.toLocalDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay();
+        LocalDateTime endWork = begin.toLocalDate().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).atTime(LocalTime.MAX);
+        int requestStatus = 1;
+        List<ShiftChangeRequest> shiftChangeRequests = shiftChangeRequestRepository.findByAccountIdAndBeginWorkBetweenAndRequestStatus(account, beginWork, endWork, requestStatus);
+        return shiftChangeRequests;
+    }
+
+    public List<ShiftChangeRequest> getAccountIdAndShiftIdInAndRequestStatusWait(Account account, List<Shift> shifts)
+    {
+        int status = 1;
+        List<ShiftChangeRequest> shiftChangeRequests = shiftChangeRequestRepository.findByAccountIdAndShiftIdInAndRequestStatus(account, shifts, status);
+        return shiftChangeRequests;
     }
 
     public String save(ShiftChangeRequest shiftChangeRequest)

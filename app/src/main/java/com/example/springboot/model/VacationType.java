@@ -29,5 +29,7 @@ public class VacationType
     @Column(name = "vacation_name", nullable = false, length = 255)
     private String vacationName;
     @OneToMany(mappedBy = "vacationTypeId", fetch = FetchType.LAZY)
-    private List<VacationRequest> vacationTypeFromVacationRequest;
+    private List<VacationRequest> vacationTypeFromVacationRequests;
+    @OneToMany(mappedBy = "vacationTypeId", fetch = FetchType.LAZY)
+    private List<Vacation> vacationTypeFromVacations;
 }

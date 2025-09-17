@@ -1,7 +1,9 @@
 package com.example.springboot.service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 import javax.transaction.Transactional;
@@ -35,6 +37,26 @@ public class ShiftRequestService
         LocalDateTime beginWork = LocalDateTime.of(begin.toLocalDate(), LocalTime.MIN);
         LocalDateTime endWork = LocalDateTime.of(begin.toLocalDate(), LocalTime.MAX);
         return shiftRequestRepository.findByAccountIdAndBeginWorkBetween(accountId, beginWork, endWork);
+    }
+
+    public List<ShiftRequest> getAccountIdAndBeginWorkBetweenAndRequestStatusWaitWeek(Long id, LocalDateTime begin)
+    {
+        Account account = new Account();
+        account.setId(id);
+        LocalDateTime beginWork = begin.toLocalDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay();
+        LocalDateTime endWork = begin.toLocalDate().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).atTime(LocalTime.MAX);
+        int requestStatus = 1;
+        List<ShiftRequest> shiftRequests = shiftRequestRepository.findByAccountIdAndBeginWorkBetweenAndRequestStatus(account, beginWork, endWork, requestStatus);
+        return shiftRequests;
+    }
+
+    public List<ShiftRequest> getAccountIdAndBeginWorkBetweenAndRequestStatusWaitWeek(Account account, LocalDateTime begin)
+    {
+        LocalDateTime beginWork = begin.toLocalDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay();
+        LocalDateTime endWork = begin.toLocalDate().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).atTime(LocalTime.MAX);
+        int requestStatus = 1;
+        List<ShiftRequest> shiftRequests = shiftRequestRepository.findByAccountIdAndBeginWorkBetweenAndRequestStatus(account, beginWork, endWork, requestStatus);
+        return shiftRequests;
     }
 
     public ShiftRequest findByAccountIdAndShiftRequestId(Account account, Long id)
