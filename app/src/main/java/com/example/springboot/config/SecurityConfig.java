@@ -25,6 +25,7 @@ public class SecurityConfig
                 new AntPathRequestMatcher("/api/send/style"),
                 new AntPathRequestMatcher("/api/send/shift"),
                 new AntPathRequestMatcher("/api/send/changetime"),
+                new AntPathRequestMatcher("/api/send/stamp"),
                 new AntPathRequestMatcher("/api/reach/approverlist"),
                 new AntPathRequestMatcher("/api/reach/allstylelist"),
                 new AntPathRequestMatcher("/api/reach/shiftlist"),

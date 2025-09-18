@@ -12,6 +12,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import lombok.Getter;
@@ -22,7 +23,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @NoArgsConstructor
-@Table(name="attendance_lists")
+@Table(name="attendance_list")
 public class Attend {
     @Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -55,6 +56,8 @@ public class Attend {
     private Time holidayWork;
     @Column(name = "late_night_work", nullable = false)
     private Time lateNightWork;
+    @OneToOne(mappedBy = "attendanceId", fetch = FetchType.LAZY)
+    private AttendanceListSource attendanceListSourceFromAttendances;
     // コンストラクタ定義
     public Attend
     (

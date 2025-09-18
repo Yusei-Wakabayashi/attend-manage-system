@@ -88,4 +88,6 @@ public class Account extends BaseTimeEntity
     private List<AttendanceExceptionRequest> attendanceExceptionRequestFromAccounts;
     @OneToMany(mappedBy = "approver", fetch = FetchType.LAZY)
     private List<AttendanceExceptionRequest> attendanceExceptionRequestFromApprovers;
+    @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
+    private List<TimeCard> timeCardFromAccounts;
 }

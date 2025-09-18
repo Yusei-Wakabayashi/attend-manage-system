@@ -46,6 +46,7 @@ import com.example.springboot.model.Role;
 import com.example.springboot.model.Salt;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
+import com.example.springboot.model.ShiftListShiftRequest;
 import com.example.springboot.model.ShiftRequest;
 import com.example.springboot.model.StampRequest;
 import com.example.springboot.model.Style;
@@ -70,6 +71,7 @@ import com.example.springboot.service.LegalTimeService;
 import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.ShiftChangeRequestService;
+import com.example.springboot.service.ShiftListShiftRequestService;
 import com.example.springboot.service.ShiftRequestService;
 import com.example.springboot.service.ShiftService;
 import com.example.springboot.service.StampRequestService;
@@ -137,6 +139,9 @@ public class TestMockMvcController
 
     @MockBean
     private VacationService vacationService;
+
+    @MockBean
+    private ShiftListShiftRequestService shiftListShiftRequestService;
 
     @Test
     void loginSuccess() throws Exception
@@ -468,10 +473,10 @@ public class TestMockMvcController
     void shiftRequestSuccess() throws Exception
     {
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
-        String generalBeginWork = "2025/09/02T09:00:00";
-        String generalBeginBreak = "2025/09/02T12:00:00";
-        String generalEndBreak = "2025/09/02T13:00:00";
-        String generalEndWork = "2025/09/02T18:00:00";
+        String generalBeginWork = "2026/09/02T09:00:00";
+        String generalBeginBreak = "2026/09/02T12:00:00";
+        String generalEndBreak = "2026/09/02T13:00:00";
+        String generalEndWork = "2026/09/02T18:00:00";
         String generalRequestComment = "";
         String generalRequestDate = "2025/08/02T00:00:11";
         String json = String.format
@@ -500,6 +505,7 @@ public class TestMockMvcController
         Time legalTimeLateNightWorkTimeBegin = Time.valueOf("22:00:00");
         Time legalTimeLateNightWorkTimeEnd = Time.valueOf("05:00:00");
         Time legalTimeScheduleBreakTime = Time.valueOf("01:00:00");
+        int legalTimeWeeklyHoliday = 1;
 
         legalTime.setLegalTimeId(legalTimeId);
         legalTime.setBegin(legalTimeBegin);
@@ -512,6 +518,7 @@ public class TestMockMvcController
         legalTime.setLateNightWorkBegin(legalTimeLateNightWorkTimeBegin);
         legalTime.setLateNightWorkEnd(legalTimeLateNightWorkTimeEnd);
         legalTime.setScheduleBreakTime(legalTimeScheduleBreakTime);
+        legalTime.setWeeklyHoliday(legalTimeWeeklyHoliday);
 
         Account generalAccount = new Account();
         Long generalAccountId = 1L;
@@ -521,6 +528,12 @@ public class TestMockMvcController
 
         List<Shift> shifts = new ArrayList<Shift>();
         List<ShiftRequest> shiftRequests = new ArrayList<ShiftRequest>();
+        Long shiftId = 20L;
+        LocalDateTime BeginWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T09:00:00");
+        LocalDateTime EndWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T18:00:00");
+        LocalDateTime BeginBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T12:00:00");
+        LocalDateTime EndBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T13:00:00");
+    
         Long generalShiftId = 22L;
         LocalDateTime generalBeginWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T09:00:00");
         LocalDateTime generalEndWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T18:00:00");
@@ -529,21 +542,41 @@ public class TestMockMvcController
 
         List<Shift> generalShifts = new ArrayList<Shift>();
         Shift shift = new Shift();
-        shift.setShiftId(generalShiftId);
-        shift.setBeginWork(generalBeginWorkTimeShift);
-        shift.setEndWork(generalEndWorkTimeShift);
-        shift.setBeginBreak(generalBeginBreakTimeShift);
-        shift.setEndBreak(generalEndBreakTimeShift);
+        shift.setShiftId(shiftId);
+        shift.setBeginWork(BeginWorkTimeShift);
+        shift.setEndWork(EndWorkTimeShift);
+        shift.setBeginBreak(BeginBreakTimeShift);
+        shift.setEndBreak(EndBreakTimeShift);
         generalShifts.add(shift);
 
-        List<ShiftChangeRequest> shiftChangeRequests = new ArrayList<ShiftChangeRequest>();
+        Shift generalShift = new Shift();
+        generalShift.setShiftId(generalShiftId);
+        generalShift.setBeginWork(generalBeginWorkTimeShift);
+        generalShift.setEndWork(generalEndWorkTimeShift);
+        generalShift.setBeginBreak(generalBeginBreakTimeShift);
+        generalShift.setEndBreak(generalEndBreakTimeShift);
+        generalShifts.add(generalShift);
+
+        ShiftRequest shiftRequest = new ShiftRequest();
+        shiftRequest.setBeginWork(BeginWorkTimeShift);
+        shiftRequest.setEndWork(EndWorkTimeShift);
+        shiftRequest.setBeginBreak(BeginBreakTimeShift);
+        shiftRequest.setEndBreak(EndBreakTimeShift);
+
         ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
         shiftChangeRequest.setShiftId(shift);
         shiftChangeRequest.setBeginWork(generalBeginWorkTimeShift);
         shiftChangeRequest.setEndWork(generalEndWorkTimeShift);
         shiftChangeRequest.setBeginBreak(generalBeginBreakTimeShift);
         shiftChangeRequest.setEndBreak(generalEndBreakTimeShift);
-        shiftChangeRequests.add(shiftChangeRequest);
+
+        List<ShiftListShiftRequest> shiftListShiftRequests = new ArrayList<ShiftListShiftRequest>();
+        ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
+        shiftListShiftRequest.setShiftRequestId(shiftRequest);
+        ShiftListShiftRequest generaShiftListShiftRequest = new ShiftListShiftRequest();
+        generaShiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
+        shiftListShiftRequests.add(shiftListShiftRequest);
+        shiftListShiftRequests.add(generaShiftListShiftRequest);
 
         List<Vacation> vacations = new ArrayList<Vacation>();
 
@@ -552,8 +585,7 @@ public class TestMockMvcController
         when(shiftRequestService.getAccountIdAndBeginWorkBetweenDay(any(Account.class), any(LocalDateTime.class))).thenReturn(shiftRequests);
         when(legalTimeService.getFirstByOrderByBeginDesc()).thenReturn(legalTime);
         when(shiftService.findByAccountIdAndBeginWorkBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(generalShifts);
-        when(shiftRequestService.getAccountIdAndBeginWorkBetweenAndRequestStatusWaitWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(shiftRequests);
-        when(shiftChangeRequestService.getAccountIdAndShiftIdInAndRequestStatusWait(any(Account.class), anyList())).thenReturn(shiftChangeRequests);
+        when(shiftListShiftRequestService.findByShiftIdIn(anyList())).thenReturn(shiftListShiftRequests);
         when(vacationService.findByAccountIdAndBeginVacationBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(vacations);
         when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn("ok");
         mockMvc.perform(
@@ -771,13 +803,13 @@ public class TestMockMvcController
     void shiftChangeRequestSuccess() throws Exception
     {
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
-        String generalBeginWork = "2025/09/02T09:00:00";
-        String generalBeginBreak = "2025/09/02T12:00:00";
-        String generalEndBreak = "2025/09/02T13:00:00";
-        String generalEndWork = "2025/09/02T18:00:00";
+        String generalBeginWork = "2026/09/02T09:00:00";
+        String generalBeginBreak = "2026/09/02T12:00:00";
+        String generalEndBreak = "2026/09/02T13:00:00";
+        String generalEndWork = "2026/09/02T18:00:00";
         String generalRequestComment = "";
         String generalRequestDate = "2025/08/02T00:00:11";
-        int generalShiftId = 1;
+        int generalId = 1;
         String json = String.format
         ("""
             {
@@ -790,7 +822,7 @@ public class TestMockMvcController
                 "shiftId": "%s"
             }
         """,
-        generalBeginWork, generalBeginBreak, generalEndBreak, generalEndWork, generalRequestComment, generalRequestDate, generalShiftId
+        generalBeginWork, generalBeginBreak, generalEndBreak, generalEndWork, generalRequestComment, generalRequestDate, generalId
         );
 
         LegalTime legalTime = new LegalTime();
@@ -805,6 +837,7 @@ public class TestMockMvcController
         Time legalTimeLateNightWorkTimeBegin = Time.valueOf("22:00:00");
         Time legalTimeLateNightWorkTimeEnd = Time.valueOf("05:00:00");
         Time legalTimeScheduleBreakTime = Time.valueOf("01:00:00");
+        int legalTimeWeeklyHoliday = 1;
 
         legalTime.setLegalTimeId(legalTimeId);
         legalTime.setBegin(legalTimeBegin);
@@ -817,6 +850,7 @@ public class TestMockMvcController
         legalTime.setLateNightWorkBegin(legalTimeLateNightWorkTimeBegin);
         legalTime.setLateNightWorkEnd(legalTimeLateNightWorkTimeEnd);
         legalTime.setScheduleBreakTime(legalTimeScheduleBreakTime);
+        legalTime.setWeeklyHoliday(legalTimeWeeklyHoliday);
 
         Account generalAccount = new Account();
         Long generalAccountId = 1L;
@@ -827,32 +861,57 @@ public class TestMockMvcController
         Shift shift = new Shift();
         Long shiftId = 1L;
         shift.setShiftId(shiftId);
+        shift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(generalBeginWork));
 
-        List<ShiftRequest> shiftRequests = new ArrayList<ShiftRequest>();
-        Long adminShiftId = 22L;
+        Long generalShiftId = 22L;
         LocalDateTime generalBeginWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T09:00:00");
         LocalDateTime generalEndWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T18:00:00");
         LocalDateTime generalBeginBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T12:00:00");
         LocalDateTime generalEndBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T13:00:00");
 
+        Long adminShiftId = 20L;
+        LocalDateTime adminBeginWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T09:00:00");
+        LocalDateTime adminEndWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T18:00:00");
+        LocalDateTime adminBeginBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T12:00:00");
+        LocalDateTime adminEndBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T13:00:00");
+
         List<Shift> generalShifts = new ArrayList<Shift>();
+        Shift adminShift = new Shift();
+        adminShift.setShiftId(adminShiftId);
+        adminShift.setBeginWork(adminBeginWorkTimeShift);
+        adminShift.setEndWork(adminEndWorkTimeShift);
+        adminShift.setBeginBreak(adminBeginBreakTimeShift);
+        adminShift.setEndBreak(adminEndBreakTimeShift);
         Shift generalShift = new Shift();
-        generalShift.setShiftId(adminShiftId);
+        generalShift.setShiftId(generalShiftId);
         generalShift.setBeginWork(generalBeginWorkTimeShift);
         generalShift.setEndWork(generalEndWorkTimeShift);
         generalShift.setBeginBreak(generalBeginBreakTimeShift);
         generalShift.setEndBreak(generalEndBreakTimeShift);
+        generalShifts.add(adminShift);
         generalShifts.add(generalShift);
 
+        ShiftRequest shiftRequest = new ShiftRequest();
+        shiftRequest.setBeginWork(adminBeginWorkTimeShift);
+        shiftRequest.setEndWork(adminEndWorkTimeShift);
+        shiftRequest.setBeginBreak(adminBeginBreakTimeShift);
+        shiftRequest.setEndBreak(adminEndBreakTimeShift);
+
         List<ShiftChangeRequest> generalShiftChangeRequests = new ArrayList<ShiftChangeRequest>();
-        List<ShiftChangeRequest> shiftChangeRequests = new ArrayList<ShiftChangeRequest>();
         ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
         shiftChangeRequest.setShiftId(shift);
         shiftChangeRequest.setBeginWork(generalBeginWorkTimeShift);
         shiftChangeRequest.setEndWork(generalEndWorkTimeShift);
         shiftChangeRequest.setBeginBreak(generalBeginBreakTimeShift);
         shiftChangeRequest.setEndBreak(generalEndBreakTimeShift);
-        shiftChangeRequests.add(shiftChangeRequest);
+
+        List<ShiftListShiftRequest> shiftListShiftRequests = new ArrayList<ShiftListShiftRequest>();
+        ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
+        shiftListShiftRequest.setShiftRequestId(shiftRequest);
+        ShiftListShiftRequest generalShiftListShiftRequest = new ShiftListShiftRequest();
+        generalShiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
+        shiftListShiftRequests.add(shiftListShiftRequest);
+        shiftListShiftRequests.add(generalShiftListShiftRequest);
 
         List<Vacation> vacations = new ArrayList<Vacation>();
 
@@ -861,8 +920,7 @@ public class TestMockMvcController
         when(shiftChangeRequestService.findByAccountIdAndShiftIdAndRequestStatusWait(any(Account.class), anyLong())).thenReturn(generalShiftChangeRequests);
         when(legalTimeService.getFirstByOrderByBeginDesc()).thenReturn(legalTime);
         when(shiftService.findByAccountIdAndBeginWorkBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(generalShifts);
-        when(shiftRequestService.getAccountIdAndBeginWorkBetweenAndRequestStatusWaitWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(shiftRequests);
-        when(shiftChangeRequestService.getAccountIdAndShiftIdInAndRequestStatusWait(any(Account.class), anyList())).thenReturn(shiftChangeRequests);
+        when(shiftListShiftRequestService.findByShiftIdIn(anyList())).thenReturn(shiftListShiftRequests);
         when(vacationService.findByAccountIdAndBeginVacationBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(vacations);
         when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn("ok");
         mockMvc.perform(
@@ -1156,4 +1214,59 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : localDateTimeToString.localDateTimeToString(approvalTime)));
 
     }
+    @Test
+    void stampRequestSuccess() throws Exception
+    {
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        String generalBeginWork = "2025/09/02T09:00:00";
+        String generalBeginBreak = "2025/09/02T12:00:00";
+        String generalEndBreak = "2025/09/02T13:00:00";
+        String generalEndWork = "2025/09/02T18:00:00";
+        String generalRequestComment = "";
+        String generalRequestDate = "2025/08/02T00:00:11";
+        int generalId = 1;
+        String json = String.format
+        ("""
+            {
+                "beginWork": "%s",
+                "beginBreak": "%s",
+                "endBreak": "%s",
+                "endWork": "%s",
+                "requestComment": "%s",
+                "requestDate": "%s",
+                "shiftId": "%s"
+            }
+        """,
+        generalBeginWork, generalBeginBreak, generalEndBreak, generalEndWork, generalRequestComment, generalRequestDate, generalId
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 1L;
+        String generalAccountName = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setName(generalAccountName);
+
+        Shift generalShift = new Shift();
+        generalShift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(generalBeginWork));
+        generalShift.setEndWork(stringToLocalDateTime.stringToLocalDateTime(generalEndWork));
+        generalShift.setBeginBreak(stringToLocalDateTime.stringToLocalDateTime(generalBeginBreak));
+        generalShift.setEndBreak(stringToLocalDateTime.stringToLocalDateTime(generalEndBreak));
+
+        List<StampRequest> stampRequests = new ArrayList<StampRequest>();
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(generalShift);
+        when(stampRequestService.findByShiftIdAndRequestStatusWait(any(Shift.class))).thenReturn(stampRequests);
+        mockMvc.perform
+        (
+            post("/api/send/stamp")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountName))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
 }

@@ -14,6 +14,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import com.example.springboot.BaseTimeEntity;
@@ -26,7 +27,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @NoArgsConstructor
-@Table(name="shift_lists")
+@Table(name="shift_list")
 public class Shift extends BaseTimeEntity
 {
     @Id
@@ -62,6 +63,10 @@ public class Shift extends BaseTimeEntity
     private List<OverTimeRequest> overTimeRequestFromShifts;
     @OneToMany(mappedBy = "shiftId", fetch = FetchType.LAZY)
     private List<AttendanceExceptionRequest> attendanceExceptionRequestFromShifts;
+    @OneToOne(mappedBy = "shiftId", fetch = FetchType.LAZY)
+    private ShiftListShiftRequest shiftListShiftRequestFromShifts;
+    @OneToOne(mappedBy = "shiftId", fetch = FetchType.LAZY)
+    private AttendanceListSource attendanceListSourceFromShifts;
     
     public Shift
     (

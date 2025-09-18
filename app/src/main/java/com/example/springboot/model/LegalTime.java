@@ -29,24 +29,26 @@ public class LegalTime
     private Long legalTimeId;
     @Column(name = "begin", nullable = false)
     private LocalDateTime begin;
-    @Column(name = "end")
+    @Column(name = "end", nullable = true)
     private LocalDateTime end;
-    @Column(name = "schedule_work_time")
+    @Column(name = "schedule_work_time", nullable = false)
     private Time scheduleWorkTime;
-    @Column(name = "weekly_work_time")
+    @Column(name = "weekly_work_time", nullable = false)
     private Time weeklyWorkTime;
-    @Column(name = "monthly_over_work_time")
+    @Column(name = "monthly_over_work_time", nullable = false)
     private Time monthlyOverWorkTime;
-    @Column(name = "year_over_work_time")
+    @Column(name = "year_over_work_time", nullable = false)
     private Time yearOverWorkTime;
-    @Column(name = "max_over_work_time")
+    @Column(name = "max_over_work_time", nullable = false)
     private Time maxOverWorkTime;
-    @Column(name = "monthly_over_work_average")
+    @Column(name = "monthly_over_work_average", nullable = false)
     private Time monthlyOverWorkAverage;
-    @Column(name = "late_night_work_begin")
+    @Column(name = "late_night_work_begin", nullable = false)
     private Time lateNightWorkBegin;
-    @Column(name = "late_night_work_end")
+    @Column(name = "late_night_work_end", nullable = false)
     private Time lateNightWorkEnd;
-    @Column(name = "schedule_break_time")
+    @Column(name = "schedule_break_time", nullable = false)
     private Time scheduleBreakTime;
+    @Column(name = "weekly_holiday", nullable = false, length = 10)
+    private int weeklyHoliday;
 }
