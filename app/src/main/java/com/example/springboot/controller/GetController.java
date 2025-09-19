@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.springboot.dto.AllStyleListResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.dto.response.AttendListResponse;
+import com.example.springboot.dto.response.RequestDetilMonthlyResponse;
 import com.example.springboot.dto.response.RequestDetilOtherTimeResponse;
 import com.example.springboot.dto.response.RequestDetilOverTimeResponse;
 import com.example.springboot.dto.response.RequestDetilShiftChangeResponse;
@@ -33,6 +34,7 @@ import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Attend;
 import com.example.springboot.model.AttendanceExceptionRequest;
 import com.example.springboot.model.Department;
+import com.example.springboot.model.MonthlyRequest;
 import com.example.springboot.model.OverTimeRequest;
 import com.example.springboot.model.Role;
 import com.example.springboot.model.Shift;
@@ -45,6 +47,7 @@ import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.AttendService;
 import com.example.springboot.service.AttendanceExceptionRequestService;
 import com.example.springboot.service.DepartmentService;
+import com.example.springboot.service.MonthlyRequestService;
 import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.ShiftChangeRequestService;
@@ -102,6 +105,9 @@ public class GetController
 
     @Autowired
     AttendanceExceptionRequestService attendanceExceptionRequestService;
+
+    @Autowired
+    MonthlyRequestService monthlyRequestService;
 
     @GetMapping("/reach/approverlist")
     public ArrayResponse<ApproverListResponse> returnApproverList(HttpSession session)
@@ -437,4 +443,49 @@ public class GetController
         return requestDetilOtherTimeResponse;
     }
     // 月次申請詳細取得を作成後申請一覧取得の作成
+    @GetMapping("/reach/requestdetil/monthly")
+    public RequestDetilMonthlyResponse returnMonthlyResponse(HttpSession session, RequestIdInput request)
+    {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        RequestDetilMonthlyResponse requestDetilMonthlyResponse = new RequestDetilMonthlyResponse();
+        // securityutilから名前を取得
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        int status = 0;
+        if(Objects.isNull(account))
+        {
+            status = 4;
+            requestDetilMonthlyResponse.setStatus(status);
+            return requestDetilMonthlyResponse;
+        }
+        MonthlyRequest monthlyRequest = monthlyRequestService.findByAccountIdAndMothlyRequestId(account, request.getRequestId());
+        if(Objects.isNull(monthlyRequest))
+        {
+            status = 4;
+            requestDetilMonthlyResponse.setStatus(status);
+            return requestDetilMonthlyResponse;
+        }
+        status = 1;
+        requestDetilMonthlyResponse.setStatus(status);
+        requestDetilMonthlyResponse.setWorkTime(monthlyRequest.getWorkTime());
+        requestDetilMonthlyResponse.setOverTime(monthlyRequest.getOverTime());
+        requestDetilMonthlyResponse.setEarlyTime(monthlyRequest.getEarlyTime());
+        requestDetilMonthlyResponse.setLeavingTime(monthlyRequest.getLeavingTime());
+        requestDetilMonthlyResponse.setOutingTime(monthlyRequest.getOutingTime());
+        requestDetilMonthlyResponse.setAbsenceTime(monthlyRequest.getAbsenceTime());
+        requestDetilMonthlyResponse.setPaydHolidayTime(monthlyRequest.getPaydHolidayTime());
+        requestDetilMonthlyResponse.setSpecialTime(monthlyRequest.getSpecialTime());
+        requestDetilMonthlyResponse.setHolidayWorkTime(monthlyRequest.getHolidayWorkTime());
+        requestDetilMonthlyResponse.setLateNightWorkTime(monthlyRequest.getLateNightWorkTime());
+        requestDetilMonthlyResponse.setYear(monthlyRequest.getYear());
+        requestDetilMonthlyResponse.setMonth(monthlyRequest.getMonth());
+        requestDetilMonthlyResponse.setRequestComment(monthlyRequest.getRequestComment());
+        requestDetilMonthlyResponse.setRequestDate(localDateTimeToString.localDateTimeToString(monthlyRequest.getRequestDate()));
+        requestDetilMonthlyResponse.setRequestStatus(monthlyRequest.getRequestStatus());
+        requestDetilMonthlyResponse.setApproverId(Objects.isNull(monthlyRequest.getApprover()) ? null : monthlyRequest.getApprover().getId().intValue());
+        requestDetilMonthlyResponse.setApproverName(Objects.isNull(monthlyRequest.getApprover()) ? "" : monthlyRequest.getApprover().getName());
+        requestDetilMonthlyResponse.setApproverComment(monthlyRequest.getApproverComment());
+        requestDetilMonthlyResponse.setApprovalTime(Objects.isNull(monthlyRequest.getApprovalDate()) ? "" : localDateTimeToString.localDateTimeToString(monthlyRequest.getApprovalDate()));
+        return requestDetilMonthlyResponse;
+    }
 }

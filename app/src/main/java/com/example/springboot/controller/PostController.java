@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.springboot.dto.LoginPostData;
+import com.example.springboot.dto.change.StringToDuration;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.response.Response;
 import com.example.springboot.dto.input.ShiftChangeInput;
@@ -170,6 +171,7 @@ public class PostController
     public Response shiftSet(@RequestBody ShiftInput shiftInput, HttpSession session)
     {
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        StringToDuration stringToDuration = new StringToDuration();
         int status = 0;
         String username = SecurityUtil.getCurrentUsername();
         Account account = accountService.getAccountByUsername(username);
@@ -228,16 +230,16 @@ public class PostController
         LegalTime legalTime = legalTimeService.getFirstByOrderByBeginDesc();
         // 労働時間が8時間(所定労働時間)になっているか確認
         // 休憩が1時間を超えているか確認
-        Duration standardWorkTime = Duration.ofHours(legalTime.getScheduleWorkTime().toLocalTime().getHour()).plusMinutes(legalTime.getScheduleWorkTime().toLocalTime().getMinute()).plusSeconds(legalTime.getScheduleWorkTime().toLocalTime().getSecond());
+        Duration standardWorkTime = stringToDuration.stringToDuration(legalTime.getScheduleWorkTime());
         Duration morning = Duration.between(beginWork, beginBreak);
         Duration afternoon = Duration.between(endBreak, endWork);
         Duration workTime = morning.plus(afternoon);
 
         Duration breakTime = Duration.between(beginBreak, endBreak);
         // 法定休憩時間で初期化
-        Duration standardBreakTime = Duration.ofHours(legalTime.getScheduleBreakTime().toLocalTime().getHour()).plusMinutes(legalTime.getScheduleBreakTime().toLocalTime().getMinute()).plusSeconds(legalTime.getScheduleBreakTime().toLocalTime().getSecond());
+        Duration standardBreakTime = stringToDuration.stringToDuration(legalTime.getScheduleBreakTime());
         // 週の法定労働時間で初期化
-        Duration standardWeekWorkTime = Duration.ofHours(legalTime.getWeeklyWorkTime().toLocalTime().getHour()).plusMinutes(legalTime.getWeeklyWorkTime().toLocalTime().getMinute()).plusSeconds(legalTime.getWeeklyWorkTime().toLocalTime().getSecond());
+        Duration standardWeekWorkTime = stringToDuration.stringToDuration(legalTime.getWeeklyWorkTime());
         // 申請の労働時間のコピーで初期化
         Duration weekWorkTime = workTime.abs();
         // 週のシフト
@@ -339,6 +341,7 @@ public class PostController
     @PostMapping("/send/changetime")
     public Response shiftChangeSet(@RequestBody ShiftChangeInput shiftChangeInput, HttpSession session)
     {
+        StringToDuration stringToDuration = new StringToDuration();
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         int status = 0;
         String username = SecurityUtil.getCurrentUsername();
@@ -396,15 +399,15 @@ public class PostController
         LegalTime legalTime = legalTimeService.getFirstByOrderByBeginDesc();
         // 労働時間が8時間(所定労働時間)になっているか確認
         // 休憩が1時間を超えているか確認
-        Duration standardWorkTime = Duration.ofHours(legalTime.getScheduleWorkTime().toLocalTime().getHour()).plusMinutes(legalTime.getScheduleWorkTime().toLocalTime().getMinute()).plusSeconds(legalTime.getScheduleWorkTime().toLocalTime().getSecond());
+        Duration standardWorkTime = stringToDuration.stringToDuration(legalTime.getScheduleWorkTime());
         Duration morning = Duration.between(beginWork, beginBreak);
         Duration afternoon = Duration.between(endBreak, endWork);
         Duration workTime = morning.plus(afternoon);
 
         Duration breakTime = Duration.between(beginBreak, endBreak);
-        Duration standardBreakTime = Duration.ofHours(legalTime.getScheduleBreakTime().toLocalTime().getHour()).plusMinutes(legalTime.getScheduleBreakTime().toLocalTime().getMinute()).plusSeconds(legalTime.getScheduleBreakTime().toLocalTime().getSecond());
+        Duration standardBreakTime = stringToDuration.stringToDuration(legalTime.getScheduleBreakTime());
         // 法定時間で初期化
-        Duration standardWeekWorkTime = Duration.ofHours(legalTime.getWeeklyWorkTime().toLocalTime().getHour()).plusMinutes(legalTime.getWeeklyWorkTime().toLocalTime().getMinute()).plusSeconds(legalTime.getWeeklyWorkTime().toLocalTime().getSecond());
+        Duration standardWeekWorkTime = stringToDuration.stringToDuration(legalTime.getWeeklyWorkTime());
         // 申請の労働時間のコピーで初期化
         Duration weekWorkTime = workTime.abs();
         // 週のシフト

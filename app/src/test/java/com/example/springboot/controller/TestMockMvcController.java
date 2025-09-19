@@ -60,6 +60,7 @@ import com.example.springboot.model.AttendanceExceptionRequest;
 import com.example.springboot.model.AttendanceExceptionType;
 import com.example.springboot.model.Department;
 import com.example.springboot.model.LegalTime;
+import com.example.springboot.model.MonthlyRequest;
 import com.example.springboot.model.OverTimeRequest;
 import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
@@ -68,6 +69,7 @@ import com.example.springboot.service.AttendService;
 import com.example.springboot.service.AttendanceExceptionRequestService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.LegalTimeService;
+import com.example.springboot.service.MonthlyRequestService;
 import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.ShiftChangeRequestService;
@@ -142,6 +144,9 @@ public class TestMockMvcController
 
     @MockBean
     private ShiftListShiftRequestService shiftListShiftRequestService;
+
+    @MockBean
+    private MonthlyRequestService monthlyRequestService;
 
     @Test
     void loginSuccess() throws Exception
@@ -496,15 +501,15 @@ public class TestMockMvcController
         LegalTime legalTime = new LegalTime();
         Long legalTimeId = 1L;
         LocalDateTime legalTimeBegin = stringToLocalDateTime.stringToLocalDateTime("2025/08/08T21:00:00");
-        Time legalTimeScheduleWorkTime = Time.valueOf("08:00:00");
-        Time legalTimeWeeklyWorkTime = Time.valueOf("40:00:00");
-        Time legalTimeMonthlyOverWork = Time.valueOf("45:00:00");
-        Time legalTimeYearOverWork = Time.valueOf("360:00:00");
-        Time legalTimeMaxOverWorkTime = Time.valueOf("100:00:00");
-        Time legalTimeMonthlyOverWorkAverage = Time.valueOf("80:00:00");
-        Time legalTimeLateNightWorkTimeBegin = Time.valueOf("22:00:00");
-        Time legalTimeLateNightWorkTimeEnd = Time.valueOf("05:00:00");
-        Time legalTimeScheduleBreakTime = Time.valueOf("01:00:00");
+        String legalTimeScheduleWorkTime = "08:00:00";
+        String legalTimeWeeklyWorkTime = "40:00:00";
+        String legalTimeMonthlyOverWork = "45:00:00";
+        String legalTimeYearOverWork = "360:00:00";
+        String legalTimeMaxOverWorkTime = "100:00:00";
+        String legalTimeMonthlyOverWorkAverage = "80:00:00";
+        String legalTimeLateNightWorkTimeBegin = "22:00:00";
+        String legalTimeLateNightWorkTimeEnd = "05:00:00";
+        String legalTimeScheduleBreakTime = "01:00:00";
         int legalTimeWeeklyHoliday = 1;
 
         legalTime.setLegalTimeId(legalTimeId);
@@ -828,15 +833,15 @@ public class TestMockMvcController
         LegalTime legalTime = new LegalTime();
         Long legalTimeId = 1L;
         LocalDateTime legalTimeBegin = LocalDateTime.parse(LocalDateTime.parse("2025/08/08T21:00:00",DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
-        Time legalTimeScheduleWorkTime = Time.valueOf("08:00:00");
-        Time legalTimeWeeklyWorkTime = Time.valueOf("40:00:00");
-        Time legalTimeMonthlyOverWork = Time.valueOf("45:00:00");
-        Time legalTimeYearOverWork = Time.valueOf("360:00:00");
-        Time legalTimeMaxOverWorkTime = Time.valueOf("100:00:00");
-        Time legalTimeMonthlyOverWorkAverage = Time.valueOf("80:00:00");
-        Time legalTimeLateNightWorkTimeBegin = Time.valueOf("22:00:00");
-        Time legalTimeLateNightWorkTimeEnd = Time.valueOf("05:00:00");
-        Time legalTimeScheduleBreakTime = Time.valueOf("01:00:00");
+        String legalTimeScheduleWorkTime = "08:00:00";
+        String legalTimeWeeklyWorkTime = "40:00:00";
+        String legalTimeMonthlyOverWork = "45:00:00";
+        String legalTimeYearOverWork = "360:00:00";
+        String legalTimeMaxOverWorkTime = "100:00:00";
+        String legalTimeMonthlyOverWorkAverage = "80:00:00";
+        String legalTimeLateNightWorkTimeBegin = "22:00:00";
+        String legalTimeLateNightWorkTimeEnd = "05:00:00";
+        String legalTimeScheduleBreakTime = "01:00:00";
         int legalTimeWeeklyHoliday = 1;
 
         legalTime.setLegalTimeId(legalTimeId);
@@ -1269,4 +1274,89 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.status").value(1));
     }
 
+    @Test
+    void monthlyRequestDetilSuccess() throws Exception
+    {
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        Account generalAccount = new Account();
+        Long generalAccountId = 1L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Account adminAccount = new Account();
+        Long adminAccountId = 2L;
+        String adminAccountName = "闇落ちしたたかし";
+        adminAccount.setId(adminAccountId);
+        adminAccount.setName(adminAccountName);
+
+        MonthlyRequest generalMonthlyRequest = new MonthlyRequest();
+        String generalWorkTime = "160:00:00";
+        String generalOverTime = "01:00:00";
+        String generalEarlyTime = "02:00:00";
+        String generalLeavingTime = "02:00:00";
+        String generalOutingTime = "02:00:00";
+        String generalAbsenceTime = "02:00:00";
+        String generalPaydHolidayTime = "02:00:00";
+        String generalSpecialTime = "02:00:00";
+        String generalHolidayWorkTime = "02:00:00";
+        String generalLateNightWorkTime = "02:00:00";
+        int generalYear = 2025;
+        int generalMonth = 07;
+        String generalRequestComment = "";
+        String generalRequestDate = "2025/08/01/08/00/21";
+        int generalRequestStatus = 1;
+        String genearlApproverComment = "";
+        String generalApprovalTime = null;
+        generalMonthlyRequest.setWorkTime(generalWorkTime);
+        generalMonthlyRequest.setOverTime(generalOverTime);
+        generalMonthlyRequest.setEarlyTime(generalEarlyTime);
+        generalMonthlyRequest.setLeavingTime(generalLeavingTime);
+        generalMonthlyRequest.setOutingTime(generalOutingTime);
+        generalMonthlyRequest.setAbsenceTime(generalAbsenceTime);
+        generalMonthlyRequest.setPaydHolidayTime(generalPaydHolidayTime);
+        generalMonthlyRequest.setSpecialTime(generalSpecialTime);
+        generalMonthlyRequest.setHolidayWorkTime(generalHolidayWorkTime);
+        generalMonthlyRequest.setLateNightWorkTime(generalLateNightWorkTime);
+        generalMonthlyRequest.setYear(generalYear);
+        generalMonthlyRequest.setMonth(generalMonth);
+        generalMonthlyRequest.setRequestComment(generalRequestComment);
+        generalMonthlyRequest.setRequestDate(LocalDateTime.parse(generalRequestDate, DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        generalMonthlyRequest.setRequestStatus(generalRequestStatus);
+        generalMonthlyRequest.setApprover(adminAccount);
+        generalMonthlyRequest.setApprovalDate(Objects.isNull(generalApprovalTime) ? null : stringToLocalDateTime.stringToLocalDateTime(generalApprovalTime));
+        generalMonthlyRequest.setApproverComment(genearlApproverComment);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(monthlyRequestService.findByAccountIdAndMothlyRequestId(any(Account.class), anyLong())).thenReturn(generalMonthlyRequest);
+        mockMvc.perform
+        (
+            get("/api/reach/requestdetil/monthly")
+            .param("requestId","1")
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.workTime").value(generalWorkTime))
+        .andExpect(jsonPath("$.overTime").value(generalOverTime))
+        .andExpect(jsonPath("$.earlyTime").value(generalEarlyTime))
+        .andExpect(jsonPath("$.leavingTime").value(generalLeavingTime))
+        .andExpect(jsonPath("$.outingTime").value(generalOutingTime))
+        .andExpect(jsonPath("$.absenceTime").value(generalAbsenceTime))
+        .andExpect(jsonPath("$.paydHolidayTime").value(generalPaydHolidayTime))
+        .andExpect(jsonPath("$.specialTime").value(generalSpecialTime))
+        .andExpect(jsonPath("$.holidayWorkTime").value(generalHolidayWorkTime))
+        .andExpect(jsonPath("$.lateNightWorkTime").value(generalLateNightWorkTime))
+        .andExpect(jsonPath("$.year").value(generalYear))
+        .andExpect(jsonPath("$.month").value(generalMonth))
+        .andExpect(jsonPath("$.requestComment").value(generalRequestComment))
+        .andExpect(jsonPath("$.requestDate").value(localDateTimeToString.localDateTimeToString(LocalDateTime.parse(generalRequestDate, DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")))))
+        .andExpect(jsonPath("$.requestStatus").value(generalRequestStatus))
+        .andExpect(jsonPath("$.approverId").value(adminAccountId))
+        .andExpect(jsonPath("$.approverName").value(adminAccountName))
+        .andExpect(jsonPath("$.approverComment").value(genearlApproverComment))
+        .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(generalApprovalTime) ? "" : localDateTimeToString.localDateTimeToString(LocalDateTime.parse(generalRequestDate, DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")))));
+    }
 }
