@@ -436,4 +436,5 @@ public class GetController
         requestDetilOtherTimeResponse.setApprovalTime(Objects.isNull(attendanceExceptionRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getApprovalTime()));
         return requestDetilOtherTimeResponse;
     }
+    // 月次申請詳細取得を作成後申請一覧取得の作成
 }

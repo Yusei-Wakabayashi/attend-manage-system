@@ -1,28 +1,19 @@
-FROM node:18-slim
+FROM node:22-slim
 
 WORKDIR /app
 
-# Vite 初期化ツールをインストール
-RUN npm install -g create-vite
+# package.json と lock ファイルだけ先にコピー
+COPY package*.json ./
 
-# Vite + Vue のプロジェクトを生成（TypeScript にしたければ vue-ts に）
-RUN create-vite . --template vue-ts
+# lockファイルに従って依存関係をインストール
+RUN npm ci
+# @tailwindcssをインストール
+RUN npm install -D tailwindcss@latest @tailwindcss/vite
 
-# 依存関係インストール
-RUN npm install
+# ソースコードをコピー
+COPY . .
 
-RUN npm install -D vite-plugin-vue-devtools
-
-RUN npm install -D @tailwindcss/vite
-
-RUN npm install -D vue-router
-
-RUN npm install -D axios
-
-RUN apt-get update
-
-# ポート公開
 EXPOSE 5173
 
-# ホットリロード可能にする（--host指定で外部アクセスも可能）
+# Vite 開発サーバーを起動
 CMD ["npm", "run", "dev", "--", "--host"]

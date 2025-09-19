@@ -45,7 +45,8 @@ public class ShiftRequestService
         account.setId(id);
         LocalDateTime beginWork = begin.toLocalDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay();
         LocalDateTime endWork = begin.toLocalDate().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).atTime(LocalTime.MAX);
-        int requestStatus = 1;
+        // 承認済みステータスが存在してほしくない
+        int requestStatus = 2;
         List<ShiftRequest> shiftRequests = shiftRequestRepository.findByAccountIdAndBeginWorkBetweenAndRequestStatus(account, beginWork, endWork, requestStatus);
         return shiftRequests;
     }
@@ -54,7 +55,8 @@ public class ShiftRequestService
     {
         LocalDateTime beginWork = begin.toLocalDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay();
         LocalDateTime endWork = begin.toLocalDate().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).atTime(LocalTime.MAX);
-        int requestStatus = 1;
+        // 承認済みステータスが存在してほしくない
+        int requestStatus = 2;
         List<ShiftRequest> shiftRequests = shiftRequestRepository.findByAccountIdAndBeginWorkBetweenAndRequestStatus(account, beginWork, endWork, requestStatus);
         return shiftRequests;
     }
