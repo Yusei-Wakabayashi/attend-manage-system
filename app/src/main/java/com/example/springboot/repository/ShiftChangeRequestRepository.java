@@ -16,4 +16,5 @@ public interface ShiftChangeRequestRepository extends JpaRepository<ShiftChangeR
     List<ShiftChangeRequest> findByAccountIdAndShiftIdAndRequestStatus(Account accountId, Shift id, int requestStatus);
     List<ShiftChangeRequest> findByAccountIdAndBeginWorkBetweenAndRequestStatus(Account accountId, LocalDateTime beginWork, LocalDateTime endWork, int requestStatus);
     List<ShiftChangeRequest> findByAccountIdAndShiftIdInAndRequestStatus(Account accountId, List<Shift> shiftIds, int requestStatus);
+    List<ShiftChangeRequest> findByAccountId(Account account);
 }

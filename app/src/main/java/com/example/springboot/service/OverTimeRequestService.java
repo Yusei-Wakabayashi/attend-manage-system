@@ -1,5 +1,7 @@
 package com.example.springboot.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +28,18 @@ public class OverTimeRequestService
     {
         return overTimeRequestRepository.findByAccountIdAndOverTimeId(account, id)
             .orElseThrow(() -> new RuntimeException("残業申請が見つかりません"));
+    }
+
+    public List<OverTimeRequest> findByAccountId(Long accountId)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        return overTimeRequestRepository.findByAccountId(account);
+    }
+
+    public List<OverTimeRequest> findByAccountId(Account account)
+    {
+        return overTimeRequestRepository.findByAccountId(account);
     }
 
     public String save(OverTimeRequest overTimeRequest)

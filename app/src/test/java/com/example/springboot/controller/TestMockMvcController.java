@@ -1359,4 +1359,61 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.approverComment").value(genearlApproverComment))
         .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(generalApprovalTime) ? "" : localDateTimeToString.localDateTimeToString(LocalDateTime.parse(generalRequestDate, DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")))));
     }
+    @Test
+    void requestListResponseSuccess() throws Exception
+    {
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        // LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        Account generalAccount = new Account();
+        Long generalAccountId = 1L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Long generalRequestId = 3L;
+        int generalRequestStatus = 1;
+        String generalLocalDateTimeShift = "2025/06/07T21:33:44";
+        String generalLocalDateTimeShiftChange = "2025/06/07T21:33:45";
+        // String generalLocalDateTimeStamp = "2025/06/07T21:33:46";
+        // String generalLocalDateTimeAttendanceException = "2025/06/07T21:33:47";
+        // String generalLocalDateTimeOverTime = "2025/06/07T21:33:48";
+        // String generalLocalDateTimeVacation = "2025/06/07T21:33:49";
+        // String generalLocalDateTimeMonthly = "2025/06/07T21:33:50";
+
+        List<ShiftRequest> shiftRequests = new ArrayList<ShiftRequest>();
+        ShiftRequest generalShiftRequest = new ShiftRequest();
+        generalShiftRequest.setShiftRequestId(generalRequestId);
+        generalShiftRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeShift));
+        generalShiftRequest.setRequestStatus(generalRequestStatus);
+        shiftRequests.add(generalShiftRequest);
+
+        List<ShiftChangeRequest> shiftChangeRequests = new ArrayList<ShiftChangeRequest>();
+        ShiftChangeRequest generalShiftChangeRequest = new ShiftChangeRequest();
+        generalShiftChangeRequest.setShiftChangeId(generalRequestId);
+        generalShiftChangeRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeShiftChange));
+        generalShiftChangeRequest.setRequestStatus(generalRequestStatus);
+        shiftChangeRequests.add(generalShiftChangeRequest);
+
+        List<StampRequest> stampRequests = new ArrayList<StampRequest>();
+        List<AttendanceExceptionRequest> attendanceExceptionRequests = new ArrayList<AttendanceExceptionRequest>();
+        List<VacationRequest> vacationRequests = new ArrayList<VacationRequest>();
+        List<OverTimeRequest> overTimeRequests = new ArrayList<OverTimeRequest>();
+        List<MonthlyRequest> monthlyRequests = new ArrayList<MonthlyRequest>();
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(shiftRequestService.findByAccountId(any(Account.class))).thenReturn(shiftRequests);
+        when(shiftChangeRequestService.findByAccountId(any(Account.class))).thenReturn(shiftChangeRequests);
+        when(stampRequestService.findByAccountId(any(Account.class))).thenReturn(stampRequests);
+        when(attendanceExceptionRequestService.findByAccountId(any(Account.class))).thenReturn(attendanceExceptionRequests);
+        when(vacationRequestService.findByAccountId(any(Account.class))).thenReturn(vacationRequests);
+        when(overTimeRequestService.findByAccountId(any(Account.class))).thenReturn(overTimeRequests);
+        when(monthlyRequestService.findByAccountId(any(Account.class))).thenReturn(monthlyRequests);
+        mockMvc.perform
+        (
+            get("/api/reach/requestlist")
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk());
+    }
 }

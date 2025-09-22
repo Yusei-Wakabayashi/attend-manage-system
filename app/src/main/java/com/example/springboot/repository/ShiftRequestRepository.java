@@ -17,6 +17,7 @@ public interface ShiftRequestRepository extends JpaRepository<ShiftRequest, Long
     List<ShiftRequest> findByBeginWorkBetween(LocalDateTime beginWork, LocalDateTime endWork);
     List<ShiftRequest> findByAccountIdAndBeginWorkBetweenAndRequestStatus(Account accountId, LocalDateTime beginWork, LocalDateTime endWork, int requestStatus);
     Optional<ShiftRequest> findByAccountIdAndShiftRequestId(Account accountId, Long id);
+    List<ShiftRequest> findByAccountId(Account account);
     @Modifying
     @Query(value = "ALTER TABLE shift_requests AUTO_INCREMENT = 1", nativeQuery = true)
     void resetAutoIncrement();

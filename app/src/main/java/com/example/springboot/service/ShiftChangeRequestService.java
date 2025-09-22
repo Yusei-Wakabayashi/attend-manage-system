@@ -84,6 +84,18 @@ public class ShiftChangeRequestService
         return shiftChangeRequests;
     }
 
+    public List<ShiftChangeRequest> findByAccountId(Long accountId)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        return shiftChangeRequestRepository.findByAccountId(account);
+    }
+
+    public List<ShiftChangeRequest> findByAccountId(Account account)
+    {
+        return shiftChangeRequestRepository.findByAccountId(account);
+    }
+
     public String save(ShiftChangeRequest shiftChangeRequest)
     {
         shiftChangeRequestRepository.save(shiftChangeRequest);

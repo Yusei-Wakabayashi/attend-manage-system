@@ -44,6 +44,19 @@ public class StampRequestService
         List<StampRequest> stampRequests = stampRequestRepository.findByShiftIdAndRequestStatus(shift, status);
         return stampRequests;
     }
+
+    public List<StampRequest> findByAccountId(Long accountId)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        return stampRequestRepository.findByAccountId(account);
+    }
+
+    public List<StampRequest> findByAccountId(Account account)
+    {
+        return stampRequestRepository.findByAccountId(account);
+    }
+
     public String save(StampRequest stampRequest)
     {
         stampRequestRepository.save(stampRequest);

@@ -21,11 +21,25 @@ public class MonthlyRequestService
         return monthlyRequestRepository.findByAccountIdAndMonthRequestId(account, id)
             .orElseThrow(() -> new RuntimeException(""));
     }
+
     public MonthlyRequest findByAccountIdAndMothlyRequestId(Account account, Long id)
     {
         return monthlyRequestRepository.findByAccountIdAndMonthRequestId(account, id)
             .orElseThrow(() -> new RuntimeException(""));
     }
+
+    public List<MonthlyRequest> findByAccountId(Long accountId)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        return monthlyRequestRepository.findByAccountId(account);
+    }
+
+    public List<MonthlyRequest> findByAccountId(Account account)
+    {
+        return monthlyRequestRepository.findByAccountId(account);
+    }
+
     public List<MonthlyRequest> findAll()
     {
         return monthlyRequestRepository.findAll();

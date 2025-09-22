@@ -75,6 +75,18 @@ public class ShiftRequestService
             .orElseThrow(() -> new RuntimeException("シフト申請が見つかりません"));
     }
 
+    public List<ShiftRequest> findByAccountId(Long accountId)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        return shiftRequestRepository.findByAccountId(account);
+    }
+
+    public List<ShiftRequest> findByAccountId(Account account)
+    {
+        return shiftRequestRepository.findByAccountId(account);
+    }    
+
     public String save(ShiftRequest shiftRequest)
     {
         shiftRequestRepository.save(shiftRequest);

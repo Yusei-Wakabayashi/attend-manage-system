@@ -37,6 +37,8 @@ public class SecurityConfig
                 new AntPathRequestMatcher("/api/reach/requestdetil/vacation"),
                 new AntPathRequestMatcher("/api/reach/requestdetil/overtime"),
                 new AntPathRequestMatcher("/api/reach/requestdetil/othertime"),
+                new AntPathRequestMatcher("/api/reach/requestdetil/monthly"),
+                new AntPathRequestMatcher("/api/reach/requestlist"),
                 new AntPathRequestMatcher("/dummy/reach/shiftlist"),
                 new AntPathRequestMatcher("/dymmy/reach/attendlist")
             )

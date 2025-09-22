@@ -1,5 +1,7 @@
 package com.example.springboot.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,5 +27,17 @@ public class AttendanceExceptionRequestService
     {
         return attendanceExceptionRequestRepsitory.findByAccountIdAndAttendanceExceptionId(account, id)
             .orElseThrow(() -> new RuntimeException("勤怠例外申請が見つかりません"));
+    }
+
+    public List<AttendanceExceptionRequest> findByAccountId(Long accountId)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        return attendanceExceptionRequestRepsitory.findByAccountId(account);
+    }
+
+    public List<AttendanceExceptionRequest> findByAccountId(Account account)
+    {
+        return attendanceExceptionRequestRepsitory.findByAccountId(account);
     }
 }
