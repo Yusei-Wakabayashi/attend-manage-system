@@ -1,5 +1,7 @@
 package com.example.springboot.controller;
 
+import java.time.Duration;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.springboot.dto.AllStyleListResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.dto.response.AttendListResponse;
+import com.example.springboot.dto.response.MonthWorkInfoResponse;
 import com.example.springboot.dto.response.RequestDetilMonthlyResponse;
 import com.example.springboot.dto.response.RequestDetilOtherTimeResponse;
 import com.example.springboot.dto.response.RequestDetilOverTimeResponse;
@@ -27,6 +30,7 @@ import com.example.springboot.dto.response.RequestDetilVacationResponse;
 import com.example.springboot.dto.response.RequestListResponse;
 import com.example.springboot.dto.ArrayResponse;
 import com.example.springboot.dto.YearMonthParam;
+import com.example.springboot.dto.change.DurationToString;
 import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.input.RequestIdInput;
 import com.example.springboot.dto.response.AccountInfoResponse;
@@ -43,6 +47,7 @@ import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
 import com.example.springboot.model.ShiftRequest;
 import com.example.springboot.model.StampRequest;
+import com.example.springboot.model.Vacation;
 import com.example.springboot.model.VacationRequest;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
@@ -59,6 +64,7 @@ import com.example.springboot.service.StampRequestService;
 import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
 import com.example.springboot.service.VacationRequestService;
+import com.example.springboot.service.VacationService;
 import com.example.springboot.util.SecurityUtil;
 
 @RequestMapping("/api")
@@ -110,6 +116,9 @@ public class GetController
 
     @Autowired
     MonthlyRequestService monthlyRequestService;
+
+    @Autowired
+    VacationService vacationService;
 
     @GetMapping("/reach/approverlist")
     public ArrayResponse<ApproverListResponse> returnApproverList(HttpSession session)
@@ -567,5 +576,64 @@ public class GetController
         requestListResponse.sort(Comparator.comparing(RequestListResponse::getRequestDate));
         status = 1;
         return new ArrayResponse<RequestListResponse>(status, requestListResponse, "requestList");
+    }
+    @GetMapping("/reach/monthworkinfo")
+    public MonthWorkInfoResponse returnMonthWorkInfo(HttpSession session, YearMonthParam yearMonthParam)
+    {
+        DurationToString durationToString = new DurationToString();
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        MonthWorkInfoResponse monthWorkInfoResponse = new MonthWorkInfoResponse();
+        int status = 0;
+        if(Objects.isNull(account))
+        {
+            status = 4;
+            monthWorkInfoResponse.setStatus(status);
+            return monthWorkInfoResponse;
+        }
+        Duration monthWorkTime = Duration.ZERO;
+        Duration monthLateness = Duration.ZERO;
+        Duration monthLeaveEarly = Duration.ZERO;
+        Duration monthOuting = Duration.ZERO;
+        Duration monthOverWork = Duration.ZERO;
+        Duration monthAbsenceTime = Duration.ZERO;
+        Duration monthSpecialTime = Duration.ZERO;
+        Duration monthLateNightWorkTime = Duration.ZERO;
+        Duration monthHolidayWorkTime = Duration.ZERO;
+        Duration monthPaydHolidayTime = Duration.ZERO;
+
+        // 休暇の分け以外は取得できる
+        List<Attend> attends = attendService.findByAccountIdAndBeginWorkBetween(account, yearMonthParam.getYear(), yearMonthParam.getMonth());
+        for(Attend attend : attends)
+        {
+            monthWorkTime = monthWorkTime.plus(Duration.between(LocalTime.MIDNIGHT, attend.getWorkTime().toLocalTime()));
+            monthLateness = monthLateness.plus(Duration.between(LocalTime.MIDNIGHT, attend.getLateness().toLocalTime()));
+            monthLeaveEarly = monthLeaveEarly.plus(Duration.between(LocalTime.MIDNIGHT, attend.getLeaveEarly().toLocalTime()));
+            monthOuting = monthOuting.plus(Duration.between(LocalTime.MIDNIGHT, attend.getOuting().toLocalTime()));
+            monthOverWork = monthOverWork.plus(Duration.between(LocalTime.MIDNIGHT, attend.getOverWork().toLocalTime()));
+            monthAbsenceTime = monthAbsenceTime.plus(Duration.between(LocalTime.MIDNIGHT, attend.getAbsenceTime().toLocalTime()));
+            monthSpecialTime = monthSpecialTime.plus(Duration.between(LocalTime.MIDNIGHT, attend.getVacationTime().toLocalTime()));
+            monthLateNightWorkTime = monthLateNightWorkTime.plus(Duration.between(LocalTime.MIDNIGHT, attend.getLateNightWork().toLocalTime()));
+            monthHolidayWorkTime = monthHolidayWorkTime.plus(Duration.between(LocalTime.MIDNIGHT, attend.getHolidayWork().toLocalTime()));
+        }
+        // 休暇はvacationlistからその月の有給の時間を取得、休暇時間から減算
+        List<Vacation> vacations = vacationService.findByAccountIdAndBeginVacationBetweenMonthAndPaydHoliday(account, yearMonthParam.getYear(), yearMonthParam.getMonth());
+        for(Vacation vacation : vacations)
+        {
+            monthPaydHolidayTime = monthPaydHolidayTime.plus(Duration.between(vacation.getBeginVacation(), vacation.getEndVacation()));
+        }
+        monthSpecialTime.minus(monthPaydHolidayTime);
+        status = 1;
+        monthWorkInfoResponse.setStatus(status);
+        monthWorkInfoResponse.setWorkTime(durationToString.durationToString(monthWorkTime));
+        monthWorkInfoResponse.setLateness(durationToString.durationToString(monthLateness));
+        monthWorkInfoResponse.setLeaveEarly(durationToString.durationToString(monthLeaveEarly));
+        monthWorkInfoResponse.setOuting(durationToString.durationToString(monthOuting));
+        monthWorkInfoResponse.setOverWork(durationToString.durationToString(monthOverWork));
+        monthWorkInfoResponse.setAbsenceTime(durationToString.durationToString(monthAbsenceTime));
+        monthWorkInfoResponse.setSpecialTime(durationToString.durationToString(monthSpecialTime));
+        monthWorkInfoResponse.setLateNightWorkTime(durationToString.durationToString(monthLateNightWorkTime));
+        monthWorkInfoResponse.setPaydHolidayTime(durationToString.durationToString(monthPaydHolidayTime));
+        return monthWorkInfoResponse;
     }
 }

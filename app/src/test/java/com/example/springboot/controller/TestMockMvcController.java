@@ -1369,7 +1369,7 @@ public class TestMockMvcController
     void requestListResponseSuccess() throws Exception
     {
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
-        // LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         Account generalAccount = new Account();
         Long generalAccountId = 1L;
         String generalAccountUsername = "testuser";
@@ -1380,11 +1380,11 @@ public class TestMockMvcController
         int generalRequestStatus = 1;
         String generalLocalDateTimeShift = "2025/06/07T21:33:44";
         String generalLocalDateTimeShiftChange = "2025/06/07T21:33:45";
-        // String generalLocalDateTimeStamp = "2025/06/07T21:33:46";
-        // String generalLocalDateTimeAttendanceException = "2025/06/07T21:33:47";
-        // String generalLocalDateTimeOverTime = "2025/06/07T21:33:48";
-        // String generalLocalDateTimeVacation = "2025/06/07T21:33:49";
-        // String generalLocalDateTimeMonthly = "2025/06/07T21:33:50";
+        String generalLocalDateTimeStamp = "2025/06/07T21:33:46";
+        String generalLocalDateTimeAttendanceException = "2025/06/07T21:33:47";
+        String generalLocalDateTimeOverTime = "2025/06/07T21:33:48";
+        String generalLocalDateTimeVacation = "2025/06/07T21:33:49";
+        String generalLocalDateTimeMonthly = "2025/06/07T21:33:50";
 
         List<ShiftRequest> shiftRequests = new ArrayList<ShiftRequest>();
         ShiftRequest generalShiftRequest = new ShiftRequest();
@@ -1401,10 +1401,39 @@ public class TestMockMvcController
         shiftChangeRequests.add(generalShiftChangeRequest);
 
         List<StampRequest> stampRequests = new ArrayList<StampRequest>();
+        StampRequest generalStampRequest = new StampRequest();
+        generalStampRequest.setStampId(generalRequestId);
+        generalStampRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeStamp));
+        generalStampRequest.setRequestStatus(generalRequestStatus);
+        stampRequests.add(generalStampRequest);
+    
         List<AttendanceExceptionRequest> attendanceExceptionRequests = new ArrayList<AttendanceExceptionRequest>();
+        AttendanceExceptionRequest generalAttendanceExceptionRequest = new AttendanceExceptionRequest();
+        generalAttendanceExceptionRequest.setAttendanceExceptionId(generalRequestId);
+        generalAttendanceExceptionRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeAttendanceException));
+        generalAttendanceExceptionRequest.setRequestStatus(generalRequestStatus);
+        attendanceExceptionRequests.add(generalAttendanceExceptionRequest);
+
         List<VacationRequest> vacationRequests = new ArrayList<VacationRequest>();
+        VacationRequest generalVacationRequest = new VacationRequest();
+        generalVacationRequest.setVacationId(generalRequestId);
+        generalVacationRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeVacation));
+        generalVacationRequest.setRequestStatus(generalRequestStatus);
+        vacationRequests.add(generalVacationRequest);
+
         List<OverTimeRequest> overTimeRequests = new ArrayList<OverTimeRequest>();
+        OverTimeRequest generalOverTimeRequest = new OverTimeRequest();
+        generalOverTimeRequest.setOverTimeId(generalRequestId);
+        generalOverTimeRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeOverTime));
+        generalOverTimeRequest.setRequestStatus(generalRequestStatus);
+        vacationRequests.add(generalVacationRequest);
+
         List<MonthlyRequest> monthlyRequests = new ArrayList<MonthlyRequest>();
+        MonthlyRequest generalMonthlyRequest = new MonthlyRequest();
+        generalMonthlyRequest.setMonthRequestId(generalRequestId);
+        generalMonthlyRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeMonthly));
+        generalMonthlyRequest.setRequestStatus(generalRequestStatus);
+        monthlyRequests.add(generalMonthlyRequest);
 
         when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftRequestService.findByAccountId(any(Account.class))).thenReturn(shiftRequests);
@@ -1420,6 +1449,67 @@ public class TestMockMvcController
             .with(csrf())
             .with(user(generalAccountUsername))
         )
-        .andExpect(status().isOk());
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.requestList[0].requestDate").value(localDateTimeToString.localDateTimeToString(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeShift))))
+        .andExpect(jsonPath("$.requestList[1].requestDate").value(localDateTimeToString.localDateTimeToString(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeShiftChange))));
+    }
+
+    @Test 
+    void monthWorkInfoResponseSuccess() throws Exception
+    {
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        Account generalAccount = new Account();
+        String generalAccountUsername = "testuser";
+        Long generalAccountId = 3L;
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Time generalTime = Time.valueOf("01:00:00");
+        List<Attend> attends = new ArrayList<Attend>();
+        Attend attend = new Attend();
+        attend.setWorkTime(generalTime);
+        attend.setLateness(generalTime);
+        attend.setLeaveEarly(generalTime);
+        attend.setOuting(generalTime);
+        attend.setOverWork(generalTime);
+        attend.setAbsenceTime(generalTime);
+        attend.setVacationTime(generalTime);
+        attend.setLateNightWork(generalTime);
+        attend.setHolidayWork(generalTime);
+
+        Attend generalAttend = new Attend();
+        generalAttend.setWorkTime(generalTime);
+        generalAttend.setLateness(generalTime);
+        generalAttend.setLeaveEarly(generalTime);
+        generalAttend.setOuting(generalTime);
+        generalAttend.setOverWork(generalTime);
+        generalAttend.setAbsenceTime(generalTime);
+        generalAttend.setVacationTime(generalTime);
+        generalAttend.setLateNightWork(generalTime);
+        generalAttend.setHolidayWork(generalTime);
+
+        attends.add(attend);
+        attends.add(generalAttend);
+
+        List<Vacation> vacations = new ArrayList<Vacation>();
+        Vacation vacation = new Vacation();
+        vacation.setBeginVacation(stringToLocalDateTime.stringToLocalDateTime("2025/09/08T01:00:00"));
+        vacation.setEndVacation(stringToLocalDateTime.stringToLocalDateTime("2025/09/08T02:00:00"));
+        vacations.add(vacation);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(attendService.findByAccountIdAndBeginWorkBetween(any(Account.class), anyInt(),anyInt())).thenReturn(attends);
+        when(vacationService.findByAccountIdAndBeginVacationBetweenMonthAndPaydHoliday(any(Account.class), anyInt(), anyInt())).thenReturn(vacations);
+        mockMvc.perform
+        (
+            get("/api/reach/monthworkinfo")
+            .param("year","2025")
+            .param("month", "9")
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.workTime").value("002:00:00"));
     }
 }
