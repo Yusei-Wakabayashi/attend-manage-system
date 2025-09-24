@@ -31,7 +31,7 @@ public class ShiftListShiftRequest
     @JoinColumn(name = "shift_id", nullable = false)
     private Shift shiftId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shift_request_id", nullable = true)
+    @JoinColumn(name = "shift_request_id", nullable = false)
     private ShiftRequest shiftRequestId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shift_change_request_id", nullable = true)

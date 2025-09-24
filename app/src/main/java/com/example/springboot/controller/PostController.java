@@ -25,9 +25,13 @@ import com.example.springboot.dto.LoginPostData;
 import com.example.springboot.dto.change.StringToDuration;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.response.Response;
+import com.example.springboot.dto.input.MonthlyInput;
+import com.example.springboot.dto.input.OtherTimeInput;
+import com.example.springboot.dto.input.OverTimeInput;
 import com.example.springboot.dto.input.ShiftChangeInput;
 import com.example.springboot.dto.input.ShiftInput;
 import com.example.springboot.dto.input.StampInput;
+import com.example.springboot.dto.input.VacationInput;
 import com.example.springboot.dto.IdData;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
@@ -620,4 +624,59 @@ public class PostController
         return new Response(status);
     }
 
+    @PostMapping("/send/vacation")
+    public Response vacationSet(@RequestBody VacationInput vacationInput, HttpSession session)
+    {
+        // アカウントの取得
+        // シフトの時間内に収まっているのか
+        // 残業の前後(始業前の残業直後、終業後の残業直前)出ないこと
+        // すでに申請されている休暇と重複していないか
+        // 有給の場合承認待ちの有給申請も時間も含め足りるかを計算
+        Response response = new Response();
+        return response;
+    }
+
+    @PostMapping("/send/othertime")
+    public Response otherTimeSet(@RequestBody OtherTimeInput otherTimeInput, HttpSession session)
+    {
+        // アカウントの取得
+        // 勤怠情報確定済みの場合申請不可
+        // 外出申請の場合
+        // 重複NG(承認待ち、承認済み問わず)
+        // 
+
+        // 遅刻申請の場合
+        // 既に存在する場合上書き
+        // 始業前の残業が存在する場合申請NG
+        // 休暇と被る場合も申請NG
+        // 早退が存在する場合遅刻の終了より前に早退の開始が存在すればエラー
+
+        // 早退申請の場合
+        // 既に存在する場合上書き
+        // 終業後の残業が存在する場合申請NG
+        // 休暇と被る場合も申請NG
+        // 遅刻が存在する場合早退の開始より後に遅刻の終了が存在すればエラー
+        Response response = new Response();
+        return response;
+    }
+
+    @PostMapping("/send/overtime")
+    public Response overTimeSet(@RequestBody OverTimeInput overTimeInput, HttpSession session)
+    {
+        // アカウントの取得
+        // 既に存在する残業と重複する場合申請NG
+        // 遅刻早退との重複NG
+        // 始業直後に休暇、終業直前に休暇が存在する場合申請NG
+        // 法定時間を超える申請(承認待ち、承認済み)はNG
+        Response response = new Response();
+        return response;
+    }
+
+    @PostMapping("/send/monthly")
+    public Response monthlySet(@RequestBody MonthlyInput monthlyInput, HttpSession session)
+    {
+        // お知らせから月次申請を行う年月の情報が不足している場合申請不可
+        Response response = new Response();
+        return response;
+    }
 }

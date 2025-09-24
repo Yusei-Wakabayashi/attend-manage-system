@@ -26,4 +26,6 @@ public class AttendListResponse
     private Time overWork;
     private Time holidayWork;
     private Time lateNightWork;
+    private Time vacationTime;
+    private Time absenceTime;
 }

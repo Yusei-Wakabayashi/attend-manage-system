@@ -24,7 +24,8 @@ import lombok.Setter;
 @Entity
 @NoArgsConstructor
 @Table(name="attendance_list")
-public class Attend {
+public class Attend
+{
     @Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(name = "attendance_id", nullable = false, length = 20)
@@ -56,6 +57,10 @@ public class Attend {
     private Time holidayWork;
     @Column(name = "late_night_work", nullable = false)
     private Time lateNightWork;
+    @Column(name = "vacation_time", nullable = false)
+    private Time vacationTime;
+    @Column(name = "absence_time", nullable = false)
+    private Time absenceTime;
     @OneToOne(mappedBy = "attendanceId", fetch = FetchType.LAZY)
     private AttendanceListSource attendanceListSourceFromAttendances;
     // コンストラクタ定義
@@ -63,7 +68,8 @@ public class Attend {
     (
         Long attendanceId, Account accountId, LocalDateTime beginWork, LocalDateTime endWork,
         LocalDateTime beginBreak, LocalDateTime endBreak, Time lateness, Time leaveEarly,
-        Time outing, Time workTime, Time breakTime, Time overWork, Time holidayWork, Time lateNightWork
+        Time outing, Time workTime, Time breakTime, Time overWork, Time holidayWork, Time lateNightWork,
+        Time vacationTime, Time absenceTime
     )
     {
         this.attendanceId = attendanceId;
@@ -80,6 +86,8 @@ public class Attend {
         this.overWork = overWork;
         this.holidayWork = holidayWork;
         this.lateNightWork = lateNightWork;
+        this.vacationTime = vacationTime;
+        this.absenceTime = absenceTime;
     }
 
     public Attend processLine(String line)
@@ -99,6 +107,8 @@ public class Attend {
         attend.setOverWork(Time.valueOf(arrayLine[10]));
         attend.setHolidayWork(Time.valueOf(arrayLine[11]));
         attend.setLateNightWork(Time.valueOf(arrayLine[12]));
+        attend.setVacationTime(Time.valueOf(arrayLine[13]));
+        attend.setAbsenceTime(Time.valueOf(arrayLine[14]));
         return attend;
     }
 }

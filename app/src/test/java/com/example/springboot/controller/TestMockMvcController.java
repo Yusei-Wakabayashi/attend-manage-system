@@ -960,6 +960,8 @@ public class TestMockMvcController
         Time generalAttendOverWork = Time.valueOf(time);
         Time generalAttendHolidayWork = Time.valueOf(time);
         Time generalAttendLateNightWork = Time.valueOf(time);
+        Time generalVacationTime = Time.valueOf(time);
+        Time generalAbsenceTime = Time.valueOf(time);
 
         Account generalAccount = new Account();
         generalAccount.setId(generalAccountId);
@@ -970,10 +972,12 @@ public class TestMockMvcController
             generalAttendId, generalAccount, generalAttendBeginWork,
             generalAttendEndWork, generalAttendBeginBreak, generalAttendEndBreak,
             generalAttendLateness, generalAttendLeaveEarly, generalAttendOuting, generalAttendWorkTime,
-            generalAttendBreakTime, generalAttendOverWork, generalAttendHolidayWork, generalAttendLateNightWork
+            generalAttendBreakTime, generalAttendOverWork, generalAttendHolidayWork, generalAttendLateNightWork,
+            generalVacationTime, generalAbsenceTime
         );
 
-        AttendListResponse generalAttendListResponse = new AttendListResponse(
+        AttendListResponse generalAttendListResponse = new AttendListResponse
+        (
             generalAttendId,
             localDateTimeToString.localDateTimeToString(generalAttendBeginWork),
             localDateTimeToString.localDateTimeToString(generalAttendEndWork),
@@ -986,7 +990,9 @@ public class TestMockMvcController
             generalAttendOuting,
             generalAttendOverWork,
             generalAttendHolidayWork,
-            generalAttendLateNightWork
+            generalAttendLateNightWork,
+            generalVacationTime,
+            generalAbsenceTime
         );
 
         List<Attend> generalAttends = new ArrayList<Attend>();

@@ -65,6 +65,10 @@ public class AttendService
         attendListResponse.setLeaveEarly(attend.getLeaveEarly());
         attendListResponse.setOuting(attend.getOuting());
         attendListResponse.setOverWork(attend.getOverWork());
+        attendListResponse.setHolidayWork(attend.getHolidayWork());
+        attendListResponse.setLateNightWork(attend.getLateNightWork());
+        attendListResponse.setVacationTime(attend.getVacationTime());
+        attendListResponse.setAbsenceTime(attend.getAbsenceTime());
         return attendListResponse;
     }
 

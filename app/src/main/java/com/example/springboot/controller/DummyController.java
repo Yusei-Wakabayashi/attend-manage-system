@@ -128,6 +128,8 @@ public class DummyController
                 attendListResponse.setOverWork(new Attend().processLine(line).getOverWork());
                 attendListResponse.setHolidayWork(new Attend().processLine(line).getHolidayWork());
                 attendListResponse.setLateNightWork(new Attend().processLine(line).getLateNightWork());
+                attendListResponse.setVacationTime(new Attend().processLine(line).getVacationTime());
+                attendListResponse.setAbsenceTime(new Attend().processLine(line).getAbsenceTime());
                 attendlist.add(attendListResponse);
             }
         }
