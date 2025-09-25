@@ -1512,4 +1512,78 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.status").value(1))
         .andExpect(jsonPath("$.workTime").value("002:00:00"));
     }
+
+    @Test
+    void styleResponseSuccess() throws Exception
+    {
+        Account generalAccount = new Account();
+        Long generalAccountId = 1L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Style generalStyle = new Style();
+        Long generalStyleId = 2L;
+        StylePlace generalStylePlace = new StylePlace();
+        String generalStylePlaceName = "出勤";
+        generalStylePlace.setName(generalStylePlaceName);
+        generalStyle.setStyleId(generalStyleId);
+        generalStyle.setStylePlaceId(generalStylePlace);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(styleService.getStyleByAccountId(any(Account.class))).thenReturn(generalStyle);
+        mockMvc.perform
+        (
+            get("/api/reach/style")
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.styleId").value(generalStyleId.intValue()))
+        .andExpect(jsonPath("$.styleName").value(generalStylePlaceName));
+    }
+
+    @Test
+    void approverResponseSuccess() throws Exception
+    {
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Account adminAccount = new Account();
+        Long adminAccountId = 4L;
+        String adminAccountName = "かまどたかしろう";
+        Department adminAccountDepartment = new Department();
+        String adminAccountDepartmentName = "総務";
+        adminAccountDepartment.setName(adminAccountDepartmentName);
+        Role adminAccountRole = new Role();
+        String adminAccountRoleName = "課長";
+        adminAccountRole.setName(adminAccountRoleName);
+        adminAccount.setId(adminAccountId);
+        adminAccount.setName(adminAccountName);
+        adminAccount.setDepartmentId(adminAccountDepartment);
+        adminAccount.setRoleId(adminAccountRole);
+
+        AccountApprover accountApprover = new AccountApprover();
+        accountApprover.setAccountId(generalAccount);
+        accountApprover.setApproverId(adminAccount);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountApproverService.getAccountApproverByAccount(any(Account.class))).thenReturn(accountApprover);
+        mockMvc.perform
+        (
+            get("/api/reach/approver")
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.approverId").value(adminAccountId.intValue()))
+        .andExpect(jsonPath("$.approverName").value(adminAccountName))
+        .andExpect(jsonPath("$.approverDepartment").value(adminAccountDepartmentName))
+        .andExpect(jsonPath("$.approverRole").value(adminAccountRoleName));
+    }
 }

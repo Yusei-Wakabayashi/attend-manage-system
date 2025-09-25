@@ -5,6 +5,7 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.springboot.model.Account;
 import com.example.springboot.model.Style;
 import com.example.springboot.repository.StyleRepository;
 
@@ -24,6 +25,14 @@ public class StyleService
     }
 
     public Style getStyleByAccountId(Long id)
+    {
+        Account account = new Account();
+        account.setId(id);
+        return styleRepository.findByAccountId(account)
+            .orElseThrow(() -> new RuntimeException("スタイルが見つかりません"));
+    }
+
+    public Style getStyleByAccountId(Account id)
     {
         return styleRepository.findByAccountId(id)
             .orElseThrow(() -> new RuntimeException("スタイルが見つかりません"));

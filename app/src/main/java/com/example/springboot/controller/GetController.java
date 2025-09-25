@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.springboot.dto.AllStyleListResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
+import com.example.springboot.dto.response.ApproverResponse;
 import com.example.springboot.dto.response.AttendListResponse;
 import com.example.springboot.dto.response.MonthWorkInfoResponse;
 import com.example.springboot.dto.response.RequestDetilMonthlyResponse;
@@ -35,6 +36,7 @@ import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.input.RequestIdInput;
 import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ShiftListResponse;
+import com.example.springboot.dto.response.StyleResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Attend;
@@ -47,8 +49,10 @@ import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
 import com.example.springboot.model.ShiftRequest;
 import com.example.springboot.model.StampRequest;
+import com.example.springboot.model.Style;
 import com.example.springboot.model.Vacation;
 import com.example.springboot.model.VacationRequest;
+import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.AttendService;
@@ -119,6 +123,9 @@ public class GetController
 
     @Autowired
     VacationService vacationService;
+
+    @Autowired
+    AccountApproverService accountApproverService;
 
     @GetMapping("/reach/approverlist")
     public ArrayResponse<ApproverListResponse> returnApproverList(HttpSession session)
@@ -635,5 +642,38 @@ public class GetController
         monthWorkInfoResponse.setLateNightWorkTime(durationToString.durationToString(monthLateNightWorkTime));
         monthWorkInfoResponse.setPaydHolidayTime(durationToString.durationToString(monthPaydHolidayTime));
         return monthWorkInfoResponse;
+    }
+
+    @GetMapping("/reach/style")
+    public StyleResponse returnStyle(HttpSession session)
+    {
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        int status = 0;
+
+        Style style = styleService.getStyleByAccountId(account);
+        StyleResponse response = new StyleResponse();
+        status = 1;
+        response.setStatus(status);
+        response.setStyleId(style.getStyleId().intValue());
+        response.setStyleName(style.getStylePlaceId().getName());
+        return response;
+    }
+
+    @GetMapping("/reach/approver")
+    public ApproverResponse returnApprover(HttpSession session)
+    {
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        int status = 0;
+        Account adminAccount = accountApproverService.getAccountApproverByAccount(account).getApproverId();
+        ApproverResponse approverResponse = new ApproverResponse();
+        status = 1;
+        approverResponse.setStatus(status);
+        approverResponse.setApproverId(adminAccount.getId().intValue());
+        approverResponse.setApproverName(adminAccount.getName());
+        approverResponse.setApproverDepartment(adminAccount.getDepartmentId().getName());
+        approverResponse.setApproverRole(adminAccount.getRoleId().getName());
+        return approverResponse;
     }
 }
