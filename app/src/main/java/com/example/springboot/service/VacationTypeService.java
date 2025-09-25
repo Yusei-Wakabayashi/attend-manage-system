@@ -1,5 +1,7 @@
 package com.example.springboot.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,5 +18,10 @@ public class VacationTypeService
     {
         return vacationTypeRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("休暇種類が見つかりません"));
+    }
+
+    public List<VacationType> findAll()
+    {
+        return vacationTypeRepository.findAll();
     }
 }

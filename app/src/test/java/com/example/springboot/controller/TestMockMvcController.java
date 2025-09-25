@@ -66,6 +66,7 @@ import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.AttendService;
+import com.example.springboot.service.AttendacneExceptionTypeService;
 import com.example.springboot.service.AttendanceExceptionRequestService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.LegalTimeService;
@@ -81,6 +82,7 @@ import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
 import com.example.springboot.service.VacationRequestService;
 import com.example.springboot.service.VacationService;
+import com.example.springboot.service.VacationTypeService;
 
 @ContextConfiguration(classes = Config.class)
 @WebMvcTest({PostController.class,GetController.class})
@@ -147,6 +149,12 @@ public class TestMockMvcController
 
     @MockBean
     private MonthlyRequestService monthlyRequestService;
+
+    @MockBean
+    private VacationTypeService vacationTypeService;
+
+    @MockBean
+    private AttendacneExceptionTypeService attendanceExceptionTypeService;
 
     @Test
     void loginSuccess() throws Exception
@@ -1586,4 +1594,63 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.approverDepartment").value(adminAccountDepartmentName))
         .andExpect(jsonPath("$.approverRole").value(adminAccountRoleName));
     }
+
+    @Test
+    void allVacationTypeListSuccess() throws Exception
+    {
+        Account generalAccount = new Account();
+        String generalAccountUsername = "testuser";
+        generalAccount.setUsername(generalAccountUsername);
+
+        List<VacationType> vacationTypes = new ArrayList<VacationType>();
+        VacationType vacationType = new VacationType();
+        Long vacationTypeId = 3L;
+        String vacationTypeName = "代休";
+        vacationType.setVacationTypeId(vacationTypeId);
+        vacationType.setVacationName(vacationTypeName);
+        vacationTypes.add(vacationType);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(vacationTypeService.findAll()).thenReturn(vacationTypes);
+        mockMvc.perform
+        (
+            get("/api/reach/allvacationtypelist")
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.vacationTypes[0].vacationTypeId").value(vacationTypeId.intValue()))
+        .andExpect(jsonPath("$.vacationTypes[0].vacationTypeName").value(vacationTypeName));
+    }
+
+    @Test
+    void allOtherTypeListSuccess() throws Exception
+    {
+        Account generalAccount = new Account();
+        String generalAccountUsername = "testuser";
+        generalAccount.setUsername(generalAccountUsername);
+
+        List<AttendanceExceptionType> attendanceExceptionTypes = new ArrayList<AttendanceExceptionType>();
+        AttendanceExceptionType attendanceExceptionType = new AttendanceExceptionType();
+        Long attendanceExceptionTypeId = 2L;
+        String attendanceExceptionTypeName = "遅刻";
+        attendanceExceptionType.setAttedanceExceptionTypeId(attendanceExceptionTypeId);
+        attendanceExceptionType.setAttednaceExceptionTypeName(attendanceExceptionTypeName);
+        attendanceExceptionTypes.add(attendanceExceptionType);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(attendanceExceptionTypeService.findAll()).thenReturn(attendanceExceptionTypes);
+        mockMvc.perform
+        (
+            get("/api/reach/allothertypelist")
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.otherTypes[0].otherTypeId").value(attendanceExceptionTypeId.intValue()))
+        .andExpect(jsonPath("$.otherTypes[0].otherTypeName").value(attendanceExceptionTypeName));
+    }
+
 }

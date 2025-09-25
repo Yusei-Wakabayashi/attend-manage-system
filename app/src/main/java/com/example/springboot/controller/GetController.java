@@ -21,6 +21,7 @@ import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.dto.response.ApproverResponse;
 import com.example.springboot.dto.response.AttendListResponse;
 import com.example.springboot.dto.response.MonthWorkInfoResponse;
+import com.example.springboot.dto.response.OtherTypeListResponse;
 import com.example.springboot.dto.response.RequestDetilMonthlyResponse;
 import com.example.springboot.dto.response.RequestDetilOtherTimeResponse;
 import com.example.springboot.dto.response.RequestDetilOverTimeResponse;
@@ -37,10 +38,12 @@ import com.example.springboot.dto.input.RequestIdInput;
 import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.dto.response.StyleResponse;
+import com.example.springboot.dto.response.VacationTypeListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Attend;
 import com.example.springboot.model.AttendanceExceptionRequest;
+import com.example.springboot.model.AttendanceExceptionType;
 import com.example.springboot.model.Department;
 import com.example.springboot.model.MonthlyRequest;
 import com.example.springboot.model.OverTimeRequest;
@@ -52,11 +55,13 @@ import com.example.springboot.model.StampRequest;
 import com.example.springboot.model.Style;
 import com.example.springboot.model.Vacation;
 import com.example.springboot.model.VacationRequest;
+import com.example.springboot.model.VacationType;
 import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.AttendService;
 import com.example.springboot.service.AttendanceExceptionRequestService;
+import com.example.springboot.service.AttendacneExceptionTypeService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.MonthlyRequestService;
 import com.example.springboot.service.OverTimeRequestService;
@@ -69,6 +74,7 @@ import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
 import com.example.springboot.service.VacationRequestService;
 import com.example.springboot.service.VacationService;
+import com.example.springboot.service.VacationTypeService;
 import com.example.springboot.util.SecurityUtil;
 
 @RequestMapping("/api")
@@ -126,6 +132,12 @@ public class GetController
 
     @Autowired
     AccountApproverService accountApproverService;
+
+    @Autowired
+    VacationTypeService vacationTypeService;
+
+    @Autowired
+    AttendacneExceptionTypeService attendanceExceptionTypeService;
 
     @GetMapping("/reach/approverlist")
     public ArrayResponse<ApproverListResponse> returnApproverList(HttpSession session)
@@ -676,4 +688,50 @@ public class GetController
         approverResponse.setApproverRole(adminAccount.getRoleId().getName());
         return approverResponse;
     }
+
+    @GetMapping("/reach/allvacationtypelist")
+    public ArrayResponse<VacationTypeListResponse> returnAllVacationType(HttpSession session)
+    {
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        if(Objects.isNull(account))
+        {
+        }
+
+        int status = 0;
+        List<VacationTypeListResponse> vacationTypeListResponses = new ArrayList<VacationTypeListResponse>();
+        List<VacationType> vacationTypes = vacationTypeService.findAll();
+        for(VacationType vacationType : vacationTypes)
+        {
+            VacationTypeListResponse vacationTypeListResponse = new VacationTypeListResponse();
+            vacationTypeListResponse.setVacationTypeId(vacationType.getVacationTypeId().intValue());
+            vacationTypeListResponse.setVacationTypeName(vacationType.getVacationName());
+            vacationTypeListResponses.add(vacationTypeListResponse);
+        }
+        status = 1;
+        return new ArrayResponse<VacationTypeListResponse>(status, vacationTypeListResponses, "vacationTypes");
+    }
+    @GetMapping("/reach/allothertypelist")
+    public ArrayResponse<OtherTypeListResponse> returnAllOtherTypes(HttpSession session)
+    {
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        if(Objects.isNull(account))
+        {
+
+        }
+        int status = 0;
+        List<OtherTypeListResponse> otherTypeListResponses = new ArrayList<OtherTypeListResponse>();
+        List<AttendanceExceptionType> attendanceExceptionTypes = attendanceExceptionTypeService.findAll();
+        for(AttendanceExceptionType attendanceExceptionType : attendanceExceptionTypes)
+        {
+            OtherTypeListResponse otherTypeListResponse = new OtherTypeListResponse();
+            otherTypeListResponse.setOtherTypeId(attendanceExceptionType.getAttedanceExceptionTypeId().intValue());
+            otherTypeListResponse.setOtherTypeName(attendanceExceptionType.getAttednaceExceptionTypeName());
+            otherTypeListResponses.add(otherTypeListResponse);
+        }
+        status = 1;
+        return new ArrayResponse<OtherTypeListResponse>(status, otherTypeListResponses, "otherTypes");
+    }
+
 }
