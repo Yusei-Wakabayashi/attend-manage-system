@@ -14,6 +14,7 @@ import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -111,7 +112,7 @@ public class PostController
             {
                 // 保存する認証情報を作成
                 UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(account.getUsername(), null); // 認証が完了しているためpasswordなどの情報は保存していない
+                    new UsernamePasswordAuthenticationToken(account.getUsername(), null, List.of(new SimpleGrantedAuthority("ROLE_USER"))); // 認証が完了しているためpasswordなどの情報は保存していない
                 // 認証情報を保存
                 SecurityContextHolder.getContext().setAuthentication(authToken);
                 return new Response(1);

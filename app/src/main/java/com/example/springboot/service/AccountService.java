@@ -46,7 +46,7 @@ public class AccountService
 
     public List<Account> getAccountByApprovalSetting(List<ApprovalSetting> approvalSettings)
     {
-        List<Role> roles = new ArrayList();
+        List<Role> roles = new ArrayList<Role>();
         for(ApprovalSetting approvalSetting: approvalSettings)
         {
             roles.add(approvalSetting.getApprovalId());

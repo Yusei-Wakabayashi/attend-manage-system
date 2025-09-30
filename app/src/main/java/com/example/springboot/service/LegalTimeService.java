@@ -1,5 +1,7 @@
 package com.example.springboot.service;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +26,13 @@ public class LegalTimeService
             .orElseThrow(() -> new RuntimeException("データが見つかりません"));
     }
 
+    public String save(LegalTime legalTime)
+    {
+        legalTimeRepository.save(legalTime);
+        return "ok";
+    }
+
+    @Transactional
     public void resetAllTables()
     {
         legalTimeRepository.deleteAll();

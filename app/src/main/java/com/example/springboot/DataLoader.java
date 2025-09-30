@@ -12,13 +12,16 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import com.example.springboot.model.Department;
+import com.example.springboot.model.LegalTime;
 import com.example.springboot.model.Role;
+import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Salt;
 import com.example.springboot.model.Style;
 import com.example.springboot.model.StylePlace;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.DepartmentService;
+import com.example.springboot.service.LegalTimeService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.SaltService;
 import com.example.springboot.service.ShiftRequestService;
@@ -48,6 +51,9 @@ public class DataLoader implements CommandLineRunner
 
     @Autowired
     ShiftRequestService shiftRequestService;
+
+    @Autowired
+    LegalTimeService legalTimeService;
     
     public void run(String... args) throws Exception
     {
@@ -58,6 +64,9 @@ public class DataLoader implements CommandLineRunner
         roleService.resetAllTables();
         departmentService.resetAllTables();
         stylePlaceService.resetAllTables();
+        legalTimeService.resetAllTables();
+
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         String saltPath = "csv/SaltList.csv";
         InputStream saltInputStream = getClass().getClassLoader().getResourceAsStream(saltPath);
         if (saltInputStream == null)
@@ -180,5 +189,19 @@ public class DataLoader implements CommandLineRunner
                 styleService.save(style);
             }
         }
+
+        LegalTime legalTime = new LegalTime();
+        legalTime.setBegin(stringToLocalDateTime.stringToLocalDateTime("2025/09/30T00:00:00"));
+        legalTime.setScheduleWorkTime("08:00:00");
+        legalTime.setWeeklyWorkTime("40:00:00");
+        legalTime.setMonthlyOverWorkTime("45:00:00");
+        legalTime.setYearOverWorkTime("360:00:00");
+        legalTime.setMaxOverWorkTime("100:00:00");
+        legalTime.setMonthlyOverWorkAverage("80:00:00");
+        legalTime.setLateNightWorkBegin("22:00:00");
+        legalTime.setLateNightWorkEnd("05:00:00");
+        legalTime.setScheduleBreakTime("01:00:00");
+        legalTime.setWeeklyHoliday(1);
+        legalTimeService.save(legalTime);
     }
 }
