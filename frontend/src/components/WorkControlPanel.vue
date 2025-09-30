@@ -6,6 +6,7 @@ import { formatDay, formatTime } from '../utils/datetime';
 const route = useRoute();
 
 const props = defineProps({
+  selectedDate: String,
   beginWork: String,
   endWork: String,
   beginBreak: String,
@@ -41,11 +42,12 @@ watch(() => props.endBreak, (val) => {
 
 // 子コンポーネント内の値が変わったときに親に変更通知（子 → 親）
 watch(localBeginWork, (val) => {
-  const datePart = props.beginWork?.split("T")[0] || "2025-01-01";
+  const datePart = props.beginWork ? props.beginWork.split("T")[0] : props.selectedDate;
   emit("update:beginWork", `${datePart}T${val}:00`);
 });
+
 watch(localEndWork, (val) => {
-  const datePart = props.endWork?.split("T")[0] || "2025-01-01";
+   const datePart = props.endWork ? props.endWork.split("T")[0] : props.selectedDate;
   emit("update:endWork", `${datePart}T${val}:00`);
 });
 
