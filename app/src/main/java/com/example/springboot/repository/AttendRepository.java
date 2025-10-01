@@ -16,6 +16,6 @@ public interface AttendRepository extends JpaRepository<Attend, Long>
     List<Attend> findByAccountIdAndBeginWorkBetween(Account id, LocalDateTime startPeriod, LocalDateTime endPeriod);
     Optional<Attend> findByAccountIdAndAttendanceId(Account id, Long AttendanceId);
     @Modifying
-    @Query(value = "ALTER TABLE attend_lists AUTO_INCREMENT = 1", nativeQuery = true)
+    @Query(value = "ALTER TABLE attendance_list AUTO_INCREMENT = 1", nativeQuery = true)
     void resetAutoIncrement();
 }

@@ -5,7 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.MessageDigest;
+import java.sql.Time;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -16,15 +18,19 @@ import com.example.springboot.model.LegalTime;
 import com.example.springboot.model.Role;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.model.Account;
+import com.example.springboot.model.Attend;
 import com.example.springboot.model.Salt;
+import com.example.springboot.model.Shift;
 import com.example.springboot.model.Style;
 import com.example.springboot.model.StylePlace;
 import com.example.springboot.service.AccountService;
+import com.example.springboot.service.AttendService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.LegalTimeService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.SaltService;
 import com.example.springboot.service.ShiftRequestService;
+import com.example.springboot.service.ShiftService;
 import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
 
@@ -54,9 +60,17 @@ public class DataLoader implements CommandLineRunner
 
     @Autowired
     LegalTimeService legalTimeService;
+
+    @Autowired
+    ShiftService shiftService;
+
+    @Autowired
+    AttendService attendService;
     
     public void run(String... args) throws Exception
     {
+        attendService.resetAllTables();
+        shiftService.resetAllTables();
         shiftRequestService.resetAllTables();
         styleService.resetAllTables();
         accountService.resetAllTables();
@@ -203,5 +217,101 @@ public class DataLoader implements CommandLineRunner
         legalTime.setScheduleBreakTime("01:00:00");
         legalTime.setWeeklyHoliday(1);
         legalTimeService.save(legalTime);
+
+        String[] shiftPathList = 
+        {
+            "ShiftListMay.csv",
+            "ShiftListJune.csv",
+            "ShiftListJuly.csv",
+            "ShiftListAugust.csv",
+            "ShiftListSep.csv",
+            "ShiftListOct.csv",
+            "ShiftListNove.csv",
+            "ShiftListDece.csv",
+            "ShiftListJanu.csv",
+            "ShiftListFeb.csv",
+            "ShiftListMarch.csv",
+            "ShiftListApril.csv"
+        };
+        for(String shiftPath : shiftPathList)
+        {
+            shiftPath = "csv/" + shiftPath;
+            InputStream shiftStream = getClass().getClassLoader().getResourceAsStream(shiftPath);
+            if(shiftStream == null)
+            {
+                throw new FileNotFoundException("ファイルが見つかりません:" + shiftPath);
+            }
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(shiftStream)))
+            {
+            String shiftLine;
+                while ((shiftLine = br.readLine()) != null)
+                {
+                    if (shiftLine.startsWith("id,")) continue;
+                    Shift shift = new Shift();
+                    String[] shiftList = shiftLine.split(",");
+                    shift.setAccountId(accountService.getAccountByAccountId(1L));
+                    shift.setBeginWork(LocalDateTime.parse(shiftList[1], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+                    shift.setEndWork(LocalDateTime.parse(shiftList[2], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+                    shift.setBeginBreak(LocalDateTime.parse(shiftList[3], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+                    shift.setEndBreak(LocalDateTime.parse(shiftList[4], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+                    shift.setLateness(Time.valueOf(shiftList[5]));
+                    shift.setLeaveEarly(Time.valueOf(shiftList[6]));
+                    shift.setOuting(Time.valueOf(shiftList[7]));
+                    shift.setOverWork(Time.valueOf(shiftList[8]));
+                    shiftService.save(shift);
+                }
+            }
+        }
+
+        String[] attendPathList = 
+        {
+            "AttendListMay.csv",
+            "AttendListJune.csv",
+            "AttendListJuly.csv",
+            "AttendListAugust.csv",
+            "AttendListSep.csv",
+            "AttendListOct.csv",
+            "AttendListNove.csv",
+            "AttendListDece.csv",
+            "AttendListJanu.csv",
+            "AttendListFeb.csv",
+            "AttendListMarch.csv",
+            "AttendListApril.csv"
+        };
+        for(String attendPath : attendPathList)
+        {
+            attendPath = "csv/" + attendPath;
+            InputStream attendStream = getClass().getClassLoader().getResourceAsStream(attendPath);
+            if(attendStream == null)
+            {
+                throw new FileNotFoundException("ファイルが見つかりません:" + attendPath);
+            }
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(attendStream)))
+            {
+                String attendLine;
+                while ((attendLine = br.readLine()) != null)
+                {
+                    if (attendLine.startsWith("id,")) continue;
+                    Attend attend = new Attend();
+                    String[] attendList = attendLine.split(",");
+                    attend.setAccountId(accountService.getAccountByAccountId(1L));
+                    attend.setBeginWork(LocalDateTime.parse(attendList[1], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+                    attend.setEndWork(LocalDateTime.parse(attendList[2], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+                    attend.setBeginBreak(LocalDateTime.parse(attendList[3], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+                    attend.setEndBreak(LocalDateTime.parse(attendList[4], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+                    attend.setWorkTime(Time.valueOf(attendList[5]));
+                    attend.setBreakTime(Time.valueOf(attendList[6]));
+                    attend.setLateness(Time.valueOf(attendList[7]));
+                    attend.setLeaveEarly(Time.valueOf(attendList[8]));
+                    attend.setOuting(Time.valueOf(attendList[9]));
+                    attend.setOverWork(Time.valueOf(attendList[10]));
+                    attend.setHolidayWork(Time.valueOf(attendList[11]));
+                    attend.setLateNightWork(Time.valueOf(attendList[12]));
+                    attend.setVacationTime(Time.valueOf(attendList[13]));
+                    attend.setAbsenceTime(Time.valueOf(attendList[14]));
+                    attendService.save(attend);
+                }
+            }
+        }
     }
 }

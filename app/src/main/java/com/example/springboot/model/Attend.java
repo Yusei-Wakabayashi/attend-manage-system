@@ -41,16 +41,16 @@ public class Attend
     private LocalDateTime beginBreak;
     @Column(name = "end_break", nullable = false)
     private LocalDateTime endBreak;
+    @Column(name = "work_time", nullable = false)
+    private Time workTime;
+    @Column(name = "break_time", nullable = false)
+    private Time breakTime;
     @Column(name = "lateness", nullable = false)
     private Time lateness;
     @Column(name = "leave_early", nullable = false)
     private Time leaveEarly;
     @Column(name = "outing", nullable = false)
     private Time outing;
-    @Column(name = "work_time", nullable = false)
-    private Time workTime;
-    @Column(name = "break_time", nullable = false)
-    private Time breakTime;
     @Column(name = "over_work", nullable = false)
     private Time overWork;
     @Column(name = "holiday_work", nullable = false)
