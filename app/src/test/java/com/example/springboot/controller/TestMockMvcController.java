@@ -64,6 +64,7 @@ import com.example.springboot.model.LegalTime;
 import com.example.springboot.model.MonthlyRequest;
 import com.example.springboot.model.OverTimeRequest;
 import com.example.springboot.model.PaydHoliday;
+import com.example.springboot.model.PaydHolidayUse;
 import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
@@ -75,6 +76,7 @@ import com.example.springboot.service.LegalTimeService;
 import com.example.springboot.service.MonthlyRequestService;
 import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.PaydHolidayService;
+import com.example.springboot.service.PaydHolidayUseService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.ShiftChangeRequestService;
 import com.example.springboot.service.ShiftListOverTimeService;
@@ -165,6 +167,9 @@ public class TestMockMvcController
 
     @MockBean
     private PaydHolidayService paydHolidayService;
+
+    @MockBean
+    private PaydHolidayUseService paydHolidayUseService;
 
     @Test
     void loginSuccess() throws Exception
@@ -1768,5 +1773,50 @@ public class TestMockMvcController
         )
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void PaydHolidayHistorySuccess() throws Exception
+    {
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+
+        Account generalAccount = new Account();
+        String generalAccountUsername = "testuser";
+        generalAccount.setUsername(generalAccountUsername);
+
+        List<PaydHoliday> paydHolidays = new ArrayList<PaydHoliday>();
+        PaydHoliday generalPaydHoliday = new PaydHoliday();
+        String generalPaydHolidayGrant = "2025/04/01T09:00:00";
+        String generalPaydHolidayTime = "160:00:00";
+        generalPaydHoliday.setGrant(stringToLocalDateTime.stringToLocalDateTime(generalPaydHolidayGrant));
+        generalPaydHoliday.setTime(generalPaydHolidayTime);
+        paydHolidays.add(generalPaydHoliday);
+
+        List<PaydHolidayUse> paydHolidayUses = new ArrayList<PaydHolidayUse>();
+        PaydHolidayUse generalPaydHolidayUse = new PaydHolidayUse();
+        String generalPaydHolidayUseDate = "2025/11/02T10:00:00";
+        String generalPaydHolidayUseTime = "08:00:00";
+        generalPaydHolidayUse.setUseDate(stringToLocalDateTime.stringToLocalDateTime(generalPaydHolidayUseDate));
+        generalPaydHolidayUse.setTime(Time.valueOf(generalPaydHolidayUseTime));
+        paydHolidayUses.add(generalPaydHolidayUse);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(paydHolidayService.findByAccountId(any(Account.class))).thenReturn(paydHolidays);
+        when(paydHolidayUseService.findByAccountId(any(Account.class))).thenReturn(paydHolidayUses);
+        mockMvc.perform
+        (
+            get("/api/reach/paydholidayhistory")
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.holidaylist[0].type").value("付与"))
+        .andExpect(jsonPath("$.holidaylist[0].date").value(localDateTimeToString.localDateTimeToString(stringToLocalDateTime.stringToLocalDateTime(generalPaydHolidayGrant))))
+        .andExpect(jsonPath("$.holidaylist[0].time").value(generalPaydHolidayTime))
+        .andExpect(jsonPath("$.holidaylist[1].type").value("消化"))
+        .andExpect(jsonPath("$.holidaylist[1].date").value(localDateTimeToString.localDateTimeToString(stringToLocalDateTime.stringToLocalDateTime(generalPaydHolidayUseDate))))
+        .andExpect(jsonPath("$.holidaylist[1].time").value(generalPaydHolidayUseTime));
     }
 }

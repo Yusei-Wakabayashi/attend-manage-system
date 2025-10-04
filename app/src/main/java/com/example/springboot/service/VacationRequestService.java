@@ -1,5 +1,8 @@
 package com.example.springboot.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,6 +88,40 @@ public class VacationRequestService
         return vacationRequests;
     }
 
+    public List<VacationRequest> findByAccountIdAndVacationTypeIdPaydHolidayAndRequestStatusApprovalAndBeginVacationBetween(Long accountId, int year, int month)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);
+        LocalDate lastDay = yearMonth.atEndOfMonth();
+        LocalDateTime startPeriod = firstDay.atStartOfDay();
+        LocalDateTime endPeriod = lastDay.atTime(23,59,59);
+        VacationType vacationType = new VacationType();
+        // 有給のid
+        vacationType.setVacationTypeId(1L);
+        // 許可ステータス
+        int requestStatus = 2;
+        List<VacationRequest> vacationRequests = vacationRequestRepository.findByAccountIdAndVacationTypeIdAndRequestStatusAndBeginVacationBetween(account, vacationType, requestStatus, startPeriod, endPeriod);
+        return vacationRequests;
+    }
+
+    public List<VacationRequest> findByAccountIdAndVacationTypeIdPaydHolidayAndRequestStatusApprovalAndBeginVacationBetween(Account account, int year, int month)
+    {
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);
+        LocalDate lastDay = yearMonth.atEndOfMonth();
+        LocalDateTime startPeriod = firstDay.atStartOfDay();
+        LocalDateTime endPeriod = lastDay.atTime(23,59,59);
+        VacationType vacationType = new VacationType();
+        // 有給のid
+        vacationType.setVacationTypeId(1L);
+        // 許可ステータス
+        int requestStatus = 2;
+        List<VacationRequest> vacationRequests = vacationRequestRepository.findByAccountIdAndVacationTypeIdAndRequestStatusAndBeginVacationBetween(account, vacationType, requestStatus, startPeriod, endPeriod);
+        return vacationRequests;
+    }
+    
     public List<VacationRequest> findByAccountId(Long accountId)
     {
         Account account = new Account();

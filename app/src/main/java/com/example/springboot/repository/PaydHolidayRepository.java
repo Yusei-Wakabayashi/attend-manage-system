@@ -12,4 +12,5 @@ public interface PaydHolidayRepository extends JpaRepository<PaydHoliday, Long>
 {
     // アカウントと特定の日付以降で検索
     List<PaydHoliday> findByAccountIdAndLimitAfter(Account account, LocalDateTime date);
+    List<PaydHoliday> findByAccountId(Account account);
 }

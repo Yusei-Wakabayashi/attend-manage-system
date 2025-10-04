@@ -1,6 +1,7 @@
 package com.example.springboot.model;
 
 import java.sql.Time;
+import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -39,4 +40,6 @@ public class PaydHolidayUse extends BaseTimeEntity
     private VacationRequest vacationId;
     @Column(name = "time", nullable = false)
     private Time time;
+    @Column(name = "use_date", nullable = false)
+    private LocalDateTime useDate;
 }

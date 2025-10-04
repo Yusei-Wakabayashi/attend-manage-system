@@ -36,4 +36,6 @@ public class PaydHoliday extends BaseTimeEntity
     private String time;
     @Column(name = "limit")
     private LocalDateTime limit;
+    @Column(name = "grant")
+    private LocalDateTime grant;
 }

@@ -22,6 +22,7 @@ import com.example.springboot.dto.response.ApproverResponse;
 import com.example.springboot.dto.response.AttendListResponse;
 import com.example.springboot.dto.response.MonthWorkInfoResponse;
 import com.example.springboot.dto.response.OtherTypeListResponse;
+import com.example.springboot.dto.response.PaydHolidayHistoryListResponse;
 import com.example.springboot.dto.response.RequestDetilMonthlyResponse;
 import com.example.springboot.dto.response.RequestDetilOtherTimeResponse;
 import com.example.springboot.dto.response.RequestDetilOverTimeResponse;
@@ -35,6 +36,7 @@ import com.example.springboot.dto.YearMonthParam;
 import com.example.springboot.dto.change.DurationToString;
 import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.input.RequestIdInput;
+import com.example.springboot.dto.input.YearInput;
 import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.dto.response.StyleResponse;
@@ -47,6 +49,8 @@ import com.example.springboot.model.AttendanceExceptionType;
 import com.example.springboot.model.Department;
 import com.example.springboot.model.MonthlyRequest;
 import com.example.springboot.model.OverTimeRequest;
+import com.example.springboot.model.PaydHoliday;
+import com.example.springboot.model.PaydHolidayUse;
 import com.example.springboot.model.Role;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
@@ -65,6 +69,8 @@ import com.example.springboot.service.AttendacneExceptionTypeService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.MonthlyRequestService;
 import com.example.springboot.service.OverTimeRequestService;
+import com.example.springboot.service.PaydHolidayService;
+import com.example.springboot.service.PaydHolidayUseService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.ShiftChangeRequestService;
 import com.example.springboot.service.ShiftRequestService;
@@ -138,6 +144,12 @@ public class GetController
 
     @Autowired
     AttendacneExceptionTypeService attendanceExceptionTypeService;
+
+    @Autowired
+    PaydHolidayService paydHolidayService;
+
+    @Autowired
+    PaydHolidayUseService paydHolidayUseService;
 
     @GetMapping("/reach/approverlist")
     public ArrayResponse<ApproverListResponse> returnApproverList(HttpSession session)
@@ -734,4 +746,48 @@ public class GetController
         return new ArrayResponse<OtherTypeListResponse>(status, otherTypeListResponses, "otherTypes");
     }
 
+    @GetMapping("/reach/paydholidayhistory")
+    public ArrayResponse<PaydHolidayHistoryListResponse> returnPaydHolidayHistory(HttpSession session, YearInput request)
+    {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        ArrayResponse<PaydHolidayHistoryListResponse> response = new ArrayResponse<>();
+        int status = 0;
+
+        if(Objects.isNull(account))
+        {
+            status = 1;
+            response.setStatus(status);
+            return response;
+        }
+
+        // 有給の取得
+        // 付与の取得
+        List<PaydHoliday> paydHolidays = paydHolidayService.findByAccountId(account);
+        // 消化の取得
+        List<PaydHolidayUse> paydHolidayUses = paydHolidayUseService.findByAccountId(account);
+        List<PaydHolidayHistoryListResponse> paydHolidayHistoryListResponses = new ArrayList<PaydHolidayHistoryListResponse>();
+        for(PaydHoliday paydHoliday : paydHolidays)
+        {
+            PaydHolidayHistoryListResponse paydHolidayHistoryListResponse = new PaydHolidayHistoryListResponse();
+            paydHolidayHistoryListResponse.setType("付与");
+            paydHolidayHistoryListResponse.setDate(localDateTimeToString.localDateTimeToString(paydHoliday.getGrant()));
+            paydHolidayHistoryListResponse.setTime(paydHoliday.getTime());
+            paydHolidayHistoryListResponses.add(paydHolidayHistoryListResponse);
+        }
+        for(PaydHolidayUse paydHolidayUse : paydHolidayUses)
+        {
+            PaydHolidayHistoryListResponse paydHolidayHistoryListResponseUse = new PaydHolidayHistoryListResponse();
+            paydHolidayHistoryListResponseUse.setType("消化");
+            paydHolidayHistoryListResponseUse.setDate(localDateTimeToString.localDateTimeToString(paydHolidayUse.getUseDate()));
+            paydHolidayHistoryListResponseUse.setTime(paydHolidayUse.getTime().toString());
+            paydHolidayHistoryListResponses.add(paydHolidayHistoryListResponseUse);
+        }
+        status = 1;
+        response.setStatus(status);
+        response.setList(paydHolidayHistoryListResponses);
+        response.setKey("holidaylist");
+        return response;
+    }
 }

@@ -22,6 +22,20 @@ public class PaydHolidayService
             .orElseThrow(() -> new RuntimeException("有給が見つかりません"));
     }
 
+    public List<PaydHoliday> findByAccountId(Long accountId)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        List<PaydHoliday> paydHolidays = paydHolidayRepository.findByAccountId(account);
+        return paydHolidays;
+    }
+
+    public List<PaydHoliday> findByAccountId(Account account)
+    {
+        List<PaydHoliday> paydHolidays = paydHolidayRepository.findByAccountId(account);
+        return paydHolidays;
+    }
+
     public List<PaydHoliday> findByAccountIdAndLimitAfter(Long accountId)
     {
         Account account = new Account();
