@@ -7,6 +7,6 @@ public class LocalDateTimeToString
 {
     public String localDateTimeToString(LocalDateTime localDateTime)
     {
-        return localDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + "T" + localDateTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        return localDateTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + localDateTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
     }
 }
