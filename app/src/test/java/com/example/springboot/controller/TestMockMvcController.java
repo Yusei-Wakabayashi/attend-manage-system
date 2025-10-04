@@ -46,6 +46,7 @@ import com.example.springboot.model.Role;
 import com.example.springboot.model.Salt;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
+import com.example.springboot.model.ShiftListOverTime;
 import com.example.springboot.model.ShiftListShiftRequest;
 import com.example.springboot.model.ShiftRequest;
 import com.example.springboot.model.StampRequest;
@@ -62,6 +63,7 @@ import com.example.springboot.model.Department;
 import com.example.springboot.model.LegalTime;
 import com.example.springboot.model.MonthlyRequest;
 import com.example.springboot.model.OverTimeRequest;
+import com.example.springboot.model.PaydHoliday;
 import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
@@ -72,8 +74,10 @@ import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.LegalTimeService;
 import com.example.springboot.service.MonthlyRequestService;
 import com.example.springboot.service.OverTimeRequestService;
+import com.example.springboot.service.PaydHolidayService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.ShiftChangeRequestService;
+import com.example.springboot.service.ShiftListOverTimeService;
 import com.example.springboot.service.ShiftListShiftRequestService;
 import com.example.springboot.service.ShiftRequestService;
 import com.example.springboot.service.ShiftService;
@@ -155,6 +159,12 @@ public class TestMockMvcController
 
     @MockBean
     private AttendacneExceptionTypeService attendanceExceptionTypeService;
+
+    @MockBean
+    private ShiftListOverTimeService shiftListOverTimeService;
+
+    @MockBean
+    private PaydHolidayService paydHolidayService;
 
     @Test
     void loginSuccess() throws Exception
@@ -1653,4 +1663,110 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.otherTypes[0].otherTypeName").value(attendanceExceptionTypeName));
     }
 
+    @Test
+    void vacationRequestSuccess() throws Exception
+    {
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        String generalBeginOverWork = "2025/11/22T10:00:00";
+        String generalEndOverWork = "2025/11/22T11:00:00";
+        String generalRequestComment = "";
+        String generalRequestDate = "2025/08/02T00:00:11";
+        int generalId = 1;
+        int vacationType = 1;
+        String json = String.format
+        (
+            """
+                {
+                    "beginVacation": "%s",
+                    "endVacation": "%s",
+                    "vacationType": "%s",
+                    "requestComment": "%s",
+                    "requestDate": "%s",
+                    "shiftId": "%s"
+                }
+            """,
+            generalBeginOverWork, generalEndOverWork, vacationType, generalRequestComment, generalRequestDate, generalId
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 1L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Shift generalShift = new Shift();
+        Long generalShiftId = 3L;
+        String generalBeginWork = "2025/11/22T09:00:00";
+        String generalEndWork = "2025/11/22T18:00:00";
+        String generalBeginBreak = "2025/11/22T12:00:00";
+        String generalEndBreak = "2025/11/22T13:00:00";
+        generalShift.setShiftId(generalShiftId);
+        generalShift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(generalBeginWork));
+        generalShift.setEndWork(stringToLocalDateTime.stringToLocalDateTime(generalEndWork));
+        generalShift.setBeginBreak(stringToLocalDateTime.stringToLocalDateTime(generalBeginBreak));
+        generalShift.setEndBreak(stringToLocalDateTime.stringToLocalDateTime(generalEndBreak));
+
+        List<VacationRequest> vacationRequests = new ArrayList<VacationRequest>();
+        VacationRequest generalVacationRequest = new VacationRequest();
+        Long generalVacationRequestId = 5L;
+        String generalVacationRequestBegin = "2025/11/22T09:00:00";
+        String generalVacationRequestEnd = "2025/11/22T10:00:00";
+        generalVacationRequest.setVacationId(generalVacationRequestId);
+        generalVacationRequest.setAccountId(generalAccount);
+        generalVacationRequest.setShiftId(generalShift);
+        generalVacationRequest.setBeginVacation(stringToLocalDateTime.stringToLocalDateTime(generalVacationRequestBegin));
+        generalVacationRequest.setEndVacation(stringToLocalDateTime.stringToLocalDateTime(generalVacationRequestEnd));
+        vacationRequests.add(generalVacationRequest);
+
+        List<ShiftListOverTime> shiftListOverTimes = new ArrayList<ShiftListOverTime>();
+        ShiftListOverTime generalShiftListOverTime = new ShiftListOverTime();
+        OverTimeRequest generalOverTimeRequest = new OverTimeRequest();
+        String generalOverTimeRequestBegin = "2025/11/22T14:00:00";
+        String generalOverTimeRequestEnd = "2025/11/22T15:00:00";
+        generalOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(generalOverTimeRequestBegin));
+        generalOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(generalOverTimeRequestEnd));
+        generalShiftListOverTime.setOverTimeId(generalOverTimeRequest);
+        shiftListOverTimes.add(generalShiftListOverTime);
+
+        List<OverTimeRequest> overTimeRequests = new ArrayList<OverTimeRequest>();
+        OverTimeRequest adminOverTimeRequest = new OverTimeRequest();
+        String adminOverTimeRequestBegin = "2025/11/22T18:00:00";
+        String adminOverTimeRequestEnd = "2025/11/22T20:00:00";
+        adminOverTimeRequest.setAccountId(generalAccount);
+        adminOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(adminOverTimeRequestBegin));
+        adminOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(adminOverTimeRequestEnd));
+        overTimeRequests.add(adminOverTimeRequest);
+
+        List<PaydHoliday> paydHolidays = new ArrayList<PaydHoliday>();
+        PaydHoliday generalPaydHoliday = new PaydHoliday();
+        String generalPaydHolidayTime = "08:00:00";
+        generalPaydHoliday.setTime(generalPaydHolidayTime);
+        paydHolidays.add(generalPaydHoliday);
+
+        List<VacationRequest> paydHolidayVacationRequests = new ArrayList<VacationRequest>();
+        VacationRequest paydHolidayVacationRequest = new VacationRequest();
+        String paydHolidayVacationRequestBegin = "2025/12/31T00:00:00";
+        String paydHolidayVacationRequestEnd = "2025/12/31T07:00:00";
+        paydHolidayVacationRequest.setBeginVacation(stringToLocalDateTime.stringToLocalDateTime(paydHolidayVacationRequestBegin));
+        paydHolidayVacationRequest.setEndVacation(stringToLocalDateTime.stringToLocalDateTime(paydHolidayVacationRequestEnd));
+        paydHolidayVacationRequests.add(paydHolidayVacationRequest);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(generalShift);
+        when(vacationRequestService.findByAccountIdAndShiftId(any(Account.class), any(Shift.class))).thenReturn(vacationRequests);
+        when(shiftListOverTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOverTimes);
+        when(overTimeRequestService.findByAccountIdAndShiftIdAndRequestStatusWait(any(Account.class), any(Shift.class))).thenReturn(overTimeRequests);
+        when(paydHolidayService.findByAccountIdAndLimitAfter(any(Account.class))).thenReturn(paydHolidays);
+        when(vacationRequestService.findByAccountIdAndRequestStatusWaitAndVacationTypePaydHoiday(any(Account.class))).thenReturn(paydHolidayVacationRequests);
+        mockMvc.perform
+        (
+            post("/api/send/vacation")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
 }

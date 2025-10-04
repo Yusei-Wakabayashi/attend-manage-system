@@ -22,22 +22,18 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "time_cards")
-public class TimeCard extends BaseTimeEntity
+@Table(name = "payd_holidays")
+public class PaydHoliday extends BaseTimeEntity
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "time_card_id", nullable = false, length = 20)
-    private Long timeCardId;
+    @Column(name = "payd_holiday_id", length = 20, nullable = false)
+    private Long paydHolidayId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     private Account accountId;
-    @Column(name = "begin_work", nullable = false)
-    private LocalDateTime beginWork;
-    @Column(name = "end_work", nullable = true)
-    private LocalDateTime endWork;
-    @Column(name = "begin_break", nullable = true)
-    private LocalDateTime beginBreak;
-    @Column(name = "end_break", nullable = true)
-    private LocalDateTime endBreak;
+    @Column(name = "time")
+    private String time;
+    @Column(name = "limit")
+    private LocalDateTime limit;
 }

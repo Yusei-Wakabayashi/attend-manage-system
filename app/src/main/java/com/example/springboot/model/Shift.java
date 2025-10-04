@@ -53,6 +53,7 @@ public class Shift extends BaseTimeEntity
     private Time outing;
     @Column(name = "over_work", nullable = false)
     private Time overWork;
+
     @OneToMany(mappedBy = "shiftId", fetch = FetchType.LAZY)
     private List<ShiftChangeRequest> shiftChangeRequestFromShifts;
     @OneToMany(mappedBy = "shiftId", fetch = FetchType.LAZY)
@@ -67,6 +68,8 @@ public class Shift extends BaseTimeEntity
     private ShiftListShiftRequest shiftListShiftRequestFromShifts;
     @OneToOne(mappedBy = "shiftId", fetch = FetchType.LAZY)
     private AttendanceListSource attendanceListSourceFromShifts;
+    @OneToOne(mappedBy = "shiftListId", fetch = FetchType.LAZY)
+    private ShiftListOverTime shiftListOverTimeFromShifts;
     
     public Shift
     (

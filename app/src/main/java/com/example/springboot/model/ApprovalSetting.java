@@ -11,6 +11,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import com.example.springboot.BaseTimeEntity;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,7 +20,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table(name = "approval_settings", uniqueConstraints = {@UniqueConstraint(name = "roles", columnNames = {"role_id"})}) // 外部キーにユニーク制約追加
-public class ApprovalSetting
+public class ApprovalSetting extends BaseTimeEntity
 {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)

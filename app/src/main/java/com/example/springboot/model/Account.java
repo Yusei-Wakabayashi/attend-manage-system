@@ -94,4 +94,8 @@ public class Account extends BaseTimeEntity
     private List<MonthlyRequest> monthlyRequestFromAccounts;
     @OneToMany(mappedBy = "approver", fetch = FetchType.LAZY)
     private List<MonthlyRequest> monthlyRequestFromApprovers;
+    @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
+    private List<PaydHoliday> paydHolidayFromAccounts;
+    @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
+    private List<PaydHolidayUse> paydHolidayUseFromAccounts;
 }

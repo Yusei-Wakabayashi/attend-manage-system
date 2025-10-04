@@ -12,6 +12,8 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import com.example.springboot.BaseTimeEntity;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,7 +23,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Entity
 @Table(name = "attendance_list_sources", uniqueConstraints = {@UniqueConstraint(name = "attendance_list", columnNames = {"attendance_id"}), @UniqueConstraint(name = "shift_list", columnNames = {"shift_id"})})
-public class AttendanceListSource
+public class AttendanceListSource extends BaseTimeEntity
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

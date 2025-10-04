@@ -12,6 +12,8 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import com.example.springboot.BaseTimeEntity;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,8 +22,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "shift_list_shift_requests", uniqueConstraints = {@UniqueConstraint(name = "shifts", columnNames = {"shift_id"})})
-public class ShiftListShiftRequest
+@Table(name = "shift_list_shift_requests", uniqueConstraints = {@UniqueConstraint(name = "shifts", columnNames = {"shift_id"}), @UniqueConstraint(name = "shift_requests", columnNames = {"shift_request_id"})})
+public class ShiftListShiftRequest extends BaseTimeEntity
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,7 +32,7 @@ public class ShiftListShiftRequest
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shift_id", nullable = false)
     private Shift shiftId;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shift_request_id", nullable = false)
     private ShiftRequest shiftRequestId;
     @ManyToOne(fetch = FetchType.LAZY)

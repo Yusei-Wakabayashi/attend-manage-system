@@ -1,6 +1,6 @@
 package com.example.springboot.model;
 
-import java.time.LocalDateTime;
+import java.sql.Time;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -10,7 +10,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import com.example.springboot.BaseTimeEntity;
 
@@ -22,22 +24,19 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "time_cards")
-public class TimeCard extends BaseTimeEntity
+@Table(name = "payd_holiday_uses", uniqueConstraints = {@UniqueConstraint(name = "vacation_requets", columnNames = {"vacation_id"})})
+public class PaydHolidayUse extends BaseTimeEntity
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "time_card_id", nullable = false, length = 20)
-    private Long timeCardId;
+    @Column(name = "payd_holiday_use_id", length = 20, nullable = false)
+    private Long paydHolidayUseId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     private Account accountId;
-    @Column(name = "begin_work", nullable = false)
-    private LocalDateTime beginWork;
-    @Column(name = "end_work", nullable = true)
-    private LocalDateTime endWork;
-    @Column(name = "begin_break", nullable = true)
-    private LocalDateTime beginBreak;
-    @Column(name = "end_break", nullable = true)
-    private LocalDateTime endBreak;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vacation_id", nullable = false)
+    private VacationRequest vacationId;
+    @Column(name = "time", nullable = false)
+    private Time time;
 }

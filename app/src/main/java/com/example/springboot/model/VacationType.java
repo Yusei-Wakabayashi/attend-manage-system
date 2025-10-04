@@ -11,6 +11,8 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.example.springboot.BaseTimeEntity;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,7 +22,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Entity
 @Table(name = "vacation_types")
-public class VacationType
+public class VacationType extends BaseTimeEntity
 {
     @Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)

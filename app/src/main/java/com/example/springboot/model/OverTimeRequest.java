@@ -10,7 +10,10 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import com.example.springboot.BaseTimeEntity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,12 +23,12 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "orvertime_requests")
-public class OverTimeRequest
+@Table(name = "overtime_requests")
+public class OverTimeRequest extends BaseTimeEntity
 {
     @Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
-    @Column(name = "overtime_id",nullable = false, length = 255)
+    @Column(name = "over_time_id",nullable = false, length = 255)
     private Long overTimeId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", referencedColumnName = "account_id", nullable = false)
@@ -50,4 +53,7 @@ public class OverTimeRequest
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shift_id", nullable = false)
     private Shift shiftId;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    private ShiftListOverTime shiftListOverTimeFromOverTimeRequests;
 }

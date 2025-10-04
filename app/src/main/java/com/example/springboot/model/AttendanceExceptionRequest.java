@@ -12,6 +12,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import com.example.springboot.BaseTimeEntity;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,7 +23,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Entity
 @Table(name = "attendance_exception_request")
-public class AttendanceExceptionRequest
+public class AttendanceExceptionRequest extends BaseTimeEntity
 {
     @Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)

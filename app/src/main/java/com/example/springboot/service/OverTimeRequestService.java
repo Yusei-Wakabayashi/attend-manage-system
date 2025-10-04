@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.springboot.model.Account;
 import com.example.springboot.model.OverTimeRequest;
+import com.example.springboot.model.Shift;
 import com.example.springboot.repository.OverTimeRequestRepository;
 
 
@@ -28,6 +29,42 @@ public class OverTimeRequestService
     {
         return overTimeRequestRepository.findByAccountIdAndOverTimeId(account, id)
             .orElseThrow(() -> new RuntimeException("残業申請が見つかりません"));
+    }
+
+    public List<OverTimeRequest> findByAccountIdAndShiftIdAndRequestStatusWait(Long accountId, Long shiftId)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        Shift shift = new Shift();
+        shift.setShiftId(shiftId);
+        int requestStatus = 1;
+        List<OverTimeRequest> overTimeRequests = overTimeRequestRepository.findByAccountIdAndShiftIdAndRequestStatus(account, shift, requestStatus);
+        return overTimeRequests;
+    }
+
+    public List<OverTimeRequest> findByAccountIdAndShiftIdAndRequestStatusWait(Account account, Long shiftId)
+    {
+        Shift shift = new Shift();
+        shift.setShiftId(shiftId);
+        int requestStatus = 1;
+        List<OverTimeRequest> overTimeRequests = overTimeRequestRepository.findByAccountIdAndShiftIdAndRequestStatus(account, shift, requestStatus);
+        return overTimeRequests;
+    }
+
+    public List<OverTimeRequest> findByAccountIdAndShiftIdAndRequestStatusWait(Long accountId, Shift shift)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        int requestStatus = 1;
+        List<OverTimeRequest> overTimeRequests = overTimeRequestRepository.findByAccountIdAndShiftIdAndRequestStatus(account, shift, requestStatus);
+        return overTimeRequests;
+    }
+
+    public List<OverTimeRequest> findByAccountIdAndShiftIdAndRequestStatusWait(Account account, Shift shift)
+    {
+        int requestStatus = 1;
+        List<OverTimeRequest> overTimeRequests = overTimeRequestRepository.findByAccountIdAndShiftIdAndRequestStatus(account, shift, requestStatus);
+        return overTimeRequests;
     }
 
     public List<OverTimeRequest> findByAccountId(Long accountId)

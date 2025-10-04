@@ -1,7 +1,6 @@
 package com.example.springboot.model;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -11,8 +10,10 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import com.example.springboot.BaseTimeEntity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,7 +24,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Table(name = "shift_requests")
-public class ShiftRequest
+public class ShiftRequest extends BaseTimeEntity
 {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -53,6 +54,6 @@ public class ShiftRequest
     private LocalDateTime approvalTime;
     @Column(name = "approver_comment", nullable = true, length = 255)
     private String approverComment;
-    @OneToMany(mappedBy = "shiftRequestId", fetch = FetchType.LAZY)
-    private List<ShiftListShiftRequest> shiftListShiftRequestFromShiftRequests;
+    @OneToOne(mappedBy = "shiftRequestId", fetch = FetchType.LAZY)
+    private ShiftListShiftRequest shiftListShiftRequestFromShiftRequests;
 }

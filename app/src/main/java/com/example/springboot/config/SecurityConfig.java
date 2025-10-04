@@ -26,7 +26,7 @@ public class SecurityConfig
                     {
                     var config = new CorsConfiguration();
                     config.setAllowedOrigins(List.of("http://localhost:5173"));
-                    config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+                    config.setAllowedMethods(List.of("GET","POST"));
                     config.setAllowCredentials(true);
                     config.setAllowedHeaders(List.of("*"));
                     return config;
@@ -44,6 +44,7 @@ public class SecurityConfig
                 new AntPathRequestMatcher("/api/send/shift"),
                 new AntPathRequestMatcher("/api/send/changetime"),
                 new AntPathRequestMatcher("/api/send/stamp"),
+                new AntPathRequestMatcher("/api/send/vacation"),
                 new AntPathRequestMatcher("/api/reach/approverlist"),
                 new AntPathRequestMatcher("/api/reach/allstylelist"),
                 new AntPathRequestMatcher("/api/reach/shiftlist"),

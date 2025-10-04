@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -37,25 +38,33 @@ import com.example.springboot.dto.IdData;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
 import com.example.springboot.model.LegalTime;
+import com.example.springboot.model.OverTimeRequest;
+import com.example.springboot.model.PaydHoliday;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
+import com.example.springboot.model.ShiftListOverTime;
 import com.example.springboot.model.ShiftListShiftRequest;
 import com.example.springboot.model.ShiftRequest;
 import com.example.springboot.model.StampRequest;
 import com.example.springboot.model.Style;
 import com.example.springboot.model.StylePlace;
 import com.example.springboot.model.Vacation;
+import com.example.springboot.model.VacationRequest;
 import com.example.springboot.service.AccountApproverService;
 // import com.example.springboot.model.Salt;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.LegalTimeService;
+import com.example.springboot.service.OverTimeRequestService;
+import com.example.springboot.service.PaydHolidayService;
 import com.example.springboot.service.ShiftChangeRequestService;
+import com.example.springboot.service.ShiftListOverTimeService;
 import com.example.springboot.service.ShiftListShiftRequestService;
 import com.example.springboot.service.ShiftRequestService;
 import com.example.springboot.service.ShiftService;
 import com.example.springboot.service.StampRequestService;
 import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
+import com.example.springboot.service.VacationRequestService;
 import com.example.springboot.service.VacationService;
 // import com.example.springboot.service.SaltService;
 import com.example.springboot.util.SecurityUtil;
@@ -97,6 +106,18 @@ public class PostController
 
     @Autowired
     private StampRequestService stampRequestService;
+
+    @Autowired
+    private VacationRequestService vacationRequestService;
+
+    @Autowired
+    private ShiftListOverTimeService shiftListOverTimeService;
+
+    @Autowired
+    private PaydHolidayService paydHolidayService;
+
+    @Autowired
+    private OverTimeRequestService overTimeRequestService;
     
     @CrossOrigin
     @PostMapping("/send/login")
@@ -228,7 +249,7 @@ public class PostController
         }
         else
         {
-            // 1年前後に収まっていない始業時間ならエラー
+            // 1年後に収まっていない始業時間ならエラー
             status = 3;
             return new Response(status);
         }
@@ -266,19 +287,19 @@ public class PostController
 
         for(ShiftListShiftRequest shiftListShiftRequest : shiftListShiftRequests)
         {
-            // シフト申請がなければシフト時間変更申請を追加
-            if(Objects.isNull(shiftListShiftRequest.getShiftRequestId()))
+            if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
             {
-                shiftChangeRequests.add(shiftListShiftRequest.getShiftChangeRequestId());
-            }
-            // シフト時間変更申請がなければシフト申請を追加
-            else if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
-            {
+                // シフト時間変更申請がなければシフト申請を追加
                 weekShiftRequests.add(shiftListShiftRequest.getShiftRequestId());
             }
-            // どちらでもなければエラー
+            else if(Optional.ofNullable(shiftListShiftRequest.getShiftChangeRequestId()).isPresent())
+            {
+                // シフト時間変更申請があればシフト時間変更申請を追加
+                shiftChangeRequests.add(shiftListShiftRequest.getShiftChangeRequestId());
+            }
             else
             {
+                // どちらでもなければエラー
                 status = 3;
                 return new Response(status);
             }
@@ -586,16 +607,7 @@ public class PostController
             status = 3;
             return new Response(status);
         }
-        // 始業日が同じか確認
-        if(shift.getBeginWork().getDayOfMonth() == beginWork.getDayOfMonth())
-        {
-            // おなじならなにもしない
-        }
-        else
-        {
-            status = 3;
-            return new Response(status);
-        }
+
         // 始業と終業、休憩の開始と終了がシフトの時間と一致していること
         if(shift.getBeginWork().compareTo(beginWork) == 0 && shift.getEndWork().compareTo(endWork) == 0 && shift.getBeginBreak().compareTo(beginBreak) == 0 && shift.getEndBreak().compareTo(endBreak) == 0)
         {
@@ -628,12 +640,160 @@ public class PostController
     @PostMapping("/send/vacation")
     public Response vacationSet(@RequestBody VacationInput vacationInput, HttpSession session)
     {
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        StringToDuration stringToDuration = new StringToDuration();
+        int status = 0;
         // アカウントの取得
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        // 休暇の時刻が形式に沿っているか
+        LocalDateTime beginVacation = stringToLocalDateTime.stringToLocalDateTime(vacationInput.getBeginVacation());
+        LocalDateTime endVacation = stringToLocalDateTime.stringToLocalDateTime(vacationInput.getEndVacation());
+
+        // 休暇開始の後に休暇終了の形になっているか
+        if(endVacation.isAfter(beginVacation))
+        {
+            // 形式通りなら何もしない
+        }
+        else
+        {
+            // それ以外ならエラー
+            status = 3;
+            return new Response(status);
+        }
+        // 現在時刻より後なら正常
+        LocalDateTime nowTime = LocalDateTime.now();
+        if(beginVacation.isAfter(nowTime))
+        {
+            // 正常
+        }
+        else
+        {
+            status = 4;
+            return new Response(status);
+        }
         // シフトの時間内に収まっているのか
-        // 残業の前後(始業前の残業直後、終業後の残業直前)出ないこと
+        Shift shift = shiftService.findByAccountIdAndShiftId(account, vacationInput.getShiftId());
+        // 始業時間より休暇の開始または終了が前ならエラー、終業時間より休暇の開始または終了が後ならエラー
+        if(beginVacation.isBefore(shift.getBeginWork()) || endVacation.isBefore(shift.getBeginWork()) || beginVacation.isAfter(shift.getEndWork()) || endVacation.isAfter(shift.getEndWork()))
+        {
+            status = 3;
+            return new Response(status);
+        }
         // すでに申請されている休暇と重複していないか
-        // 有給の場合承認待ちの有給申請も時間も含め足りるかを計算
-        Response response = new Response();
+        List<VacationRequest> vacationRequests = vacationRequestService.findByAccountIdAndShiftId(account, shift);
+        for(VacationRequest vacationRequest : vacationRequests)
+        {
+            // 申請済みの休暇の休暇開始と休暇終了の間に、今回申請する休暇開始、休暇終了のどちらかが存在していればエラー
+            if((vacationRequest.getBeginVacation().isBefore(beginVacation) && vacationRequest.getEndVacation().isAfter(beginVacation)) || (vacationRequest.getBeginVacation().isBefore(endVacation) && vacationRequest.getEndVacation().isAfter(endVacation)))
+            {
+                status = 3;
+                return new Response(status);
+            }
+        }
+        // 残業の前後(始業前の残業直後、終業後の残業直前)でないこと
+        List<ShiftListOverTime> shiftListOverTimes = shiftListOverTimeService.findByShiftId(shift);
+        for(ShiftListOverTime shiftListOverTime : shiftListOverTimes)
+        {
+            LocalDateTime beginOverTime = shiftListOverTime.getOverTimeId().getBeginWork();
+            LocalDateTime endOverTime = shiftListOverTime.getOverTimeId().getEndWork();
+            // 残業の終了の後に休暇の開始(同じ時刻ならfalse)、残業の開始の前に休暇の終了(同じ時刻ならfalse)
+            if(beginVacation.isAfter(endOverTime) || endVacation.isBefore(beginOverTime))
+            {
+                // 正常動作
+            }
+            else
+            {
+                // 残業終了の前に休暇の開始、または休暇の終了の後に終業後の残業開始が存在していればエラー
+                status = 3;
+                return new Response(status);     
+            }
+        }
+
+        // 残業申請の承認待ちでも行う
+        List<OverTimeRequest> overTimeRequests = overTimeRequestService.findByAccountIdAndShiftIdAndRequestStatusWait(account, shift);
+        for(OverTimeRequest overTimeRequest : overTimeRequests)
+        {
+            LocalDateTime requestBeginOverTime = overTimeRequest.getBeginWork();
+            LocalDateTime requestEndOverTime = overTimeRequest.getEndWork();
+            // 残業の終了の後に休暇の開始(同じ時刻ならfalse)、残業の開始の前に休暇の終了(同じ時刻ならfalse)
+            if(beginVacation.isAfter(requestEndOverTime) || endVacation.isBefore(requestBeginOverTime))
+            {
+                // 正常動作
+            }
+            else
+            {
+                // 残業終了の前に休暇の開始、または休暇の終了の後に終業後の残業開始が存在していればエラー
+                status = 3;
+                return new Response(status);            
+            }
+        }
+        // 有給の場合承認待ちの有給申請の時間も含め足りるかを計算
+        switch (vacationInput.getVacationType())
+        {
+            // 有給の場合
+            case 1:
+                // 使用可能な有給を取得
+                List<PaydHoliday> paydHolidays = paydHolidayService.findByAccountIdAndLimitAfter(account);
+                Duration availableHoliday = Duration.ZERO;
+                for(PaydHoliday paydHoliday : paydHolidays)
+                {
+                    availableHoliday = availableHoliday.plus(stringToDuration.stringToDuration(paydHoliday.getTime()));
+                }
+                // 申請によって予約済みの有給を取得
+                List<VacationRequest> vacationRequestPaydHolidays = vacationRequestService.findByAccountIdAndRequestStatusWaitAndVacationTypePaydHoiday(account);
+                Duration usedHoliday = Duration.ZERO;
+                for(VacationRequest vacationRequest : vacationRequestPaydHolidays)
+                {
+                    usedHoliday = usedHoliday.plus(Duration.between(vacationRequest.getBeginVacation(), vacationRequest.getEndVacation()));
+                }
+                // 使用可能な有給から予約済みの有給を減算
+                availableHoliday = availableHoliday.minus(usedHoliday);
+                // 申請された有給と使用可能な有給を比較し等しいか、大きければtrue
+                Duration requestHoliday = Duration.between(beginVacation, endVacation);
+                if(availableHoliday.compareTo(requestHoliday) >= 0)
+                {
+                    // 正常
+                }
+                else
+                {
+                    status = 8;
+                    return new Response(status);
+                }
+                break;
+            
+            // 代休の場合
+            case 2:
+                break;
+
+            // 欠勤の場合
+            case 3:
+                break;
+
+            // 忌引きの場合
+            case 4:
+                break;
+            
+            // 特別休暇の場合
+            case 5:
+                break;
+            
+            // 子供休暇
+            case 6:
+                break;
+            // 介護休暇
+            case 7:
+                break;
+            // 保存休暇
+            case 8:
+                break;
+
+            default:
+
+                break;
+        }
+        status = 1;
+        Response response = new Response(status);
         return response;
     }
 

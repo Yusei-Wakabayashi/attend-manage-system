@@ -14,6 +14,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.example.springboot.BaseTimeEntity;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,7 +23,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table(name = "shift_change_requests")
-public class ShiftChangeRequest
+public class ShiftChangeRequest extends BaseTimeEntity
 {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)

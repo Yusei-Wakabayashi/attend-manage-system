@@ -11,6 +11,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import com.example.springboot.BaseTimeEntity;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,7 +20,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Table(name = "account_approvers", uniqueConstraints = {@UniqueConstraint(name = "accounts", columnNames = "account_id")})
-public class AccountApprover
+public class AccountApprover extends BaseTimeEntity
 {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
