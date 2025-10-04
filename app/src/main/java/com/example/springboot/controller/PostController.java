@@ -38,6 +38,7 @@ import com.example.springboot.dto.IdData;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
 import com.example.springboot.model.LegalTime;
+import com.example.springboot.model.MonthlyRequest;
 import com.example.springboot.model.OverTimeRequest;
 import com.example.springboot.model.PaydHoliday;
 import com.example.springboot.model.Shift;
@@ -54,6 +55,7 @@ import com.example.springboot.service.AccountApproverService;
 // import com.example.springboot.model.Salt;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.LegalTimeService;
+import com.example.springboot.service.MonthlyRequestService;
 import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.PaydHolidayService;
 import com.example.springboot.service.ShiftChangeRequestService;
@@ -118,6 +120,9 @@ public class PostController
 
     @Autowired
     private OverTimeRequestService overTimeRequestService;
+
+    @Autowired
+    private MonthlyRequestService monthlyRequestService;
     
     @CrossOrigin
     @PostMapping("/send/login")
@@ -592,6 +597,17 @@ public class PostController
             status = 3;
             return new Response(status);
         }
+
+        // 申請するシフトの年月で月次申請が申請されていればエラー
+        int searchYear = shift.getBeginWork().getYear();
+        int searchMonth = shift.getBeginWork().getMonthValue();
+        List<MonthlyRequest> monthlyRequests = monthlyRequestService.findByAccountIdAndYearAndMonth(account, searchYear, searchMonth);
+        if(monthlyRequests.size() > 0)
+        {
+            status = 3;
+            return new Response(status);
+        }
+
         LocalDateTime beginWork = stringToLocalDateTime.stringToLocalDateTime(stampInput.getBeginWork());
         LocalDateTime endWork = stringToLocalDateTime.stringToLocalDateTime(stampInput.getEndWork());
         LocalDateTime beginBreak = stringToLocalDateTime.stringToLocalDateTime(stampInput.getBeginBreak());

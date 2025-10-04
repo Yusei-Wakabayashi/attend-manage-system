@@ -35,6 +35,20 @@ public class MonthlyRequestService
         return monthlyRequestRepository.findByAccountId(account);
     }
 
+    public List<MonthlyRequest> findByAccountIdAndYearAndMonth(Long accountId, int year, int month)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        List<MonthlyRequest> monthlyRequests = monthlyRequestRepository.findByAccountIdAndYearAndMonth(account, year, month);
+        return monthlyRequests;
+    }
+
+    public List<MonthlyRequest> findByAccountIdAndYearAndMonth(Account account, int year, int month)
+    {
+        List<MonthlyRequest> monthlyRequests = monthlyRequestRepository.findByAccountIdAndYearAndMonth(account, year, month);
+        return monthlyRequests;
+    }
+
     public List<MonthlyRequest> findByAccountId(Account account)
     {
         return monthlyRequestRepository.findByAccountId(account);
