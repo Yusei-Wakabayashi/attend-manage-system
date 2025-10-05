@@ -5,23 +5,26 @@ import axios from "axios";
 
 const router = useRouter();
 
-const loginId = ref("");
-const password = ref("");
+const loginId = ref("wakabayashi@karaage.com");
+const password = ref("password");
 const error = ref("");
 
 //仮ID wakabayashi@karaage.com
 //仮パスワード password
 const login = async () => {
-  // try {
-  //   await axios.post("http://localhost:8080/api/send/login", {
-  //     id: loginId.value,
-  //     password: password.value,
-  //   });
-  //   console.log(loginId.value, password.value)
-  //   router.push("/application");
-  // } catch (error) {
-  //   console.log(`ログインエラー${error}`);
-  // }
+  try {
+    await axios.post(
+      "http://localhost:8080/api/send/login",
+      {
+        id: loginId.value,
+        password: password.value,
+      },
+      { withCredentials: true }
+    );
+    router.push("/application");
+  } catch (error) {
+    console.log(`ログインエラー${error}`);
+  }
   router.push("/application");
 };
 </script>
