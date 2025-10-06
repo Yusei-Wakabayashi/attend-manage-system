@@ -34,6 +34,7 @@ import com.example.springboot.dto.input.ShiftChangeInput;
 import com.example.springboot.dto.input.ShiftInput;
 import com.example.springboot.dto.input.StampInput;
 import com.example.springboot.dto.input.VacationInput;
+import com.example.springboot.dto.input.WithDrowInput;
 import com.example.springboot.dto.IdData;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
@@ -855,5 +856,17 @@ public class PostController
         // お知らせから月次申請を行う年月の情報が不足している場合申請不可
         Response response = new Response();
         return response;
+    }
+
+    @PostMapping("/send/withdrow")
+    public Response withDrow(@RequestBody WithDrowInput withDrowInput, HttpSession session)
+    {
+        return new Response();
+    }
+    
+    @PostMapping("/send/approval")
+    public Response approval(@RequestBody WithDrowInput withDrowInput, HttpSession session)
+    {
+        return new Response();
     }
 }
