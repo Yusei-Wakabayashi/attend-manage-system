@@ -36,12 +36,15 @@ import com.example.springboot.dto.YearMonthParam;
 import com.example.springboot.dto.change.DurationToString;
 import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.input.RequestIdInput;
+import com.example.springboot.dto.input.UserAttendInput;
+import com.example.springboot.dto.input.UserShiftInput;
 import com.example.springboot.dto.input.YearInput;
 import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.dto.response.StyleResponse;
 import com.example.springboot.dto.response.VacationTypeListResponse;
 import com.example.springboot.model.Account;
+import com.example.springboot.model.AccountApprover;
 import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Attend;
 import com.example.springboot.model.AttendanceExceptionRequest;
@@ -789,5 +792,53 @@ public class GetController
         response.setList(paydHolidayHistoryListResponses);
         response.setKey("holidaylist");
         return response;
+    }
+
+    @GetMapping("/reach/user/attendinfo")
+    public ArrayResponse<AttendListResponse> returnUserAttendList(HttpSession session, UserAttendInput request)
+    {
+        String username = SecurityUtil.getCurrentUsername();
+        Account adminAccount = accountService.getAccountByUsername(username);
+
+        // リクエストを送ってきているのは承認者なので引数に注意しながらメソッドに渡す
+        AccountApprover accountApprover = accountApproverService.getAccountAndApprover(request.getAccountId(), adminAccount);
+        // 情報が取得できていなければ利用者の承認者として設定されていないことになる
+        if(Objects.isNull(accountApprover))
+        {
+            throw new NullPointerException("正しく情報が渡されていません");
+        }
+
+        // 以下
+        int status = 1;
+        List<AttendListResponse> attendListResponses = new ArrayList<AttendListResponse>();
+        List<Attend> attends = attendService.findByAccountIdAndBeginWorkBetween(request.getAccountId(), request.getYear(), request.getMonth());
+        for(Attend attend : attends)
+        {
+            attendListResponses.add(attendService.attendToAttendListResponse(attend));
+        }
+        return new ArrayResponse<AttendListResponse>(status, attendListResponses, "attendList");
+    }
+
+    @GetMapping("/reach/user/shiftinfo")
+    public ArrayResponse<ShiftListResponse> returnUserShiftList(HttpSession session, UserShiftInput request)
+    {
+        String username = SecurityUtil.getCurrentUsername();
+        Account adminAccount = accountService.getAccountByUsername(username);
+        // リクエストを送ってきているのは承認者なので引数に注意しながらメソッドに渡す
+        AccountApprover accountApprover = accountApproverService.getAccountAndApprover(request.getAccountId(), adminAccount);
+        // 情報が取得できていなければ利用者の承認者として設定されていないことになる
+        if(Objects.isNull(accountApprover))
+        {
+            throw new NullPointerException("正しく情報が渡されていません");
+        }
+
+        int status = 1;
+        List<ShiftListResponse> shiftListResponses = new ArrayList<ShiftListResponse>();
+        List<Shift> shifts = shiftService.findByAccountIdAndBeginWorkBetween(request.getAccountId(), request.getYear(), request.getMonth());
+        for(Shift shift : shifts)
+        {
+            shiftListResponses.add(shiftService.shiftToShiftListResponse(shift));
+        }
+        return new ArrayResponse<ShiftListResponse>(status, shiftListResponses, "shiftList");
     }
 }

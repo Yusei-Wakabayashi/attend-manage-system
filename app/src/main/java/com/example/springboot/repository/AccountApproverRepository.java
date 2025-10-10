@@ -13,6 +13,7 @@ import com.example.springboot.model.AccountApprover;
 public interface AccountApproverRepository extends JpaRepository<AccountApprover, Long>
 {
     Optional<AccountApprover> findByAccountId(Account id);
+    Optional<AccountApprover> findByAccountIdAndApproverId(Account accountId, Account approverId);
     List<AccountApprover> findByApproverId(Account id);
     @Modifying
     @Query(value = "ALTER TABLE account_approvers AUTO_INCREMENT = 1", nativeQuery = true)

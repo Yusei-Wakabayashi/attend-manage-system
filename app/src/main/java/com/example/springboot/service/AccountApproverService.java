@@ -20,6 +20,38 @@ public class AccountApproverService
             .orElseThrow(() -> new RuntimeException("承認者が見つかりません"));
     }
 
+    public AccountApprover getAccountAndApprover(Long accountId, Long approverId)
+    {
+        Account account = new Account();
+        Account approver = new Account();
+        account.setId(accountId);
+        approver.setId(approverId);
+        return accountApproverRepository.findByAccountIdAndApproverId(account, approver)
+            .orElseThrow(() -> new RuntimeException("情報が見つかりません"));
+    }
+
+    public AccountApprover getAccountAndApprover(Account account, Long approverId)
+    {
+        Account approver = new Account();
+        approver.setId(approverId);
+        return accountApproverRepository.findByAccountIdAndApproverId(account, approver)
+            .orElseThrow(() -> new RuntimeException("情報が見つかりません"));
+    }
+
+    public AccountApprover getAccountAndApprover(Long accountId, Account approver)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        return accountApproverRepository.findByAccountIdAndApproverId(account, approver)
+            .orElseThrow(() -> new RuntimeException("情報が見つかりません"));
+    }
+
+    public AccountApprover getAccountAndApprover(Account account, Account approver)
+    {
+        return accountApproverRepository.findByAccountIdAndApproverId(account, approver)
+            .orElseThrow(() -> new RuntimeException("情報が見つかりません"));
+    }
+
     public String save(AccountApprover accountApprover)
     {
         accountApproverRepository.save(accountApprover);
