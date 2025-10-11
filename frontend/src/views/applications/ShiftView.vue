@@ -1,53 +1,31 @@
 <script setup>
+import axios from "axios";
+import { getCurrentDateTime, getCurrentDate, convertToApiDate } from "../../utils/datetime";
 import { ref, computed } from "vue";
-import ShiftComplete from "../../components/ShiftComplete.vue"
 import NavList from "../../components/NavList.vue";
 import WorkControlPanel from "../../components/WorkControlPanel.vue";
 import RequestReason from "../../components/RequestReason.vue";
 import ReqestTime from "../../components/ReqestTime.vue";
 import ApplyBtn from "../../components/ApplyBtn.vue";
-import axios from "axios";
-import { formatDay, formatTime } from "../../utils/datetime";
-import ShiftCompleteVue from "../../components/ShiftComplete.vue";
+import ShiftComplete from "../../components/ShiftComplete.vue";
+import LoadingScreen from "../../components/LoadingScreen.vue";
 
 const isLoading = ref(false);
 const isCompleteModal = ref(false); //モーダル表示用
-
-const today = new Date();
-const year = today.getFullYear();
-const month = String(today.getMonth() + 1).padStart(2, "0");
-const day = String(today.getDate()).padStart(2, "0");
-const hours = String(today.getHours()).padStart(2, "0");
-const minutes = String(today.getMinutes()).padStart(2, "0");
-const seconds = String(today.getSeconds()).padStart(2, "0");
-
-const requestDate = ref(
-  `${year}/${month}/${day}T${hours}:${minutes}:${seconds}`
-); //API送信時間
-const selectedDate = ref(`${year}-${month}-${day}`); //日付選択用(この形じゃないと日付表示できない)
-//API送信用(yyyy/MM/ddの形でおくるから)
-const apiDate = computed(() => {
-  const dateParts = selectedDate.value.split("-");
-  return `${dateParts[0]}/${dateParts[1]}/${dateParts[2]}`;
-});
-
 const beginWork = ref(""); //始業時刻
 const endWork = ref(""); //就業時刻
 const beginBreak = ref(""); //休憩時間
 const endBreak = ref(""); //休憩時間
 const reasonText = ref(""); //申請理由テキスト
 
-//シフト申請関数
+const requestDate = ref(getCurrentDateTime()); //API送信時間
+const selectedDate = ref(getCurrentDate()); //日付選択用(この形じゃないと日付表示できない)
+//API送信用(yyyy/MM/ddの形でおくるから)
+const apiDate = computed(() => {
+  return convertToApiDate(selectedDate.value);
+})
 
-/**
- * 
- *"beginWork": "2025/09/30T09:00:00",
-  "endWork": "2025/09/30T18:00:00",
-  "beginBreak": "12:00",
-  "endBreak": "13:00",
-  "requestComment": "テスト",
-  "requestDate": "2025/09/30T18:45:12"
- */
+//シフト申請関数
 const shiftPost = async () => {
   isLoading.value = true;
   try {
@@ -75,14 +53,7 @@ const shiftPost = async () => {
 
 <template>
   <!--ローディング画面-->
-  <div
-    v-if="isLoading"
-    class="fixed inset-0 w-full h-full bg-gray-400/50 flex justify-center items-center z-[9999]"
-  >
-    <div
-      class="w-12 h-12 border-4 border-gray-200 border-t-green-500 rounded-full animate-spin"
-    ></div>
-  </div>
+  <LoadingScreen :isLoading="isLoading" />
   <!--申請完了-->
   <ShiftComplete v-model:isCompleteModal="isCompleteModal" />
 
@@ -116,7 +87,7 @@ const shiftPost = async () => {
 
         <!-- 申請時刻 -->
         <ReqestTime
-          :day="selectedDate"
+          :day="apiDate"
           :beginWork="beginWork"
           :endWork="endWork"
           :beginBreak="beginBreak"
