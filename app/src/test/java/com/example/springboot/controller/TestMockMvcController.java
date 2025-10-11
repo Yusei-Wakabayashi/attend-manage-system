@@ -1776,7 +1776,7 @@ public class TestMockMvcController
     }
 
     @Test
-    void PaydHolidayHistorySuccess() throws Exception
+    void paydHolidayHistorySuccess() throws Exception
     {
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
@@ -1821,7 +1821,7 @@ public class TestMockMvcController
     }
 
     @Test
-    void UserAttendListSuccess() throws Exception
+    void userAttendListSuccess() throws Exception
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         Long generalAccountId = 1L;
@@ -1919,7 +1919,7 @@ public class TestMockMvcController
     }
 
     @Test
-    void UserShiftListSuccess() throws Exception
+    void userShiftListSuccess() throws Exception
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         Long generalAccountId = 1L;
@@ -1992,4 +1992,72 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.shiftList[0].overWork").value(String.valueOf(generalShiftListResponse.getOverWork())));
     }
 
+    @Test
+    void userMonthWorkInfoSuccess() throws Exception
+    {
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        Account adminAccount = new Account();
+        Long adminAccountId = 3L;
+        String adminAccountUsername = "testuser";
+        adminAccount.setId(adminAccountId);
+        adminAccount.setUsername(adminAccountUsername);
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 4L;
+        String generalAccountUsername = "hogehoge";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        AccountApprover accountApprover = new AccountApprover();
+        accountApprover.setAccountId(generalAccount);
+        accountApprover.setApproverId(adminAccount);
+
+        Time generalTime = Time.valueOf("01:00:00");
+        List<Attend> attends = new ArrayList<Attend>();
+        Attend attend = new Attend();
+        attend.setWorkTime(generalTime);
+        attend.setLateness(generalTime);
+        attend.setLeaveEarly(generalTime);
+        attend.setOuting(generalTime);
+        attend.setOverWork(generalTime);
+        attend.setAbsenceTime(generalTime);
+        attend.setVacationTime(generalTime);
+        attend.setLateNightWork(generalTime);
+        attend.setHolidayWork(generalTime);
+
+        Attend generalAttend = new Attend();
+        generalAttend.setWorkTime(generalTime);
+        generalAttend.setLateness(generalTime);
+        generalAttend.setLeaveEarly(generalTime);
+        generalAttend.setOuting(generalTime);
+        generalAttend.setOverWork(generalTime);
+        generalAttend.setAbsenceTime(generalTime);
+        generalAttend.setVacationTime(generalTime);
+        generalAttend.setLateNightWork(generalTime);
+        generalAttend.setHolidayWork(generalTime);
+
+        attends.add(attend);
+        attends.add(generalAttend);
+
+        List<Vacation> vacations = new ArrayList<Vacation>();
+        Vacation vacation = new Vacation();
+        vacation.setBeginVacation(stringToLocalDateTime.stringToLocalDateTime("2025/09/08T01:00:00"));
+        vacation.setEndVacation(stringToLocalDateTime.stringToLocalDateTime("2025/09/08T02:00:00"));
+        vacations.add(vacation);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(adminAccount);
+        when(accountApproverService.getAccountAndApprover(anyLong(), any(Account.class))).thenReturn(accountApprover);
+        when(attendService.findByAccountIdAndBeginWorkBetween(any(Account.class), anyInt(), anyInt())).thenReturn(attends);
+        when(vacationService.findByAccountIdAndBeginVacationBetweenMonthAndPaydHoliday(any(Account.class), anyInt(), anyInt())).thenReturn(vacations);
+        mockMvc.perform
+        (
+            get("/api/reach/user/monthworkinfo")
+            .param("accountId", "3")
+            .param("year", "2025")
+            .param("month", "9")
+            .with(csrf())
+            .with(user(adminAccountUsername))
+        )
+        .andExpect(status().isOk());
+    }
 }

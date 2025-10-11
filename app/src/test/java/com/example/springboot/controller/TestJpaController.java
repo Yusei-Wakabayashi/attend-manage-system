@@ -104,17 +104,17 @@ public class TestJpaController
         ApprovalSetting testApprovalSetting = new ApprovalSetting();
         testApprovalSetting.setRoleId(generalRole);
         testApprovalSetting.setApprovalId(adminRole);
-        List<ApprovalSetting> approvalSettings = new ArrayList();
+        List<ApprovalSetting> approvalSettings = new ArrayList<ApprovalSetting>();
         approvalSettings.add(testApprovalSetting);
         // whenで返すaccountsオブジェクト
-        List<Account> accounts = new ArrayList();
+        List<Account> accounts = new ArrayList<Account>();
         Account account = new Account();
         account.setId(adminAccountId);
         account.setName(adminName);
         account.setRoleId(adminRole);
         accounts.add(account);
         // whenの条件を指定するため作成
-        List<Role> roles = new ArrayList();
+        List<Role> roles = new ArrayList<Role>();
         for(ApprovalSetting approvalSetting: approvalSettings)
         {
             roles.add(approvalSetting.getApprovalId());
@@ -133,7 +133,7 @@ public class TestJpaController
         Long homeStyleId = 2L;
         String workStyleName = "work";
         String homeStyleName = "home";
-        List<StylePlace> styles = new ArrayList();
+        List<StylePlace> styles = new ArrayList<StylePlace>();
         StylePlace workStyle = new StylePlace();
         workStyle.setId(workStyleId);
         workStyle.setName(workStyleName);
