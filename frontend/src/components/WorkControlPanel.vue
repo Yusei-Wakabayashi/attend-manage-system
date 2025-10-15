@@ -72,20 +72,21 @@ watch(
 //子コンポーネント内の値が変わったときに親に変更通知（子 → 親）
 //time が空でない場合のみ親に更新を通知
 watch([localBeginWork, () => props.selectedDate], ([time, date]) => {
-  if (time) emit("update:beginWork", `${date}T${time}:00`);
+  if (time && date) emit("update:beginWork", `${date}T${time}:00`);
 });
 
 watch([localEndWork, () => props.selectedDate], ([time, date]) => {
-  if (time) emit("update:endWork", `${date}T${time}:00`);
+  if (time && date) emit("update:endWork", `${date}T${time}:00`);
 });
 
 watch([localBeginBreak, () => props.selectedDate], ([time, date]) => {
-  if (time) emit("update:beginBreak", `${date}T${time}:00`);
+  if (time && date) emit("update:beginBreak", `${date}T${time}:00`);
 });
 
 watch([localEndBreak, () => props.selectedDate], ([time, date]) => {
-  if (time) emit("update:endBreak", `${date}T${time}:00`);
+  if (time && date) emit("update:endBreak", `${date}T${time}:00`);
 });
+
 
 // watch(() => props.selectedDate, (newDate) => {
 //   console.log(newDate)

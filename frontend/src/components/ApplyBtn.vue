@@ -6,11 +6,12 @@ const route = useRoute();
 const props = defineProps({
   shiftPost: Function,
   TimeChangePost: Function,
-  MissingStampingPost:Function,
+  MissingStampingPost: Function,
   vacationPost: Function,
   overTimePost: Function,
-  AttendanceRequestPost: Function
-})
+  AttendanceRequestPost: Function,
+  errorMsg: String,
+});
 
 // ルートによって押されたときの動作を切り替え
 const handleClick = () => {
@@ -38,13 +39,13 @@ const handleClick = () => {
       break;
   }
 };
-
 </script>
 
 <template>
   <!-- 登録ボタン -->
   <div class="text-right space-x-5">
     <router-link to="/application">
+      <p class="text-red-500 mb-2">{{ errorMsg }}</p>
       <button
         class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded w-25 cursor-pointer"
       >
@@ -52,8 +53,8 @@ const handleClick = () => {
       </button>
     </router-link>
     <button
-      class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded w-25 cursor-pointer"
       @click="handleClick"
+      class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded w-25 cursor-pointer"
     >
       登録
     </button>

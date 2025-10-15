@@ -17,7 +17,7 @@ const buttonGroups = [
     title: "📝 各種申請",
     items: [
       { label: "シフト申請", color: "green", path: "/shift" },
-      { label: "時間変更申請", color: "green", path: "/timechange" },
+      { label: "勤務時間変更申請", color: "green", path: "/timechange" },
       { label: "打刻漏れ申請", color: "green", path: "/missingstamping" },
       { label: "休暇申請", color: "green", path: "/vacation" },
       { label: "残業申請", color: "green", path: "/overtime" },

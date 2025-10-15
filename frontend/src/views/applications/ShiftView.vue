@@ -1,6 +1,10 @@
 <script setup>
 import axios from "axios";
-import { getCurrentDateTime, getCurrentDate, convertToApiDate } from "../../utils/datetime";
+import {
+  getCurrentDateTime,
+  getCurrentDate,
+  convertToApiDate,
+} from "../../utils/datetime";
 import { ref, computed } from "vue";
 import NavList from "../../components/NavList.vue";
 import WorkControlPanel from "../../components/WorkControlPanel.vue";
@@ -17,16 +21,25 @@ const endWork = ref(""); //就業時刻
 const beginBreak = ref(""); //休憩時間
 const endBreak = ref(""); //休憩時間
 const reasonText = ref(""); //申請理由テキスト
+const errorMsg = ref("");
 
 const requestDate = ref(getCurrentDateTime()); //API送信時間
 const selectedDate = ref(getCurrentDate()); //日付選択用(この形じゃないと日付表示できない)
 //API送信用(yyyy/MM/ddの形でおくるから)
 const apiDate = computed(() => {
   return convertToApiDate(selectedDate.value);
-})
+});
 
 //シフト申請関数
 const shiftPost = async () => {
+  
+  //時間の入力チェック
+  if (!beginWork.value || !endWork.value || !beginBreak.value || !endBreak.value) {
+    errorMsg.value = "すべての時間を入力してください";
+    return;
+  }
+
+  errorMsg.value = "";
   isLoading.value = true;
   try {
     await axios.post(
@@ -52,11 +65,6 @@ const shiftPost = async () => {
 </script>
 
 <template>
-  <!--ローディング画面-->
-  <LoadingScreen :isLoading="isLoading" />
-  <!--申請完了-->
-  <ShiftComplete v-model:isCompleteModal="isCompleteModal" />
-
   <div class="flex h-screen text-base">
     <NavList />
     <main class="flex-1 p-6 bg-gray-100 overflow-auto pt-25 lg:ml-64 lg:pt-7">
@@ -93,10 +101,14 @@ const shiftPost = async () => {
           :beginBreak="beginBreak"
           :endBreak="endBreak"
         />
-
+        <!-- ボタン上にエラー表示 -->
         <!--申請,戻るボタン-->
-        <ApplyBtn :shiftPost="shiftPost" />
+        <ApplyBtn :shiftPost="shiftPost" :errorMsg="errorMsg" />
       </div>
     </main>
   </div>
+  <!--ローディング画面-->
+  <LoadingScreen :isLoading="isLoading" />
+  <!--申請完了-->
+  <ShiftComplete v-model:isCompleteModal="isCompleteModal" />
 </template>
