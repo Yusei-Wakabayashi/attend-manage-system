@@ -12,4 +12,5 @@ public interface AttendanceExceptionRequestRepsitory extends JpaRepository<Atten
 {
     Optional<AttendanceExceptionRequest> findByAccountIdAndAttendanceExceptionId(Account accountId, Long id);
     List<AttendanceExceptionRequest> findByAccountId(Account account);
+    List<AttendanceExceptionRequest> findByAccountIdIn(List<Account> accounts);
 }

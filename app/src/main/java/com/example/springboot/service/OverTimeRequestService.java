@@ -79,6 +79,12 @@ public class OverTimeRequestService
         return overTimeRequestRepository.findByAccountId(account);
     }
 
+    public List<OverTimeRequest> findByAccountIdIn(List<Account> accounts)
+    {
+        List<OverTimeRequest> overTimeRequests = overTimeRequestRepository.findByAccountIdIn(accounts);
+        return overTimeRequests;
+    }
+
     public String save(OverTimeRequest overTimeRequest)
     {
         overTimeRequestRepository.save(overTimeRequest);

@@ -13,4 +13,5 @@ public interface MonthlyRequestRepository extends JpaRepository<MonthlyRequest, 
     Optional<MonthlyRequest> findByAccountIdAndMonthRequestId(Account accountId, Long id);
     List<MonthlyRequest> findByAccountId(Account account);
     List<MonthlyRequest> findByAccountIdAndYearAndMonth(Account account, int year, int month);
+    List<MonthlyRequest> findByAccountIdIn(List<Account> accounts);
 }

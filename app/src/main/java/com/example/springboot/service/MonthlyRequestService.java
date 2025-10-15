@@ -54,6 +54,12 @@ public class MonthlyRequestService
         return monthlyRequestRepository.findByAccountId(account);
     }
 
+    public List<MonthlyRequest> findByAccountIdIn(List<Account> accounts)
+    {
+        List<MonthlyRequest> monthlyRequests = monthlyRequestRepository.findByAccountIdIn(accounts);
+        return monthlyRequests;
+    }
+
     public List<MonthlyRequest> findAll()
     {
         return monthlyRequestRepository.findAll();

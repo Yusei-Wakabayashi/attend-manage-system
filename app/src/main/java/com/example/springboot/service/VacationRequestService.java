@@ -133,4 +133,10 @@ public class VacationRequestService
     {
         return vacationRequestRepository.findByAccountId(account);
     }
+
+    public List<VacationRequest> findByAccountIdIn(List<Account> accounts)
+    {
+        List<VacationRequest> vacationRequests = vacationRequestRepository.findByAccountIdIn(accounts);
+        return vacationRequests;
+    }
 }

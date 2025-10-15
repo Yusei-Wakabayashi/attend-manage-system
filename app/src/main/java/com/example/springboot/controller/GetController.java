@@ -43,6 +43,7 @@ import com.example.springboot.dto.input.YearInput;
 import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.dto.response.StyleResponse;
+import com.example.springboot.dto.response.UserRequestListResponse;
 import com.example.springboot.dto.response.VacationTypeListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
@@ -905,5 +906,104 @@ public class GetController
         monthWorkInfoResponse.setLateNightWorkTime(durationToString.durationToString(monthLateNightWorkTime));
         monthWorkInfoResponse.setPaydHolidayTime(durationToString.durationToString(monthPaydHolidayTime));
         return monthWorkInfoResponse;
+    }
+
+    @GetMapping("/reach/user/requestlist")
+    public ArrayResponse<UserRequestListResponse> returnUserRequestList(HttpSession session)
+    {
+        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
+        String username = SecurityUtil.getCurrentUsername();
+        Account adminAccount = accountService.getAccountByUsername(username);
+        List<AccountApprover> accountApprovers = accountApproverService.findByApproverId(adminAccount);
+        List<Account> accounts = new ArrayList<Account>();
+        for(AccountApprover accountApprover : accountApprovers)
+        {
+            accounts.add(accountApprover.getAccountId());
+        }
+
+        List<UserRequestListResponse> userRequestListResponses = new ArrayList<UserRequestListResponse>();
+        // それぞれの申請ごとに取得
+        for(ShiftRequest shiftRequest : shiftRequestService.findByAccountIdIn(accounts))
+        {
+            UserRequestListResponse userRequestListResponseShiftRequest = new UserRequestListResponse();
+            userRequestListResponseShiftRequest.setId(shiftRequest.getShiftRequestId().intValue());
+            userRequestListResponseShiftRequest.setAccountId(shiftRequest.getAccountId().getId().intValue());
+            userRequestListResponseShiftRequest.setAccountName(shiftRequest.getAccountId().getName());
+            userRequestListResponseShiftRequest.setType(1);
+            userRequestListResponseShiftRequest.setRequestDate(localDateTimeToString.localDateTimeToString(shiftRequest.getRequestDate()));
+            userRequestListResponseShiftRequest.setRequestStatus(shiftRequest.getRequestStatus());
+            userRequestListResponses.add(userRequestListResponseShiftRequest);
+        }
+        for(ShiftChangeRequest shiftChangeRequest : shiftChangeRequestService.findByAccountIdIn(accounts))
+        {
+            UserRequestListResponse userRequestListResponseShiftChangeRequest = new UserRequestListResponse();
+            userRequestListResponseShiftChangeRequest.setId(shiftChangeRequest.getShiftChangeId().intValue());
+            userRequestListResponseShiftChangeRequest.setAccountId(shiftChangeRequest.getAccountId().getId().intValue());
+            userRequestListResponseShiftChangeRequest.setAccountName(shiftChangeRequest.getAccountId().getName());
+            userRequestListResponseShiftChangeRequest.setType(2);
+            userRequestListResponseShiftChangeRequest.setRequestDate(localDateTimeToString.localDateTimeToString(shiftChangeRequest.getRequestDate()));
+            userRequestListResponseShiftChangeRequest.setRequestStatus(shiftChangeRequest.getRequestStatus());
+            userRequestListResponses.add(userRequestListResponseShiftChangeRequest);
+        }
+        for(StampRequest stampRequest : stampRequestService.findByAccountIdIn(accounts))
+        {
+            UserRequestListResponse userRequestListResponseStampRequest = new UserRequestListResponse();
+            userRequestListResponseStampRequest.setId(stampRequest.getStampId().intValue());
+            userRequestListResponseStampRequest.setAccountId(stampRequest.getAccountId().getId().intValue());
+            userRequestListResponseStampRequest.setAccountName(stampRequest.getAccountId().getName());
+            userRequestListResponseStampRequest.setType(3);
+            userRequestListResponseStampRequest.setRequestDate(localDateTimeToString.localDateTimeToString(stampRequest.getRequestDate()));
+            userRequestListResponseStampRequest.setRequestStatus(stampRequest.getRequestStatus());
+            userRequestListResponses.add(userRequestListResponseStampRequest);
+        }
+        for(VacationRequest vacationRequest : vacationRequestService.findByAccountIdIn(accounts))
+        {
+            UserRequestListResponse userRequestListResponseVacationRequest = new UserRequestListResponse();
+            userRequestListResponseVacationRequest.setId(vacationRequest.getVacationId().intValue());
+            userRequestListResponseVacationRequest.setAccountId(vacationRequest.getAccountId().getId().intValue());
+            userRequestListResponseVacationRequest.setAccountName(vacationRequest.getAccountId().getName());
+            userRequestListResponseVacationRequest.setType(4);
+            userRequestListResponseVacationRequest.setRequestDate(localDateTimeToString.localDateTimeToString(vacationRequest.getRequestDate()));
+            userRequestListResponseVacationRequest.setRequestStatus(vacationRequest.getRequestStatus());
+            userRequestListResponses.add(userRequestListResponseVacationRequest);
+        }
+        for(OverTimeRequest overTimeRequest : overTimeRequestService.findByAccountIdIn(accounts))
+        {
+            UserRequestListResponse userRequestListResponseOverTimeRequest = new UserRequestListResponse();
+            userRequestListResponseOverTimeRequest.setId(overTimeRequest.getOverTimeId().intValue());
+            userRequestListResponseOverTimeRequest.setAccountId(overTimeRequest.getAccountId().getId().intValue());
+            userRequestListResponseOverTimeRequest.setAccountName(overTimeRequest.getAccountId().getName());
+            userRequestListResponseOverTimeRequest.setType(5);
+            userRequestListResponseOverTimeRequest.setRequestDate(localDateTimeToString.localDateTimeToString(overTimeRequest.getRequestDate()));
+            userRequestListResponseOverTimeRequest.setRequestStatus(overTimeRequest.getRequestStatus());
+            userRequestListResponses.add(userRequestListResponseOverTimeRequest);
+        }
+        for(AttendanceExceptionRequest attendanceExceptionRequest : attendanceExceptionRequestService.findByAccountIdIn(accounts))
+        {
+            UserRequestListResponse userRequestListResponseAttendanceExceptionRequest = new UserRequestListResponse();
+            userRequestListResponseAttendanceExceptionRequest.setId(attendanceExceptionRequest.getAttendanceExceptionId().intValue());
+            userRequestListResponseAttendanceExceptionRequest.setAccountId(attendanceExceptionRequest.getAccountId().getId().intValue());
+            userRequestListResponseAttendanceExceptionRequest.setAccountName(attendanceExceptionRequest.getAccountId().getName());
+            userRequestListResponseAttendanceExceptionRequest.setType(6);
+            userRequestListResponseAttendanceExceptionRequest.setRequestDate(localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getRequestDate()));
+            userRequestListResponseAttendanceExceptionRequest.setRequestStatus(attendanceExceptionRequest.getRequestStatus());
+            userRequestListResponses.add(userRequestListResponseAttendanceExceptionRequest);
+        }
+        for(MonthlyRequest monthlyRequest : monthlyRequestService.findByAccountIdIn(accounts))
+        {
+            UserRequestListResponse userRequestListResponseMonthlyRequest = new UserRequestListResponse();
+            userRequestListResponseMonthlyRequest.setId(monthlyRequest.getMonthRequestId().intValue());
+            userRequestListResponseMonthlyRequest.setAccountId(monthlyRequest.getAccountId().getId().intValue());
+            userRequestListResponseMonthlyRequest.setAccountName(monthlyRequest.getAccountId().getName());
+            userRequestListResponseMonthlyRequest.setType(7);
+            userRequestListResponseMonthlyRequest.setRequestDate(localDateTimeToString.localDateTimeToString(monthlyRequest.getRequestDate()));
+            userRequestListResponseMonthlyRequest.setRequestStatus(monthlyRequest.getRequestStatus());
+            userRequestListResponses.add(userRequestListResponseMonthlyRequest);
+        }
+
+        userRequestListResponses.sort(Comparator.comparing(UserRequestListResponse::getRequestDate));
+
+        int status = 1;
+        return new ArrayResponse<UserRequestListResponse>(status, userRequestListResponses, "requestList");
     }
 }

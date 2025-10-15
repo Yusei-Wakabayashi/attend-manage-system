@@ -87,6 +87,12 @@ public class ShiftRequestService
         return shiftRequestRepository.findByAccountId(account);
     }    
 
+    public List<ShiftRequest> findByAccountIdIn(List<Account> accounts)
+    {
+        List<ShiftRequest> shiftRequests = shiftRequestRepository.findByAccountIdIn(accounts);
+        return shiftRequests;
+    }
+
     public String save(ShiftRequest shiftRequest)
     {
         shiftRequestRepository.save(shiftRequest);
