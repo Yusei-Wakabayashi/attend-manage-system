@@ -52,6 +52,12 @@ public class StampRequestService
         return stampRequestRepository.findByAccountId(account);
     }
 
+    public List<StampRequest> findByAccountIdIn(List<Account> accounts)
+    {
+        List<StampRequest> stampRequests = stampRequestRepository.findByAccountIdIn(accounts);
+        return stampRequests;
+    }
+
     public List<StampRequest> findByAccountId(Account account)
     {
         return stampRequestRepository.findByAccountId(account);

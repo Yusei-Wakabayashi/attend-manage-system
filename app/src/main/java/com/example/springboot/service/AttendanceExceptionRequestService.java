@@ -36,6 +36,12 @@ public class AttendanceExceptionRequestService
         return attendanceExceptionRequestRepsitory.findByAccountId(account);
     }
 
+    public List<AttendanceExceptionRequest> findByAccountIdIn(List<Account> accounts)
+    {
+        List<AttendanceExceptionRequest> attendanceExceptionRequests = attendanceExceptionRequestRepsitory.findByAccountIdIn(accounts);
+        return attendanceExceptionRequests;
+    }
+
     public List<AttendanceExceptionRequest> findByAccountId(Account account)
     {
         return attendanceExceptionRequestRepsitory.findByAccountId(account);

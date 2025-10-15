@@ -14,4 +14,5 @@ public interface StampRequestRepository extends JpaRepository<StampRequest, Long
     Optional<StampRequest> findByAccountIdAndStampId(Account accountId, Long Id);
     List<StampRequest> findByShiftIdAndRequestStatus(Shift id, int status);
     List<StampRequest> findByAccountId(Account account);
+    List<StampRequest> findByAccountIdIn(List<Account> accounts);
 }

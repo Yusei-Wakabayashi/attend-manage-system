@@ -1,5 +1,7 @@
 package com.example.springboot.service;
 
+import java.util.List;
+
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,11 @@ public class AccountApproverService
     {
         return accountApproverRepository.findByAccountId(account)
             .orElseThrow(() -> new RuntimeException("承認者が見つかりません"));
+    }
+
+    public List<AccountApprover> findByApproverId(Account approver)
+    {
+        return accountApproverRepository.findByApproverId(approver);
     }
 
     public AccountApprover getAccountAndApprover(Long accountId, Long approverId)

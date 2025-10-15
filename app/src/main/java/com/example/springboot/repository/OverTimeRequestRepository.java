@@ -14,4 +14,5 @@ public interface OverTimeRequestRepository extends JpaRepository<OverTimeRequest
     Optional<OverTimeRequest> findByAccountIdAndOverTimeId(Account accountId, Long Id);
     List<OverTimeRequest> findByAccountIdAndShiftIdAndRequestStatus(Account account, Shift shift, int requestStatus);
     List<OverTimeRequest> findByAccountId(Account account);
+    List<OverTimeRequest> findByAccountIdIn(List<Account> accounts);
 }
