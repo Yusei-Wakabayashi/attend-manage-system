@@ -13,6 +13,7 @@ const route = useRoute();
 const isOpen = ref(false);
 const account = ref("");
 
+//ログインアカウント情報取得関数
 const getAccount = async () => {
   try {
     const response = await axios.get(
@@ -26,6 +27,19 @@ const getAccount = async () => {
     console.log("ログインアカウント:", account.value);
   } catch (error) {
     console.error("ログインアカウント取得エラー:", error);
+  }
+};
+
+//ログアウト関数
+const logout = async () => {
+  try {
+    await axios.post("http://localhost:8080/api/send/logout", {
+      withCredentials: true,
+    });
+    //状態リセットするためにページをリロード
+    window.location.href = "/";
+  } catch (error) {
+    console.error("ログアウトエラー:", error);
   }
 };
 
@@ -76,16 +90,36 @@ onMounted(() => {
       </div>
 
       <!--下部メニュー-->
-      <div class="space-y-2 px-2 md:text-lg lg:text-xl font-bold">
-        <router-link
+      <div class="space-y-3 px-2 md:text-lg lg:text-xl font-bold">
+        <!-- サポートリンク -->
+        <!-- <router-link
           to="/support"
-          class="block bg-blue-500 hover:bg-blue-600 rounded px-3 py-2"
+          class="block bg-blue-500 hover:bg-blue-600 text-white text-center rounded px-3 py-2"
         >
           サポート
-        </router-link>
-        <div class="block bg-gray-500 rounded px-3 py-2">
-          {{ account.name }}
+        </router-link> -->
+
+        <!-- アカウント情報表示 -->
+        <div
+          class="bg-gray-100 text-gray-800 rounded px-3 py-2 text-sm md:text-base"
+        >
+          <div><span class="font-semibold">氏名:</span> {{ account.name }}</div>
+          <div>
+            <span class="font-semibold">部署:</span>
+            {{ account.departmentName }}
+          </div>
+          <div>
+            <span class="font-semibold">役職:</span> {{ account.roleName }}
+          </div>
         </div>
+
+        <!-- ログアウトボタン -->
+        <button
+          class="w-full bg-red-500 hover:bg-red-600 text-white text-center rounded px-3 py-2"
+          @click="logout"
+        >
+          ログアウト
+        </button>
       </div>
     </nav>
   </div>
