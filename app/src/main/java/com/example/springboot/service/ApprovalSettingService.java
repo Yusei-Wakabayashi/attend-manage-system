@@ -2,6 +2,8 @@ package com.example.springboot.service;
 
 import java.util.List;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,5 +31,17 @@ public class ApprovalSettingService
     {
         approvalSettingRepository.save(approvalSetting);
         return "ok";
+    }
+
+    @Transactional
+    public void resetAllTables()
+    {
+        approvalSettingRepository.deleteAll();
+        approvalSettingRepository.resetAutoIncrement();
+    }
+
+    public void init()
+    {
+        
     }
 }

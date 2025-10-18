@@ -18,6 +18,7 @@ import com.example.springboot.model.LegalTime;
 import com.example.springboot.model.Role;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.model.Account;
+import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Attend;
 import com.example.springboot.model.AttendanceExceptionType;
 import com.example.springboot.model.Salt;
@@ -25,6 +26,7 @@ import com.example.springboot.model.Shift;
 import com.example.springboot.model.Style;
 import com.example.springboot.model.StylePlace;
 import com.example.springboot.service.AccountService;
+import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.AttendService;
 import com.example.springboot.service.AttendanceExceptionTypeService;
 import com.example.springboot.service.DepartmentService;
@@ -79,9 +81,13 @@ public class DataLoader implements CommandLineRunner
 
     @Autowired
     AttendanceExceptionTypeService attendanceExceptionTypeService;
+
+    @Autowired
+    ApprovalSettingService approvalSettingService;
     
     public void run(String... args) throws Exception
     {
+        approvalSettingService.resetAllTables();
         attendService.resetAllTables();
         shiftService.resetAllTables();
         shiftRequestService.resetAllTables();
@@ -235,6 +241,26 @@ public class DataLoader implements CommandLineRunner
                 String[] styleList = styleLine.split(",");
                 style.setAccountId(accountService.getAccountByAccountId(Long.valueOf(styleList[1])));
                 styleService.save(style);
+            }
+        }
+
+        String approvalSettingPath = "csv/ApproverSettingList.csv";
+        InputStream approvalSettingInputStream = getClass().getClassLoader().getResourceAsStream(approvalSettingPath);
+        if(approvalSettingInputStream == null)
+        {
+            throw new FileNotFoundException("ファイルが見つかりません:" + approvalSettingPath);
+        }
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(approvalSettingInputStream)))
+        {
+            String approvalSettingLine;
+            while ((approvalSettingLine = br.readLine()) != null)
+            {
+                if (approvalSettingLine.startsWith("id,")) continue;
+                ApprovalSetting approvalSetting = new ApprovalSetting();
+                String[] approvalSettingList = approvalSettingLine.split(",");
+                approvalSetting.setRoleId(roleService.getRoleById(Long.valueOf(approvalSettingList[1])));
+                approvalSetting.setApprovalId(roleService.getRoleById(Long.valueOf(approvalSettingList[2])));
+                approvalSettingService.save(approvalSetting);
             }
         }
 

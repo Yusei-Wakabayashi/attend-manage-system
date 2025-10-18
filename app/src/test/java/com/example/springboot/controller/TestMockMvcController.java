@@ -433,6 +433,56 @@ public class TestMockMvcController
     }
 
     @Test
+    void adminAccountInfoSuccess() throws Exception
+    {
+        Long adminAccountId = 1L;
+        String adminAccountName = "testuser";
+        Long adminRoleId = 34L;
+        String adminRoleName = "kakarityou";
+        Long adminDepartmentId = 4L;
+        String adminDepartmentName = "soumu";
+        Boolean adminAccountAdmin = true;
+
+        Account account = new Account();
+        Role role = new Role();
+        Department department = new Department();
+        role.setId(adminRoleId);
+        role.setName(adminRoleName);
+        department.setId(adminDepartmentId);
+        department.setName(adminDepartmentName);
+        account.setId(adminAccountId);
+        account.setName(adminAccountName);
+        account.setRoleId(role);
+        account.setDepartmentId(department);
+
+        Role generalRole = new Role();
+        Long generalRoleId = 3L;
+        generalRole.setId(generalRoleId);
+
+        List<ApprovalSetting> approvalSettings = new ArrayList<ApprovalSetting>();
+        ApprovalSetting approvalSetting = new ApprovalSetting();
+        approvalSetting.setRoleId(generalRole);
+        approvalSetting.setApprovalId(role);
+        approvalSettings.add(approvalSetting);
+
+        when(accountService.getAccountByUsername(any())).thenReturn(account);
+        when(roleService.getRoleById(any())).thenReturn(role);
+        when(departmentService.getDepartmentById(any())).thenReturn(department);
+        when(approvalSettingService.getApprovalSettingsByApprover(any())).thenReturn(approvalSettings);
+        mockMvc.perform(
+            get("/api/reach/accountinfo")
+            .with(csrf())
+            .with(user(adminAccountName))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.name").value(adminAccountName))
+        .andExpect(jsonPath("$.departmentName").value(adminDepartmentName))
+        .andExpect(jsonPath("$.roleName").value(adminRoleName))
+        .andExpect(jsonPath("$.admin").value(adminAccountAdmin));
+    }
+
+    @Test
     void shiftListSuccess() throws Exception
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
