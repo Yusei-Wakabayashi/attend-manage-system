@@ -30,6 +30,7 @@ public class Role extends BaseTimeEntity
     private String name;
     @Column(name = "power", nullable = false, length = 10)
     private int power;
+
     @OneToMany(mappedBy = "roleId", fetch = FetchType.LAZY)
     private List<Account> accountFromRole;
     @OneToMany(mappedBy = "roleId", fetch = FetchType.LAZY)

@@ -30,10 +30,10 @@ public class AttendanceExceptionRequest extends BaseTimeEntity
     @Column(name = "attendance_exception_id", nullable = false, length = 20)
     private Long attendanceExceptionId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
+    @JoinColumn(name = "account_id", referencedColumnName = "account_id", nullable = false)
     private Account accountId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "attendance_exception_type_id", nullable = false)
+    @JoinColumn(name = "attendance_exception_type_id", referencedColumnName = "attendance_exception_type_id", nullable = false)
     private AttendanceExceptionType attendanceExceptionTypeId;
     @Column(name = "begin_time", nullable = false)
     private LocalDateTime beginTime;
@@ -46,13 +46,13 @@ public class AttendanceExceptionRequest extends BaseTimeEntity
     @Column(name = "request_status", nullable = false, length = 10)
     private int requestStatus;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "approver", nullable = true)
+    @JoinColumn(name = "approver", referencedColumnName = "account_id", nullable = true)
     private Account approver;
     @Column(name = "approval_time", nullable = true)
     private LocalDateTime approvalTime;
     @Column(name = "approver_comment", nullable = true, length = 255)
     private String approverComment;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shift_id", nullable = false)
+    @JoinColumn(name = "shift_id", referencedColumnName = "shift_id", nullable = false)
     private Shift shiftId;
 }

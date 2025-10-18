@@ -61,6 +61,7 @@ public class SecurityConfig
                 new AntPathRequestMatcher("/api/reach/user/shiftinfo"),
                 new AntPathRequestMatcher("/api/reach/user/attendinfo"),
                 new AntPathRequestMatcher("/api/reach/user/monthworkinfo"),
+                new AntPathRequestMatcher("/api/reach/user/requestlist"),
                 new AntPathRequestMatcher("/dummy/reach/shiftlist"),
                 new AntPathRequestMatcher("/dummy/reach/attendlist")
             )

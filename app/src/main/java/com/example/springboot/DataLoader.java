@@ -29,8 +29,10 @@ import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.LegalTimeService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.SaltService;
+import com.example.springboot.service.ShiftChangeRequestService;
 import com.example.springboot.service.ShiftRequestService;
 import com.example.springboot.service.ShiftService;
+import com.example.springboot.service.StampRequestService;
 import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
 
@@ -66,12 +68,20 @@ public class DataLoader implements CommandLineRunner
 
     @Autowired
     AttendService attendService;
+
+    @Autowired
+    ShiftChangeRequestService shiftChangeRequestService;
+
+    @Autowired
+    StampRequestService stampRequestService;
     
     public void run(String... args) throws Exception
     {
         attendService.resetAllTables();
         shiftService.resetAllTables();
         shiftRequestService.resetAllTables();
+        shiftChangeRequestService.resetAllTables();
+        stampRequestService.resetAllTables();
         styleService.resetAllTables();
         accountService.resetAllTables();
         saltService.resetAllTables();

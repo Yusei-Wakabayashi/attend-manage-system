@@ -54,6 +54,7 @@ public class Account extends BaseTimeEntity
     private Department departmentId;
     @Column(name = "join_date", nullable = false)
     private LocalDateTime joinDate;
+
     @OneToOne(mappedBy = "accountId", fetch = FetchType.LAZY)
     private Style styleFromAccount;
     @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)

@@ -51,7 +51,7 @@ public class OverTimeRequest extends BaseTimeEntity
     @Column(name = "approver_comment", nullable = true, length = 255)
     private String approverComment;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shift_id", nullable = false)
+    @JoinColumn(name = "shift_id", referencedColumnName = "shift_id", nullable = false)
     private Shift shiftId;
 
     @OneToOne(fetch = FetchType.LAZY)

@@ -28,9 +28,9 @@ public class ShiftListOverTime
     @Column(name = "shift_list_over_time_id", length = 20, nullable = false)
     private Long shiftListOverTimeId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shift_list_id", nullable = false)
+    @JoinColumn(name = "shift_list_id", referencedColumnName = "shift_id", nullable = false)
     private Shift shiftListId;
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "over_time_id", nullable = false)
+    @JoinColumn(name = "over_time_id", referencedColumnName = "over_time_id", nullable = false)
     private OverTimeRequest overTimeId;
 }

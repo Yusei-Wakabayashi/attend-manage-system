@@ -30,6 +30,7 @@ public class AttendanceExceptionType extends BaseTimeEntity
     private Long attedanceExceptionTypeId;
     @Column(name = "attendance_exception_type_name", nullable = false, length = 255)
     private String attednaceExceptionTypeName;
+
     @OneToMany(mappedBy = "attendanceExceptionTypeId", fetch = FetchType.LAZY)
     private List<AttendanceExceptionRequest> attedanceExceptionRequestFromAttendanceExceptionTypes;
 }

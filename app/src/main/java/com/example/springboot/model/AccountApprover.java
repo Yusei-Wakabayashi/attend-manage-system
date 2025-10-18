@@ -27,9 +27,9 @@ public class AccountApprover extends BaseTimeEntity
     @Column(name = "account_approver_id", nullable = false, length = 20)
     private Long id;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
+    @JoinColumn(name = "account_id", referencedColumnName = "account_id", nullable = false)
     private Account accountId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "approver_id", nullable = false)
+    @JoinColumn(name = "approver_id", referencedColumnName = "account_id", nullable = false)
     private Account approverId;
 }

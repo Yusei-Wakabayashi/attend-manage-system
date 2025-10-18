@@ -556,66 +556,13 @@ public class TestMockMvcController
 
         List<Shift> shifts = new ArrayList<Shift>();
         List<ShiftRequest> shiftRequests = new ArrayList<ShiftRequest>();
-        Long shiftId = 20L;
-        LocalDateTime BeginWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T09:00:00");
-        LocalDateTime EndWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T18:00:00");
-        LocalDateTime BeginBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T12:00:00");
-        LocalDateTime EndBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T13:00:00");
+
     
-        Long generalShiftId = 22L;
-        LocalDateTime generalBeginWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T09:00:00");
-        LocalDateTime generalEndWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T18:00:00");
-        LocalDateTime generalBeginBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T12:00:00");
-        LocalDateTime generalEndBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T13:00:00");
 
-        List<Shift> generalShifts = new ArrayList<Shift>();
-        Shift shift = new Shift();
-        shift.setShiftId(shiftId);
-        shift.setBeginWork(BeginWorkTimeShift);
-        shift.setEndWork(EndWorkTimeShift);
-        shift.setBeginBreak(BeginBreakTimeShift);
-        shift.setEndBreak(EndBreakTimeShift);
-        generalShifts.add(shift);
-
-        Shift generalShift = new Shift();
-        generalShift.setShiftId(generalShiftId);
-        generalShift.setBeginWork(generalBeginWorkTimeShift);
-        generalShift.setEndWork(generalEndWorkTimeShift);
-        generalShift.setBeginBreak(generalBeginBreakTimeShift);
-        generalShift.setEndBreak(generalEndBreakTimeShift);
-        generalShifts.add(generalShift);
-
-        ShiftRequest shiftRequest = new ShiftRequest();
-        shiftRequest.setBeginWork(BeginWorkTimeShift);
-        shiftRequest.setEndWork(EndWorkTimeShift);
-        shiftRequest.setBeginBreak(BeginBreakTimeShift);
-        shiftRequest.setEndBreak(EndBreakTimeShift);
-
-        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
-        shiftChangeRequest.setShiftId(shift);
-        shiftChangeRequest.setBeginWork(generalBeginWorkTimeShift);
-        shiftChangeRequest.setEndWork(generalEndWorkTimeShift);
-        shiftChangeRequest.setBeginBreak(generalBeginBreakTimeShift);
-        shiftChangeRequest.setEndBreak(generalEndBreakTimeShift);
-
-        List<ShiftListShiftRequest> shiftListShiftRequests = new ArrayList<ShiftListShiftRequest>();
-        ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
-        shiftListShiftRequest.setShiftRequestId(shiftRequest);
-        ShiftListShiftRequest generaShiftListShiftRequest = new ShiftListShiftRequest();
-        generaShiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
-        shiftListShiftRequests.add(shiftListShiftRequest);
-        shiftListShiftRequests.add(generaShiftListShiftRequest);
-
-        List<Vacation> vacations = new ArrayList<Vacation>();
 
         when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftService.findByAccountIdAndDayBeginWorkBetween(any(Account.class), any(LocalDateTime.class))).thenReturn(shifts);
         when(shiftRequestService.getAccountIdAndBeginWorkBetweenDay(any(Account.class), any(LocalDateTime.class))).thenReturn(shiftRequests);
-        when(legalTimeService.getFirstByOrderByBeginDesc()).thenReturn(legalTime);
-        when(shiftService.findByAccountIdAndBeginWorkBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(generalShifts);
-        when(shiftListShiftRequestService.findByShiftIdIn(anyList())).thenReturn(shiftListShiftRequests);
-        when(vacationService.findByAccountIdAndBeginVacationBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(vacations);
-        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn("ok");
         mockMvc.perform(
             post("/api/send/shift")
             .contentType(MediaType.APPLICATION_JSON)
@@ -891,39 +838,10 @@ public class TestMockMvcController
         shift.setShiftId(shiftId);
         shift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(generalBeginWork));
 
-        Long generalShiftId = 22L;
         LocalDateTime generalBeginWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T09:00:00");
         LocalDateTime generalEndWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T18:00:00");
         LocalDateTime generalBeginBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T12:00:00");
         LocalDateTime generalEndBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T13:00:00");
-
-        Long adminShiftId = 20L;
-        LocalDateTime adminBeginWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T09:00:00");
-        LocalDateTime adminEndWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T18:00:00");
-        LocalDateTime adminBeginBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T12:00:00");
-        LocalDateTime adminEndBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T13:00:00");
-
-        List<Shift> generalShifts = new ArrayList<Shift>();
-        Shift adminShift = new Shift();
-        adminShift.setShiftId(adminShiftId);
-        adminShift.setBeginWork(adminBeginWorkTimeShift);
-        adminShift.setEndWork(adminEndWorkTimeShift);
-        adminShift.setBeginBreak(adminBeginBreakTimeShift);
-        adminShift.setEndBreak(adminEndBreakTimeShift);
-        Shift generalShift = new Shift();
-        generalShift.setShiftId(generalShiftId);
-        generalShift.setBeginWork(generalBeginWorkTimeShift);
-        generalShift.setEndWork(generalEndWorkTimeShift);
-        generalShift.setBeginBreak(generalBeginBreakTimeShift);
-        generalShift.setEndBreak(generalEndBreakTimeShift);
-        generalShifts.add(adminShift);
-        generalShifts.add(generalShift);
-
-        ShiftRequest shiftRequest = new ShiftRequest();
-        shiftRequest.setBeginWork(adminBeginWorkTimeShift);
-        shiftRequest.setEndWork(adminEndWorkTimeShift);
-        shiftRequest.setBeginBreak(adminBeginBreakTimeShift);
-        shiftRequest.setEndBreak(adminEndBreakTimeShift);
 
         List<ShiftChangeRequest> generalShiftChangeRequests = new ArrayList<ShiftChangeRequest>();
         ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
@@ -933,23 +851,10 @@ public class TestMockMvcController
         shiftChangeRequest.setBeginBreak(generalBeginBreakTimeShift);
         shiftChangeRequest.setEndBreak(generalEndBreakTimeShift);
 
-        List<ShiftListShiftRequest> shiftListShiftRequests = new ArrayList<ShiftListShiftRequest>();
-        ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
-        shiftListShiftRequest.setShiftRequestId(shiftRequest);
-        ShiftListShiftRequest generalShiftListShiftRequest = new ShiftListShiftRequest();
-        generalShiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
-        shiftListShiftRequests.add(shiftListShiftRequest);
-        shiftListShiftRequests.add(generalShiftListShiftRequest);
-
-        List<Vacation> vacations = new ArrayList<Vacation>();
 
         when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(shift);
         when(shiftChangeRequestService.findByAccountIdAndShiftIdAndRequestStatusWait(any(Account.class), anyLong())).thenReturn(generalShiftChangeRequests);
-        when(legalTimeService.getFirstByOrderByBeginDesc()).thenReturn(legalTime);
-        when(shiftService.findByAccountIdAndBeginWorkBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(generalShifts);
-        when(shiftListShiftRequestService.findByShiftIdIn(anyList())).thenReturn(shiftListShiftRequests);
-        when(vacationService.findByAccountIdAndBeginVacationBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(vacations);
         when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn("ok");
         mockMvc.perform(
             post("/api/send/changetime")
@@ -2193,6 +2098,257 @@ public class TestMockMvcController
             get("/api/reach/user/requestlist")
             .with(csrf())
             .with(user(adminAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void legalCheckShiftSuccess() throws Exception
+    {
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        String generalBeginWork = "2026/09/02T09:00:00";
+        String generalBeginBreak = "2026/09/02T12:00:00";
+        String generalEndBreak = "2026/09/02T13:00:00";
+        String generalEndWork = "2026/09/02T18:00:00";
+        String json = String.format
+        ("""
+            {
+                "beginWork": "%s",
+                "beginBreak": "%s",
+                "endBreak": "%s",
+                "endWork": "%s"
+            }
+        """,
+        generalBeginWork, generalBeginBreak, generalEndBreak, generalEndWork
+        );
+
+        LegalTime legalTime = new LegalTime();
+        Long legalTimeId = 1L;
+        LocalDateTime legalTimeBegin = stringToLocalDateTime.stringToLocalDateTime("2025/08/08T21:00:00");
+        String legalTimeScheduleWorkTime = "08:00:00";
+        String legalTimeWeeklyWorkTime = "40:00:00";
+        String legalTimeMonthlyOverWork = "45:00:00";
+        String legalTimeYearOverWork = "360:00:00";
+        String legalTimeMaxOverWorkTime = "100:00:00";
+        String legalTimeMonthlyOverWorkAverage = "80:00:00";
+        String legalTimeLateNightWorkTimeBegin = "22:00:00";
+        String legalTimeLateNightWorkTimeEnd = "05:00:00";
+        String legalTimeScheduleBreakTime = "01:00:00";
+        int legalTimeWeeklyHoliday = 1;
+
+        legalTime.setLegalTimeId(legalTimeId);
+        legalTime.setBegin(legalTimeBegin);
+        legalTime.setScheduleWorkTime(legalTimeScheduleWorkTime);
+        legalTime.setWeeklyWorkTime(legalTimeWeeklyWorkTime);
+        legalTime.setMonthlyOverWorkTime(legalTimeMonthlyOverWork);
+        legalTime.setYearOverWorkTime(legalTimeYearOverWork);
+        legalTime.setMaxOverWorkTime(legalTimeMaxOverWorkTime);
+        legalTime.setMonthlyOverWorkAverage(legalTimeMonthlyOverWorkAverage);
+        legalTime.setLateNightWorkBegin(legalTimeLateNightWorkTimeBegin);
+        legalTime.setLateNightWorkEnd(legalTimeLateNightWorkTimeEnd);
+        legalTime.setScheduleBreakTime(legalTimeScheduleBreakTime);
+        legalTime.setWeeklyHoliday(legalTimeWeeklyHoliday);
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 1L;
+        String generalAccountName = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setName(generalAccountName);
+
+        Long shiftId = 20L;
+        LocalDateTime BeginWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T09:00:00");
+        LocalDateTime EndWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T18:00:00");
+        LocalDateTime BeginBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T12:00:00");
+        LocalDateTime EndBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T13:00:00");
+    
+        Long generalShiftId = 22L;
+        LocalDateTime generalBeginWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T09:00:00");
+        LocalDateTime generalEndWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T18:00:00");
+        LocalDateTime generalBeginBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T12:00:00");
+        LocalDateTime generalEndBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T13:00:00");
+
+        List<Shift> generalShifts = new ArrayList<Shift>();
+        Shift shift = new Shift();
+        shift.setShiftId(shiftId);
+        shift.setBeginWork(BeginWorkTimeShift);
+        shift.setEndWork(EndWorkTimeShift);
+        shift.setBeginBreak(BeginBreakTimeShift);
+        shift.setEndBreak(EndBreakTimeShift);
+        generalShifts.add(shift);
+
+        Shift generalShift = new Shift();
+        generalShift.setShiftId(generalShiftId);
+        generalShift.setBeginWork(generalBeginWorkTimeShift);
+        generalShift.setEndWork(generalEndWorkTimeShift);
+        generalShift.setBeginBreak(generalBeginBreakTimeShift);
+        generalShift.setEndBreak(generalEndBreakTimeShift);
+        generalShifts.add(generalShift);
+
+        ShiftRequest shiftRequest = new ShiftRequest();
+        shiftRequest.setBeginWork(BeginWorkTimeShift);
+        shiftRequest.setEndWork(EndWorkTimeShift);
+        shiftRequest.setBeginBreak(BeginBreakTimeShift);
+        shiftRequest.setEndBreak(EndBreakTimeShift);
+
+        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
+        shiftChangeRequest.setShiftId(shift);
+        shiftChangeRequest.setBeginWork(generalBeginWorkTimeShift);
+        shiftChangeRequest.setEndWork(generalEndWorkTimeShift);
+        shiftChangeRequest.setBeginBreak(generalBeginBreakTimeShift);
+        shiftChangeRequest.setEndBreak(generalEndBreakTimeShift);
+
+        List<ShiftListShiftRequest> shiftListShiftRequests = new ArrayList<ShiftListShiftRequest>();
+        ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
+        shiftListShiftRequest.setShiftRequestId(shiftRequest);
+        ShiftListShiftRequest generaShiftListShiftRequest = new ShiftListShiftRequest();
+        generaShiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
+        shiftListShiftRequests.add(shiftListShiftRequest);
+        shiftListShiftRequests.add(generaShiftListShiftRequest);
+
+        List<Vacation> vacations = new ArrayList<Vacation>();
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(legalTimeService.getFirstByOrderByBeginDesc()).thenReturn(legalTime);
+        when(shiftService.findByAccountIdAndBeginWorkBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(generalShifts);
+        when(shiftListShiftRequestService.findByShiftIdIn(anyList())).thenReturn(shiftListShiftRequests);
+        when(vacationService.findByAccountIdAndBeginVacationBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(vacations);
+        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn("ok");
+        mockMvc.perform(
+            post("/api/send/legalcheck/shift")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountName))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void legalCheckShiftChangeSuccess() throws Exception
+    {
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        String generalBeginWork = "2026/09/02T09:00:00";
+        String generalBeginBreak = "2026/09/02T12:00:00";
+        String generalEndBreak = "2026/09/02T13:00:00";
+        String generalEndWork = "2026/09/02T18:00:00";
+        int generalId = 1;
+        String json = String.format
+        ("""
+            {
+                "beginWork": "%s",
+                "beginBreak": "%s",
+                "endBreak": "%s",
+                "endWork": "%s",
+                "shiftId": "%s"
+            }
+        """,
+        generalBeginWork, generalBeginBreak, generalEndBreak, generalEndWork, generalId
+        );
+
+        LegalTime legalTime = new LegalTime();
+        Long legalTimeId = 1L;
+        LocalDateTime legalTimeBegin = LocalDateTime.parse(LocalDateTime.parse("2025/08/08T21:00:00",DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        String legalTimeScheduleWorkTime = "08:00:00";
+        String legalTimeWeeklyWorkTime = "40:00:00";
+        String legalTimeMonthlyOverWork = "45:00:00";
+        String legalTimeYearOverWork = "360:00:00";
+        String legalTimeMaxOverWorkTime = "100:00:00";
+        String legalTimeMonthlyOverWorkAverage = "80:00:00";
+        String legalTimeLateNightWorkTimeBegin = "22:00:00";
+        String legalTimeLateNightWorkTimeEnd = "05:00:00";
+        String legalTimeScheduleBreakTime = "01:00:00";
+        int legalTimeWeeklyHoliday = 1;
+
+        legalTime.setLegalTimeId(legalTimeId);
+        legalTime.setBegin(legalTimeBegin);
+        legalTime.setScheduleWorkTime(legalTimeScheduleWorkTime);
+        legalTime.setWeeklyWorkTime(legalTimeWeeklyWorkTime);
+        legalTime.setMonthlyOverWorkTime(legalTimeMonthlyOverWork);
+        legalTime.setYearOverWorkTime(legalTimeYearOverWork);
+        legalTime.setMaxOverWorkTime(legalTimeMaxOverWorkTime);
+        legalTime.setMonthlyOverWorkAverage(legalTimeMonthlyOverWorkAverage);
+        legalTime.setLateNightWorkBegin(legalTimeLateNightWorkTimeBegin);
+        legalTime.setLateNightWorkEnd(legalTimeLateNightWorkTimeEnd);
+        legalTime.setScheduleBreakTime(legalTimeScheduleBreakTime);
+        legalTime.setWeeklyHoliday(legalTimeWeeklyHoliday);
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 1L;
+        String generalAccountName = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setName(generalAccountName);
+
+        Shift shift = new Shift();
+        Long shiftId = 1L;
+        shift.setShiftId(shiftId);
+        shift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(generalBeginWork));
+
+        Long generalShiftId = 22L;
+        LocalDateTime generalBeginWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T09:00:00");
+        LocalDateTime generalEndWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T18:00:00");
+        LocalDateTime generalBeginBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T12:00:00");
+        LocalDateTime generalEndBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T13:00:00");
+
+        Long adminShiftId = 20L;
+        LocalDateTime adminBeginWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T09:00:00");
+        LocalDateTime adminEndWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T18:00:00");
+        LocalDateTime adminBeginBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T12:00:00");
+        LocalDateTime adminEndBreakTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/18T13:00:00");
+
+        List<Shift> generalShifts = new ArrayList<Shift>();
+        Shift adminShift = new Shift();
+        adminShift.setShiftId(adminShiftId);
+        adminShift.setBeginWork(adminBeginWorkTimeShift);
+        adminShift.setEndWork(adminEndWorkTimeShift);
+        adminShift.setBeginBreak(adminBeginBreakTimeShift);
+        adminShift.setEndBreak(adminEndBreakTimeShift);
+        Shift generalShift = new Shift();
+        generalShift.setShiftId(generalShiftId);
+        generalShift.setBeginWork(generalBeginWorkTimeShift);
+        generalShift.setEndWork(generalEndWorkTimeShift);
+        generalShift.setBeginBreak(generalBeginBreakTimeShift);
+        generalShift.setEndBreak(generalEndBreakTimeShift);
+        generalShifts.add(adminShift);
+        generalShifts.add(generalShift);
+
+        ShiftRequest shiftRequest = new ShiftRequest();
+        shiftRequest.setBeginWork(adminBeginWorkTimeShift);
+        shiftRequest.setEndWork(adminEndWorkTimeShift);
+        shiftRequest.setBeginBreak(adminBeginBreakTimeShift);
+        shiftRequest.setEndBreak(adminEndBreakTimeShift);
+
+        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
+        shiftChangeRequest.setShiftId(shift);
+        shiftChangeRequest.setBeginWork(generalBeginWorkTimeShift);
+        shiftChangeRequest.setEndWork(generalEndWorkTimeShift);
+        shiftChangeRequest.setBeginBreak(generalBeginBreakTimeShift);
+        shiftChangeRequest.setEndBreak(generalEndBreakTimeShift);
+
+        List<ShiftListShiftRequest> shiftListShiftRequests = new ArrayList<ShiftListShiftRequest>();
+        ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
+        shiftListShiftRequest.setShiftRequestId(shiftRequest);
+        ShiftListShiftRequest generalShiftListShiftRequest = new ShiftListShiftRequest();
+        generalShiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
+        shiftListShiftRequests.add(shiftListShiftRequest);
+        shiftListShiftRequests.add(generalShiftListShiftRequest);
+
+        List<Vacation> vacations = new ArrayList<Vacation>();
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(shift);
+        when(legalTimeService.getFirstByOrderByBeginDesc()).thenReturn(legalTime);
+        when(shiftService.findByAccountIdAndBeginWorkBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(generalShifts);
+        when(shiftListShiftRequestService.findByShiftIdIn(anyList())).thenReturn(shiftListShiftRequests);
+        when(vacationService.findByAccountIdAndBeginVacationBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(vacations);
+        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn("ok");
+        mockMvc.perform(
+            post("/api/send/legalcheck/shiftchange")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountName))
         )
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(1));

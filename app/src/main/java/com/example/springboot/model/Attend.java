@@ -63,6 +63,7 @@ public class Attend extends BaseTimeEntity
     private Time vacationTime;
     @Column(name = "absence_time", nullable = false)
     private Time absenceTime;
+
     @OneToOne(mappedBy = "attendanceId", fetch = FetchType.LAZY)
     private AttendanceListSource attendanceListSourceFromAttendances;
     // コンストラクタ定義
