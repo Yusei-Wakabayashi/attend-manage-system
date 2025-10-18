@@ -30,7 +30,7 @@ public class TimeCard extends BaseTimeEntity
     @Column(name = "time_card_id", nullable = false, length = 20)
     private Long timeCardId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
+    @JoinColumn(name = "account_id", referencedColumnName = "account_id", nullable = false)
     private Account accountId;
     @Column(name = "begin_work", nullable = false)
     private LocalDateTime beginWork;

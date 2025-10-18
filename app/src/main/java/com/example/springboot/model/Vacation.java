@@ -30,10 +30,10 @@ public class Vacation extends BaseTimeEntity
     @Column(name = "vacation_list_id", nullable = false)
     private Long vacationListId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
+    @JoinColumn(name = "account_id", referencedColumnName = "account_id", nullable = false)
     private Account accountId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vacation_type_id", nullable = false)
+    @JoinColumn(name = "vacation_type_id", referencedColumnName = "vacation_type_id", nullable = false)
     private VacationType vacationTypeId;
     @Column(name = "beginVacation", nullable = false)
     private LocalDateTime beginVacation;

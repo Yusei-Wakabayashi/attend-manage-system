@@ -31,7 +31,7 @@ public class ShiftRequest extends BaseTimeEntity
     @Column(name = "shift_request_id", nullable = false)
     private Long shiftRequestId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
+    @JoinColumn(name = "account_id", referencedColumnName = "account_id", nullable = false)
     private Account accountId;
     @Column(name = "begin_work", nullable = false)
     private LocalDateTime beginWork;
@@ -48,7 +48,7 @@ public class ShiftRequest extends BaseTimeEntity
     @Column(name = "request_status", nullable = false, length = 10)
     private int requestStatus;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "approver", nullable = true)
+    @JoinColumn(name = "approver", referencedColumnName = "account_id", nullable = true)
     private Account approver;
     @Column(name = "approval_time", nullable = true)
     private LocalDateTime approvalTime;

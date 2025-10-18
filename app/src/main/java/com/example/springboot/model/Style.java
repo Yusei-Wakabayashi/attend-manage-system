@@ -28,7 +28,7 @@ public class Style extends BaseTimeEntity
     @Column(name = "style_id", nullable = false, length = 20)
     private Long styleId;
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
+    @JoinColumn(name = "account_id", referencedColumnName = "account_id", nullable = false)
     private Account accountId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "style_place_id", referencedColumnName = "style_place_id")
