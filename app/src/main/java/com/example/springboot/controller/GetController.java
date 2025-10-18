@@ -70,7 +70,7 @@ import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.AttendService;
 import com.example.springboot.service.AttendanceExceptionRequestService;
-import com.example.springboot.service.AttendacneExceptionTypeService;
+import com.example.springboot.service.AttendanceExceptionTypeService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.MonthlyRequestService;
 import com.example.springboot.service.OverTimeRequestService;
@@ -148,7 +148,7 @@ public class GetController
     VacationTypeService vacationTypeService;
 
     @Autowired
-    AttendacneExceptionTypeService attendanceExceptionTypeService;
+    AttendanceExceptionTypeService attendanceExceptionTypeService;
 
     @Autowired
     PaydHolidayService paydHolidayService;

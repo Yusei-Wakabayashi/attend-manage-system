@@ -611,7 +611,6 @@ public class PostController
     public Response otherTimeSet(@RequestBody OtherTimeInput otherTimeInput, HttpSession session)
     {
         // アカウントの取得
-        // 勤怠情報確定済みの場合申請不可
         // 外出申請の場合
         // 重複NG(承認待ち、承認済み問わず)
         // 

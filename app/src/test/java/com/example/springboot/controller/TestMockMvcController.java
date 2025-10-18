@@ -20,7 +20,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-// import java.util.stream.Collectors;
 import java.util.Objects;
 
 import org.junit.jupiter.api.Test;
@@ -69,8 +68,8 @@ import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.AttendService;
-import com.example.springboot.service.AttendacneExceptionTypeService;
 import com.example.springboot.service.AttendanceExceptionRequestService;
+import com.example.springboot.service.AttendanceExceptionTypeService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.LegalTimeService;
 import com.example.springboot.service.MonthlyRequestService;
@@ -160,7 +159,7 @@ public class TestMockMvcController
     private VacationTypeService vacationTypeService;
 
     @MockBean
-    private AttendacneExceptionTypeService attendanceExceptionTypeService;
+    private AttendanceExceptionTypeService attendanceExceptionTypeService;
 
     @MockBean
     private ShiftListOverTimeService shiftListOverTimeService;
