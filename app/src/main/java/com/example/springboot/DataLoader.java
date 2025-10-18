@@ -19,12 +19,14 @@ import com.example.springboot.model.Role;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Attend;
+import com.example.springboot.model.AttendanceExceptionType;
 import com.example.springboot.model.Salt;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.Style;
 import com.example.springboot.model.StylePlace;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.AttendService;
+import com.example.springboot.service.AttendanceExceptionTypeService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.LegalTimeService;
 import com.example.springboot.service.RoleService;
@@ -74,6 +76,9 @@ public class DataLoader implements CommandLineRunner
 
     @Autowired
     StampRequestService stampRequestService;
+
+    @Autowired
+    AttendanceExceptionTypeService attendanceExceptionTypeService;
     
     public void run(String... args) throws Exception
     {
@@ -89,6 +94,25 @@ public class DataLoader implements CommandLineRunner
         departmentService.resetAllTables();
         stylePlaceService.resetAllTables();
         legalTimeService.resetAllTables();
+
+        String attendanceExceptionTypePath = "csv/AttendanceExceptionTypeList.csv";
+        InputStream attendanceExceptionTypeInputStream = getClass().getClassLoader().getResourceAsStream(attendanceExceptionTypePath);
+        if(attendanceExceptionTypeInputStream == null)
+        {
+            throw new FileNotFoundException("ファイルが見つかりません" + attendanceExceptionTypePath);
+        }
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(attendanceExceptionTypeInputStream)))
+        {
+            String attendanceExceptionTypeLine;
+            while ((attendanceExceptionTypeLine = br.readLine()) != null)
+            {
+                if (attendanceExceptionTypeLine.startsWith("id,")) continue;
+                AttendanceExceptionType attendanceExceptionType = new AttendanceExceptionType();
+                String[] attendanceExceptionTypeList = attendanceExceptionTypeLine.split(",");
+                attendanceExceptionType.setAttednaceExceptionTypeName(attendanceExceptionTypeList[1]);
+                attendanceExceptionTypeService.save(attendanceExceptionType);
+            }
+        }
 
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         String saltPath = "csv/SaltList.csv";
