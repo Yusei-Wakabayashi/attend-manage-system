@@ -1,6 +1,7 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import axios from "axios";
 
 const navList = ref([
   { label: "各種申請", path: "/application" },
@@ -10,6 +11,27 @@ const navList = ref([
 
 const route = useRoute();
 const isOpen = ref(false);
+const account = ref("");
+
+const getAccount = async () => {
+  try {
+    const response = await axios.get(
+      "http://localhost:8080/api/reach/accountinfo",
+      {
+        withCredentials: true,
+      }
+    );
+
+    account.value = response.data;
+    console.log("ログインアカウント:", account.value);
+  } catch (error) {
+    console.error("ログインアカウント取得エラー:", error);
+  }
+};
+
+onMounted(() => {
+  getAccount();
+});
 </script>
 
 <template>
@@ -62,7 +84,7 @@ const isOpen = ref(false);
           サポート
         </router-link>
         <div class="block bg-gray-500 rounded px-3 py-2">
-          アカウント名: よこじ
+          {{ account.name }}
         </div>
       </div>
     </nav>

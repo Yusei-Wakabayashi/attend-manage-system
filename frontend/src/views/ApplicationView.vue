@@ -1,10 +1,6 @@
 <script setup>
 import NavList from "../components/NavList.vue";
 
-import { useRoute } from "vue-router";
-
-const route = useRoute();
-
 const buttonGroups = [
   {
     title: "🛠 業務設定",
