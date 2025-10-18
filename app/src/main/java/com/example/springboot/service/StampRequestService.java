@@ -2,6 +2,8 @@ package com.example.springboot.service;
 
 import java.util.List;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -67,5 +69,17 @@ public class StampRequestService
     {
         stampRequestRepository.save(stampRequest);
         return "ok";
+    }
+
+    @Transactional
+    public void resetAllTables()
+    {
+        stampRequestRepository.deleteAll();
+        stampRequestRepository.resetAutoIncrement();
+    }
+
+    public void init()
+    {
+        
     }
 }

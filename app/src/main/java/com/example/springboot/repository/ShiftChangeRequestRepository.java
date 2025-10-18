@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Shift;
@@ -18,4 +20,7 @@ public interface ShiftChangeRequestRepository extends JpaRepository<ShiftChangeR
     List<ShiftChangeRequest> findByAccountIdAndShiftIdInAndRequestStatus(Account accountId, List<Shift> shiftIds, int requestStatus);
     List<ShiftChangeRequest> findByAccountId(Account account);
     List<ShiftChangeRequest> findByAccountIdIn(List<Account> accounts);
+    @Modifying
+    @Query(value = "ALTER TABLE shift_change_requests AUTO_INCREMENT = 1", nativeQuery = true)
+    void resetAutoIncrement();
 }

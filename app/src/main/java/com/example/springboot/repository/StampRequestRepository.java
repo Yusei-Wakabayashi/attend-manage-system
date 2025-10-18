@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Shift;
@@ -15,4 +17,7 @@ public interface StampRequestRepository extends JpaRepository<StampRequest, Long
     List<StampRequest> findByShiftIdAndRequestStatus(Shift id, int status);
     List<StampRequest> findByAccountId(Account account);
     List<StampRequest> findByAccountIdIn(List<Account> accounts);
+    @Modifying
+    @Query(value = "ALTER TABLE stamp_requests AUTO_INCREMENT = 1", nativeQuery = true)
+    void resetAutoIncrement();
 }

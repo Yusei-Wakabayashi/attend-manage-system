@@ -6,6 +6,8 @@ import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -106,5 +108,17 @@ public class ShiftChangeRequestService
     {
         shiftChangeRequestRepository.save(shiftChangeRequest);
         return "ok";
+    }
+
+    @Transactional
+    public void resetAllTables()
+    {
+        shiftChangeRequestRepository.deleteAll();
+        shiftChangeRequestRepository.resetAutoIncrement();
+    }
+
+    public void init()
+    {
+        
     }
 }
