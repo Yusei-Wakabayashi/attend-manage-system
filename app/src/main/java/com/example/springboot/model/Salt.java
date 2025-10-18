@@ -26,6 +26,7 @@ public class Salt extends BaseTimeEntity
     private Long id;
     @Column(name = "text", nullable = false, length=255)
     private String text;
+
     @OneToOne(mappedBy = "saltId", fetch = FetchType.LAZY)
     private Account accountFromSalt;
 }

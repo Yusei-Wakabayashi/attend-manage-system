@@ -27,6 +27,8 @@ import com.example.springboot.dto.LoginPostData;
 import com.example.springboot.dto.change.StringToDuration;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.response.Response;
+import com.example.springboot.dto.input.LegalCheckShiftChangeInput;
+import com.example.springboot.dto.input.LegalCheckShiftInput;
 import com.example.springboot.dto.input.MonthlyInput;
 import com.example.springboot.dto.input.OtherTimeInput;
 import com.example.springboot.dto.input.OverTimeInput;
@@ -203,7 +205,6 @@ public class PostController
     public Response shiftSet(@RequestBody ShiftInput shiftInput, HttpSession session)
     {
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
-        StringToDuration stringToDuration = new StringToDuration();
         int status = 0;
         String username = SecurityUtil.getCurrentUsername();
         Account account = accountService.getAccountByUsername(username);
@@ -259,101 +260,7 @@ public class PostController
             status = 3;
             return new Response(status);
         }
-        LegalTime legalTime = legalTimeService.getFirstByOrderByBeginDesc();
-        // 労働時間が8時間(所定労働時間)になっているか確認
-        // 休憩が1時間を超えているか確認
-        Duration standardWorkTime = stringToDuration.stringToDuration(legalTime.getScheduleWorkTime());
-        Duration morning = Duration.between(beginWork, beginBreak);
-        Duration afternoon = Duration.between(endBreak, endWork);
-        Duration workTime = morning.plus(afternoon);
-
-        Duration breakTime = Duration.between(beginBreak, endBreak);
-        // 法定休憩時間で初期化
-        Duration standardBreakTime = stringToDuration.stringToDuration(legalTime.getScheduleBreakTime());
-        // 週の法定労働時間で初期化
-        Duration standardWeekWorkTime = stringToDuration.stringToDuration(legalTime.getWeeklyWorkTime());
-        // 申請の労働時間のコピーで初期化
-        Duration weekWorkTime = workTime.abs();
-        // 週のシフト
-        List<Shift> weekShifts = shiftService.findByAccountIdAndBeginWorkBetweenWeek(account, beginWork);
-        // すでにあるシフトと今回申請される1件を足した件数が一週間(7)から法定休日の日数を引いた数より大きければエラー
-        // 法定休日を超えないようにしたい
-        if((weekShifts.size() + 1) > (7 - legalTime.getWeeklyHoliday()))
-        {
-            status = 3;
-            return new Response(status);
-        }
-
-        // シフトに関連する申請を取得したい
-        List<ShiftListShiftRequest> shiftListShiftRequests = shiftListShiftRequestService.findByShiftIdIn(weekShifts);
-        // 週シフト申請
-        List<ShiftRequest> weekShiftRequests = new ArrayList<ShiftRequest>();
-        // シフト時間変更申請が出されているシフトを取得したい
-        List<ShiftChangeRequest> shiftChangeRequests = new ArrayList<ShiftChangeRequest>();
-
-        for(ShiftListShiftRequest shiftListShiftRequest : shiftListShiftRequests)
-        {
-            if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
-            {
-                // シフト時間変更申請がなければシフト申請を追加
-                weekShiftRequests.add(shiftListShiftRequest.getShiftRequestId());
-            }
-            else if(Optional.ofNullable(shiftListShiftRequest.getShiftChangeRequestId()).isPresent())
-            {
-                // シフト時間変更申請があればシフト時間変更申請を追加
-                shiftChangeRequests.add(shiftListShiftRequest.getShiftChangeRequestId());
-            }
-            else
-            {
-                // どちらでもなければエラー
-                status = 3;
-                return new Response(status);
-            }
-        }
-        // シフトでの計算だと遅刻や早退、残業などでずれた時間で計算することになる
-        // それを避けるため反映する申請から取得し計算している
-        // 週の休暇
-        List<Vacation> weekVacations = vacationService.findByAccountIdAndBeginVacationBetweenWeek(account, beginWork);
-
-        // 申請待ち状態の時間を加算
-        for(ShiftRequest weekShiftRequest : weekShiftRequests)
-        {
-            Duration weekShiftRequestWorkTimeMorning = Duration.between(weekShiftRequest.getBeginWork(), weekShiftRequest.getBeginBreak());
-            Duration weekShiftRequestWorkTimeAfternoon = Duration.between(weekShiftRequest.getEndBreak(), weekShiftRequest.getBeginWork());
-            weekWorkTime.plus(weekShiftRequestWorkTimeMorning);
-            weekWorkTime.plus(weekShiftRequestWorkTimeAfternoon);
-        }
-        // 時間変更申請の申請待ち状態の時間を加算
-        for(ShiftChangeRequest weekShiftChangeRequest : shiftChangeRequests)
-        {
-            Duration weekShiftChangeRequestWorkTimeMorning = Duration.between(weekShiftChangeRequest.getBeginWork(), weekShiftChangeRequest.getBeginBreak());
-            Duration weekShiftChangeRequestWorkTimeAfternoon = Duration.between(weekShiftChangeRequest.getEndBreak(), weekShiftChangeRequest.getBeginWork());
-            weekWorkTime.plus(weekShiftChangeRequestWorkTimeMorning);
-            weekWorkTime.plus(weekShiftChangeRequestWorkTimeAfternoon);
-        }
-        // 休暇の時間分減算
-        for(Vacation weekVacation : weekVacations)
-        {
-            weekWorkTime.minus(Duration.between(weekVacation.getBeginVacation(), weekVacation.getEndVacation()));
-        }
-        // compareToで辞書的に前か後か(短いか長いか)を条件にしている
-        if(workTime.compareTo(standardWorkTime) > 0 || breakTime.compareTo(standardBreakTime) < 0 || weekWorkTime.compareTo(standardWeekWorkTime) > 0)
-        {
-            // 所定労働時間より長いもしくは休憩時間が所定のものより短い
-            // 申請する日を含む一週(月曜日から日曜日)の合計労働時間が法定時間を超える(シフトで予定されている労働時間)
-            status = 3;
-            return new Response(status);
-        }
-        else if(workTime.equals(standardWorkTime))
-        {
-            // 労働時間が所定労働時間と等しい
-            status = 1;
-        }
-        else
-        {
-            // 所定労働時間より短い
-            status = 1;
-        }
+        status = 1;
         // シフト申請に登録
         ShiftRequest shiftRequest = new ShiftRequest();
         shiftRequest.setAccountId(account);
@@ -370,10 +277,10 @@ public class PostController
         shiftRequestService.save(shiftRequest);
         return new Response(status);
     }
+
     @PostMapping("/send/changetime")
     public Response shiftChangeSet(@RequestBody ShiftChangeInput shiftChangeInput, HttpSession session)
     {
-        StringToDuration stringToDuration = new StringToDuration();
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         int status = 0;
         String username = SecurityUtil.getCurrentUsername();
@@ -428,122 +335,8 @@ public class PostController
             status = 3;
             return new Response(status);
         }
-        LegalTime legalTime = legalTimeService.getFirstByOrderByBeginDesc();
-        // 労働時間が8時間(所定労働時間)になっているか確認
-        // 休憩が1時間を超えているか確認
-        Duration standardWorkTime = stringToDuration.stringToDuration(legalTime.getScheduleWorkTime());
-        Duration morning = Duration.between(beginWork, beginBreak);
-        Duration afternoon = Duration.between(endBreak, endWork);
-        Duration workTime = morning.plus(afternoon);
 
-        Duration breakTime = Duration.between(beginBreak, endBreak);
-        Duration standardBreakTime = stringToDuration.stringToDuration(legalTime.getScheduleBreakTime());
-        // 法定時間で初期化
-        Duration standardWeekWorkTime = stringToDuration.stringToDuration(legalTime.getWeeklyWorkTime());
-        // 申請の労働時間のコピーで初期化
-        Duration weekWorkTime = workTime.abs();
-        // 週のシフト
-        List<Shift> weekShifts = shiftService.findByAccountIdAndBeginWorkBetweenWeek(account, beginWork);
-    
-        // 始業日が同じか確認
-        if(shift.getBeginWork().getDayOfMonth() == beginWork.getDayOfMonth())
-        {
-            // おなじならなにもしない
-        }
-        else
-        {
-            status = 3;
-            return new Response(status);
-        }
-
-        // すでにあるシフトと今回申請される1件を足した件数が一週間(7)から法定休日の日数を引いた数より大きければエラー
-        // 法定休日を超えないようにしたい
-        if((weekShifts.size() + 1) > (7 - legalTime.getWeeklyHoliday()))
-        {
-            status = 3;
-            return new Response(status);
-        }
-
-        // シフトに関連する申請を取得したい
-        List<ShiftListShiftRequest> shiftListShiftRequests = shiftListShiftRequestService.findByShiftIdIn(weekShifts);
-        // 週シフト申請
-        List<ShiftRequest> weekShiftRequests = new ArrayList<ShiftRequest>();
-        // シフト時間変更申請が出されているシフトを取得したい
-        List<ShiftChangeRequest> shiftChangeRequests = new ArrayList<ShiftChangeRequest>();
-
-        for(ShiftListShiftRequest shiftListShiftRequest : shiftListShiftRequests)
-        {
-            // シフト申請がなければシフト時間変更申請を追加
-            if(Objects.isNull(shiftListShiftRequest.getShiftRequestId()))
-            {
-                shiftChangeRequests.add(shiftListShiftRequest.getShiftChangeRequestId());
-            }
-            // シフト時間変更申請がなければシフト申請を追加
-            else if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
-            {
-                weekShiftRequests.add(shiftListShiftRequest.getShiftRequestId());
-            }
-            // どちらでもなければエラー
-            else
-            {
-                status = 3;
-                return new Response(status);
-            }
-        }
-        // シフトでの計算だと遅刻や早退、残業などでずれた時間で計算することになる
-        // それを避けるため反映する申請から取得し計算している
-        // 週の休暇
-        List<Vacation> weekVacations = vacationService.findByAccountIdAndBeginVacationBetweenWeek(account, beginWork);
-
-        // シフトで予定されている週の労働時間を加算
-        for(Shift weekShift : weekShifts)
-        {
-            Duration weekWorkTimeMorning = Duration.between(weekShift.getBeginWork(), weekShift.getBeginBreak());
-            Duration weekWorkTimeAfternoon = Duration.between(weekShift.getEndBreak(), weekShift.getBeginWork());
-            weekWorkTime.plus(weekWorkTimeMorning);
-            weekWorkTime.plus(weekWorkTimeAfternoon);
-        }
-        // 申請待ち状態の時間を加算
-        for(ShiftRequest weekShiftRequest : weekShiftRequests)
-        {
-            Duration weekShiftRequestWorkTimeMorning = Duration.between(weekShiftRequest.getBeginWork(), weekShiftRequest.getBeginBreak());
-            Duration weekShiftRequestWorkTimeAfternoon = Duration.between(weekShiftRequest.getEndBreak(), weekShiftRequest.getBeginWork());
-            weekWorkTime.plus(weekShiftRequestWorkTimeMorning);
-            weekWorkTime.plus(weekShiftRequestWorkTimeAfternoon);
-        }
-        // 時間変更申請の申請待ち状態の時間を加算
-        for(ShiftChangeRequest weekShiftChangeRequest : shiftChangeRequests)
-        {
-            Duration weekShiftChangeRequestWorkTimeMorning = Duration.between(weekShiftChangeRequest.getBeginWork(), weekShiftChangeRequest.getBeginBreak());
-            Duration weekShiftChangeRequestWorkTimeAfternoon = Duration.between(weekShiftChangeRequest.getEndBreak(), weekShiftChangeRequest.getBeginWork());
-            weekWorkTime.plus(weekShiftChangeRequestWorkTimeMorning);
-            weekWorkTime.plus(weekShiftChangeRequestWorkTimeAfternoon);
-        }
-        // 休暇の時間分減算
-        for(Vacation weekVacation : weekVacations)
-        {
-            weekWorkTime.minus(Duration.between(weekVacation.getBeginVacation(), weekVacation.getEndVacation()));
-        }
-
-        // compareToで辞書的に前か後か(短いか長いか)を条件にしている
-        if(workTime.compareTo(standardWorkTime) > 0 || breakTime.compareTo(standardBreakTime) < 0 || weekWorkTime.compareTo(standardWeekWorkTime) > 0)
-        {
-            // 所定労働時間より長いもしくは休憩時間が所定のものより短い
-            // 申請する日を含む一週(月曜日から日曜日)の合計労働時間が法定時間を超える(シフトで予定されている労働時間)
-            status = 3;
-            return new Response(status);
-        }
-        else if(workTime.equals(standardWorkTime))
-        {
-            // 労働時間が所定労働時間と等しい
-            status = 1;
-        }
-        else
-        {
-            // 所定労働時間より短い
-            status = 1;
-        }
-
+        status = 1;
         ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
         shiftChangeRequest.setAccountId(account);
         shiftChangeRequest.setBeginWork(beginWork);
@@ -858,6 +651,253 @@ public class PostController
         return response;
     }
 
+    @PostMapping("/send/legalcheck/shift")
+    public Response shiftLegalCheck(@RequestBody LegalCheckShiftInput legalCheckShiftInput, HttpSession session)
+    {
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        StringToDuration stringToDuration = new StringToDuration();
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        int status = 0;
+
+        LocalDateTime beginWork = stringToLocalDateTime.stringToLocalDateTime(legalCheckShiftInput.getBeginWork());
+        LocalDateTime endWork = stringToLocalDateTime.stringToLocalDateTime(legalCheckShiftInput.getEndWork());
+        LocalDateTime beginBreak = stringToLocalDateTime.stringToLocalDateTime(legalCheckShiftInput.getBeginBreak());
+        LocalDateTime endBreak = stringToLocalDateTime.stringToLocalDateTime(legalCheckShiftInput.getEndBreak());
+
+        LegalTime legalTime = legalTimeService.getFirstByOrderByBeginDesc();
+        // 労働時間が8時間(所定労働時間)になっているか確認
+        // 休憩が1時間を超えているか確認
+        Duration standardWorkTime = stringToDuration.stringToDuration(legalTime.getScheduleWorkTime());
+        Duration morning = Duration.between(beginWork, beginBreak);
+        Duration afternoon = Duration.between(endBreak, endWork);
+        Duration workTime = morning.plus(afternoon);
+
+        Duration breakTime = Duration.between(beginBreak, endBreak);
+        // 法定休憩時間で初期化
+        Duration standardBreakTime = stringToDuration.stringToDuration(legalTime.getScheduleBreakTime());
+        // 週の法定労働時間で初期化
+        Duration standardWeekWorkTime = stringToDuration.stringToDuration(legalTime.getWeeklyWorkTime());
+        // 申請の労働時間のコピーで初期化
+        Duration weekWorkTime = workTime.abs();
+        // 週のシフト
+        List<Shift> weekShifts = shiftService.findByAccountIdAndBeginWorkBetweenWeek(account, beginWork);
+        // すでにあるシフトと今回申請される1件を足した件数が一週間(7)から法定休日の日数を引いた数より大きければエラー
+        // 法定休日を超えないようにしたい
+        if((weekShifts.size() + 1) > (7 - legalTime.getWeeklyHoliday()))
+        {
+            status = 7;
+        }
+
+        // シフトに関連する申請を取得したい
+        List<ShiftListShiftRequest> shiftListShiftRequests = shiftListShiftRequestService.findByShiftIdIn(weekShifts);
+        // 週シフト申請
+        List<ShiftRequest> weekShiftRequests = new ArrayList<ShiftRequest>();
+        // シフト時間変更申請が出されているシフトを取得したい
+        List<ShiftChangeRequest> shiftChangeRequests = new ArrayList<ShiftChangeRequest>();
+
+        for(ShiftListShiftRequest shiftListShiftRequest : shiftListShiftRequests)
+        {
+            if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
+            {
+                // シフト時間変更申請がなければシフト申請を追加
+                weekShiftRequests.add(shiftListShiftRequest.getShiftRequestId());
+            }
+            else if(Optional.ofNullable(shiftListShiftRequest.getShiftChangeRequestId()).isPresent())
+            {
+                // シフト時間変更申請があればシフト時間変更申請を追加
+                shiftChangeRequests.add(shiftListShiftRequest.getShiftChangeRequestId());
+            }
+            else
+            {
+                // どちらでもなければエラー
+                status = 7;
+            }
+        }
+        // シフトでの計算だと遅刻や早退、残業などでずれた時間で計算することになる
+        // それを避けるため反映する申請から取得し計算している
+        // 週の休暇
+        List<Vacation> weekVacations = vacationService.findByAccountIdAndBeginVacationBetweenWeek(account, beginWork);
+
+        // 申請待ち状態の時間を加算
+        for(ShiftRequest weekShiftRequest : weekShiftRequests)
+        {
+            Duration weekShiftRequestWorkTimeMorning = Duration.between(weekShiftRequest.getBeginWork(), weekShiftRequest.getBeginBreak());
+            Duration weekShiftRequestWorkTimeAfternoon = Duration.between(weekShiftRequest.getEndBreak(), weekShiftRequest.getBeginWork());
+            weekWorkTime.plus(weekShiftRequestWorkTimeMorning);
+            weekWorkTime.plus(weekShiftRequestWorkTimeAfternoon);
+        }
+        // 時間変更申請の申請待ち状態の時間を加算
+        for(ShiftChangeRequest weekShiftChangeRequest : shiftChangeRequests)
+        {
+            Duration weekShiftChangeRequestWorkTimeMorning = Duration.between(weekShiftChangeRequest.getBeginWork(), weekShiftChangeRequest.getBeginBreak());
+            Duration weekShiftChangeRequestWorkTimeAfternoon = Duration.between(weekShiftChangeRequest.getEndBreak(), weekShiftChangeRequest.getBeginWork());
+            weekWorkTime.plus(weekShiftChangeRequestWorkTimeMorning);
+            weekWorkTime.plus(weekShiftChangeRequestWorkTimeAfternoon);
+        }
+        // 休暇の時間分減算
+        for(Vacation weekVacation : weekVacations)
+        {
+            weekWorkTime.minus(Duration.between(weekVacation.getBeginVacation(), weekVacation.getEndVacation()));
+        }
+        // compareToで辞書的に前か後か(短いか長いか)を条件にしている
+        if(workTime.compareTo(standardWorkTime) > 0 || breakTime.compareTo(standardBreakTime) < 0 || weekWorkTime.compareTo(standardWeekWorkTime) > 0)
+        {
+            // 所定労働時間より長いもしくは休憩時間が所定のものより短い
+            // 申請する日を含む一週(月曜日から日曜日)の合計労働時間が法定時間を超える(シフトで予定されている労働時間)
+            status = 7;
+        }
+        else if(workTime.equals(standardWorkTime))
+        {
+            // 労働時間が所定労働時間と等しい
+            status = 1;
+        }
+        else
+        {
+            // 所定労働時間より短い
+            status = 1;
+        }
+        return new Response(status);
+    }
+
+    @PostMapping("/send/legalcheck/shiftchange")
+    public Response shiftChangeLegalCheck(@RequestBody LegalCheckShiftChangeInput legalCheckShiftChangeInput, HttpSession session)
+    {
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        StringToDuration stringToDuration = new StringToDuration();
+
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+
+        int status = 0;
+
+        Shift shift = shiftService.findByAccountIdAndShiftId(account, legalCheckShiftChangeInput.getShiftId());
+        if(Objects.isNull(shift))
+        {
+            status = 3;
+            return new Response(status);
+        }
+
+        LocalDateTime beginWork = stringToLocalDateTime.stringToLocalDateTime(legalCheckShiftChangeInput.getBeginWork());
+        LocalDateTime endWork = stringToLocalDateTime.stringToLocalDateTime(legalCheckShiftChangeInput.getEndWork());
+        LocalDateTime beginBreak = stringToLocalDateTime.stringToLocalDateTime(legalCheckShiftChangeInput.getBeginBreak());
+        LocalDateTime endBreak = stringToLocalDateTime.stringToLocalDateTime(legalCheckShiftChangeInput.getEndBreak());
+
+        LegalTime legalTime = legalTimeService.getFirstByOrderByBeginDesc();
+        // 労働時間が8時間(所定労働時間)になっているか確認
+        // 休憩が1時間を超えているか確認
+        Duration standardWorkTime = stringToDuration.stringToDuration(legalTime.getScheduleWorkTime());
+        Duration morning = Duration.between(beginWork, beginBreak);
+        Duration afternoon = Duration.between(endBreak, endWork);
+        Duration workTime = morning.plus(afternoon);
+
+        Duration breakTime = Duration.between(beginBreak, endBreak);
+        Duration standardBreakTime = stringToDuration.stringToDuration(legalTime.getScheduleBreakTime());
+        // 法定時間で初期化
+        Duration standardWeekWorkTime = stringToDuration.stringToDuration(legalTime.getWeeklyWorkTime());
+        // 申請の労働時間のコピーで初期化
+        Duration weekWorkTime = workTime.abs();
+        // 週のシフト
+        List<Shift> weekShifts = shiftService.findByAccountIdAndBeginWorkBetweenWeek(account, beginWork);
+    
+        // 始業日が同じか確認
+        if(shift.getBeginWork().getDayOfMonth() == beginWork.getDayOfMonth())
+        {
+            // おなじならなにもしない
+        }
+        else
+        {
+            status = 3;
+            return new Response(status);
+        }
+
+        // すでにあるシフトと今回申請される1件を足した件数が一週間(7)から法定休日の日数を引いた数より大きければエラー
+        // 法定休日を超えないようにしたい
+        if((weekShifts.size() + 1) > (7 - legalTime.getWeeklyHoliday()))
+        {
+            status = 7;
+        }
+
+        // シフトに関連する申請を取得したい
+        List<ShiftListShiftRequest> shiftListShiftRequests = shiftListShiftRequestService.findByShiftIdIn(weekShifts);
+        // 週シフト申請
+        List<ShiftRequest> weekShiftRequests = new ArrayList<ShiftRequest>();
+        // シフト時間変更申請が出されているシフトを取得したい
+        List<ShiftChangeRequest> shiftChangeRequests = new ArrayList<ShiftChangeRequest>();
+
+        for(ShiftListShiftRequest shiftListShiftRequest : shiftListShiftRequests)
+        {
+            // シフト申請がなければシフト時間変更申請を追加
+            if(Objects.isNull(shiftListShiftRequest.getShiftRequestId()))
+            {
+                shiftChangeRequests.add(shiftListShiftRequest.getShiftChangeRequestId());
+            }
+            // シフト時間変更申請がなければシフト申請を追加
+            else if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
+            {
+                weekShiftRequests.add(shiftListShiftRequest.getShiftRequestId());
+            }
+            // どちらでもなければエラー
+            else
+            {
+                status = 7;
+            }
+        }
+        // シフトでの計算だと遅刻や早退、残業などでずれた時間で計算することになる
+        // それを避けるため反映する申請から取得し計算している
+        // 週の休暇
+        List<Vacation> weekVacations = vacationService.findByAccountIdAndBeginVacationBetweenWeek(account, beginWork);
+
+        // シフトで予定されている週の労働時間を加算
+        for(Shift weekShift : weekShifts)
+        {
+            Duration weekWorkTimeMorning = Duration.between(weekShift.getBeginWork(), weekShift.getBeginBreak());
+            Duration weekWorkTimeAfternoon = Duration.between(weekShift.getEndBreak(), weekShift.getBeginWork());
+            weekWorkTime.plus(weekWorkTimeMorning);
+            weekWorkTime.plus(weekWorkTimeAfternoon);
+        }
+        // 申請待ち状態の時間を加算
+        for(ShiftRequest weekShiftRequest : weekShiftRequests)
+        {
+            Duration weekShiftRequestWorkTimeMorning = Duration.between(weekShiftRequest.getBeginWork(), weekShiftRequest.getBeginBreak());
+            Duration weekShiftRequestWorkTimeAfternoon = Duration.between(weekShiftRequest.getEndBreak(), weekShiftRequest.getBeginWork());
+            weekWorkTime.plus(weekShiftRequestWorkTimeMorning);
+            weekWorkTime.plus(weekShiftRequestWorkTimeAfternoon);
+        }
+        // 時間変更申請の申請待ち状態の時間を加算
+        for(ShiftChangeRequest weekShiftChangeRequest : shiftChangeRequests)
+        {
+            Duration weekShiftChangeRequestWorkTimeMorning = Duration.between(weekShiftChangeRequest.getBeginWork(), weekShiftChangeRequest.getBeginBreak());
+            Duration weekShiftChangeRequestWorkTimeAfternoon = Duration.between(weekShiftChangeRequest.getEndBreak(), weekShiftChangeRequest.getBeginWork());
+            weekWorkTime.plus(weekShiftChangeRequestWorkTimeMorning);
+            weekWorkTime.plus(weekShiftChangeRequestWorkTimeAfternoon);
+        }
+        // 休暇の時間分減算
+        for(Vacation weekVacation : weekVacations)
+        {
+            weekWorkTime.minus(Duration.between(weekVacation.getBeginVacation(), weekVacation.getEndVacation()));
+        }
+
+        // compareToで辞書的に前か後か(短いか長いか)を条件にしている
+        if(workTime.compareTo(standardWorkTime) > 0 || breakTime.compareTo(standardBreakTime) < 0 || weekWorkTime.compareTo(standardWeekWorkTime) > 0)
+        {
+            // 所定労働時間より長いもしくは休憩時間が所定のものより短い
+            // 申請する日を含む一週(月曜日から日曜日)の合計労働時間が法定時間を超える(シフトで予定されている労働時間)
+            status = 7;
+        }
+        else if(workTime.equals(standardWorkTime))
+        {
+            // 労働時間が所定労働時間と等しい
+            status = 1;
+        }
+        else
+        {
+            // 所定労働時間より短い
+            status = 1;
+        }
+
+        return new Response(status);
+    }
     @PostMapping("/send/withdrow")
     public Response withDrow(@RequestBody WithDrowInput withDrowInput, HttpSession session)
     {

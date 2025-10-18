@@ -30,12 +30,12 @@ public class ShiftListShiftRequest extends BaseTimeEntity
     @Column(name = "shift_list_shift_request_id", nullable = false, length = 20)
     private Long shiftListShiftRequestId;
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shift_id", nullable = false)
+    @JoinColumn(name = "shift_id", referencedColumnName = "shift_id", nullable = false)
     private Shift shiftId;
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shift_request_id", nullable = false)
+    @JoinColumn(name = "shift_request_id", referencedColumnName = "shift_request_id", nullable = false)
     private ShiftRequest shiftRequestId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shift_change_request_id", nullable = true)
+    @JoinColumn(name = "shift_change_request_id", referencedColumnName = "shift_change_id", nullable = true)
     private ShiftChangeRequest shiftChangeRequestId;
 }

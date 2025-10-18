@@ -30,15 +30,15 @@ public class AttendanceListSource extends BaseTimeEntity
     @Column(name = "attendance_list_source_id", nullable = false, length = 20)
     private Long attendanceListSourceId;
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "attendance_id", nullable = false)
+    @JoinColumn(name = "attendance_id", referencedColumnName = "attendance_id", nullable = false)
     private Attend attendanceId;
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shift_id", nullable = false)
+    @JoinColumn(name = "shift_id", referencedColumnName = "shift_id", nullable = false)
     private Shift shiftId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "time_card_id", nullable = false)
+    @JoinColumn(name = "time_card_id", referencedColumnName = "time_card_id", nullable = false)
     private TimeCard timeCardId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "stamp_request_id", nullable = false)
+    @JoinColumn(name = "stamp_request_id", referencedColumnName = "stamp_id", nullable = false)
     private StampRequest stampRequestId;
 }

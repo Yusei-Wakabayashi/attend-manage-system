@@ -27,9 +27,9 @@ public class ApprovalSetting extends BaseTimeEntity
     @Column(name = "approval_setting_id", nullable = false, length = 20)
     private Long id;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id", nullable = false)
+    @JoinColumn(name = "role_id", referencedColumnName = "role_id", nullable = false)
     private Role roleId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "approval_id", nullable = false)
+    @JoinColumn(name = "approval_id", referencedColumnName = "role_id", nullable = false)
     private Role approvalId;
 }

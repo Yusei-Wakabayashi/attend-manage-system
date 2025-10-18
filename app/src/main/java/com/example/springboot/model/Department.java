@@ -28,6 +28,7 @@ public class Department extends BaseTimeEntity
     private Long id;
     @Column(name = "department_name", nullable = false, length = 255)
     private String name;
+
     @OneToMany(mappedBy = "departmentId", fetch = FetchType.LAZY)
     private List<Account> accountFromDepartment;
 }

@@ -30,7 +30,7 @@ public class MonthlyRequest extends BaseTimeEntity
     @Column(name = "month_request_id", nullable = false, length = 20)
     private Long monthRequestId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
+    @JoinColumn(name = "account_id", referencedColumnName = "account_id", nullable = false)
     private Account accountId;
     @Column(name = "work_time", nullable = false)
     private String workTime;
@@ -63,7 +63,7 @@ public class MonthlyRequest extends BaseTimeEntity
     @Column(name = "request_status", nullable = false, length = 10)
     private int requestStatus;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "approver", nullable = true)
+    @JoinColumn(name = "approver", referencedColumnName = "account_id", nullable = true)
     private Account approver;
     @Column(name = "approval_date", nullable = true)
     private LocalDateTime approvalDate;

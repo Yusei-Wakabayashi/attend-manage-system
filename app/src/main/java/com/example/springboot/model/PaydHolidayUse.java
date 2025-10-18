@@ -33,10 +33,10 @@ public class PaydHolidayUse extends BaseTimeEntity
     @Column(name = "payd_holiday_use_id", length = 20, nullable = false)
     private Long paydHolidayUseId;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id", nullable = false)
+    @JoinColumn(name = "account_id", referencedColumnName = "account_id", nullable = false)
     private Account accountId;
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vacation_id", nullable = false)
+    @JoinColumn(name = "vacation_id", referencedColumnName = "vacation_id", nullable = false)
     private VacationRequest vacationId;
     @Column(name = "time", nullable = false)
     private Time time;
