@@ -11,7 +11,7 @@ const navList = ref([
 
 const route = useRoute();
 const isOpen = ref(false);
-const account = ref("");
+const account = ref("");//アカウント情報
 
 //ログインアカウント情報取得関数
 const getAccount = async () => {
@@ -24,7 +24,6 @@ const getAccount = async () => {
     );
 
     account.value = response.data;
-    console.log("ログインアカウント:", account.value);
   } catch (error) {
     console.error("ログインアカウント取得エラー:", error);
   }

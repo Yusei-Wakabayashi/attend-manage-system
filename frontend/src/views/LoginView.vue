@@ -48,9 +48,18 @@ const login = async () => {
 <template>
   <div class="flex items-center justify-center min-h-screen bg-gray-200">
     <div
-      class="bg-white w-full max-w-70 rounded-md p-5 shadow-md md:max-w-md lg:max-w-lg"
+      class="relative bg-white w-full max-w-70 rounded-md p-5 shadow-md md:max-w-md lg:max-w-lg"
     >
-      <h2 class="text-center font-medium md:text-lg lg:text-xl">ログイン</h2>
+      <div class="flex items-center justify-center space-x-4 pb-4">
+        <!-- 左画像 -->
+        <img src="../img/bikkuri.png" alt="左画像" class="w-10 h-10" />
+
+        <h2 class="text-center font-medium md:text-lg lg:text-xl">ログイン</h2>
+
+
+        <!-- 右画像 -->
+        <img src="../img/karaage.png" alt="右画像" class="w-10 h-10" />
+      </div>
 
       <!-- 切り替えボタン -->
       <div class="flex justify-center space-x-2 pb-4">
@@ -100,4 +109,3 @@ const login = async () => {
     </div>
   </div>
 </template>
-
