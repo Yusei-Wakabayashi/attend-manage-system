@@ -70,6 +70,9 @@ public class Shift extends BaseTimeEntity
     private AttendanceListSource attendanceListSourceFromShifts;
     @OneToOne(mappedBy = "shiftListId", fetch = FetchType.LAZY)
     private ShiftListOverTime shiftListOverTimeFromShifts;
+
+    @OneToMany(mappedBy = "shiftId", fetch = FetchType.LAZY)
+    private List<ShiftListOtherTime> shiftListOtherTimeFromShifts;
     
     public Shift
     (

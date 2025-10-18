@@ -150,6 +150,7 @@ public class TestJpaController
         assertEquals(homeStyleName, response.get(1).getName());
     }
 
+    @Test
     void shiftToShiftListResponseSuccess()
     {
         Long generalAccountId = 1L;
