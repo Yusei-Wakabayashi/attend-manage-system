@@ -26,6 +26,12 @@ public class ShiftChangeRequestService
     {
         return shiftChangeRequestRepository.findAll();
     }
+
+    public ShiftChangeRequest findById(Long id)
+    {
+        return shiftChangeRequestRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("シフト時間変更申請が見つかりません"));
+    }
     public ShiftChangeRequest findByAccountIdAndShiftChangeRequestId(Account account, Long id)
     {
         return shiftChangeRequestRepository.findByAccountIdAndShiftChangeId(account, id)

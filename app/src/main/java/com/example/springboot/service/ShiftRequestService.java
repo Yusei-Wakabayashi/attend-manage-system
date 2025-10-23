@@ -26,6 +26,12 @@ public class ShiftRequestService
         return shiftRequestRepository.findAll();
     }
 
+    public ShiftRequest findById(Long id)
+    {
+        return shiftRequestRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("シフト申請が見つかりません"));
+    }
+
     public List<ShiftRequest> getAccountIdAndBeginWorkBetween(Account accountId, LocalDateTime beginWork, LocalDateTime endWork)
     {
         return shiftRequestRepository.findByAccountIdAndBeginWorkBetween(accountId, beginWork, endWork);

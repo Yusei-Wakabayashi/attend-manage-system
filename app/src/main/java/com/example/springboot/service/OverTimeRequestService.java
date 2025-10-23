@@ -17,6 +17,11 @@ public class OverTimeRequestService
     @Autowired
     private OverTimeRequestRepository overTimeRequestRepository;
     
+    public OverTimeRequest findById(Long requestId)
+    {
+        return overTimeRequestRepository.findById(requestId)
+            .orElseThrow(() -> new RuntimeException("残業申請が見つかりません"));
+    }
     public OverTimeRequest findByAccountIdAndOverTimeRequestId(Long accountId, Long id)
     {
         Account account = new Account();
