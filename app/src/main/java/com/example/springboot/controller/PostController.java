@@ -47,6 +47,7 @@ import com.example.springboot.model.OverTimeRequest;
 import com.example.springboot.model.PaydHoliday;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
+import com.example.springboot.model.ShiftListOtherTime;
 import com.example.springboot.model.ShiftListOverTime;
 import com.example.springboot.model.ShiftListShiftRequest;
 import com.example.springboot.model.ShiftRequest;
@@ -59,11 +60,13 @@ import com.example.springboot.service.AccountApproverService;
 // import com.example.springboot.model.Salt;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.AttendanceExceptionRequestService;
+import com.example.springboot.service.AttendanceExceptionTypeService;
 import com.example.springboot.service.LegalTimeService;
 import com.example.springboot.service.MonthlyRequestService;
 import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.PaydHolidayService;
 import com.example.springboot.service.ShiftChangeRequestService;
+import com.example.springboot.service.ShiftListOtherTimeService;
 import com.example.springboot.service.ShiftListOverTimeService;
 import com.example.springboot.service.ShiftListShiftRequestService;
 import com.example.springboot.service.ShiftRequestService;
@@ -131,6 +134,12 @@ public class PostController
 
     @Autowired
     private AttendanceExceptionRequestService attendanceExceptionRequestService;
+
+    @Autowired
+    private AttendanceExceptionTypeService attendanceExceptionTypeService;
+
+    @Autowired
+    private ShiftListOtherTimeService shiftListOtherTimeService;
     
     @CrossOrigin
     @PostMapping("/send/login")
@@ -628,7 +637,7 @@ public class PostController
         Shift shift = shiftService.findByAccountIdAndShiftId(account, otherTimeInput.getShiftId());
         if(Objects.isNull(shift))
         {
-            status = 4;
+            status = 3;
             return new Response(status);
         }
         // 開始の後に終了が存在すること
@@ -640,14 +649,14 @@ public class PostController
         }
         else
         {
-            status = 5;
+            status = 3;
             return new Response(status);
         }
         // shiftidを基に反映されている残業申請の一覧を取得
         List<ShiftListOverTime> shiftListOverTimes = shiftListOverTimeService.findByShiftId(shift);
         // shiftidを基にシフトに関する申請の取得
         ShiftListShiftRequest shiftListShiftRequest = shiftListShiftRequestService.findByShiftId(shift);
-        switch (otherTimeInput.getOtherType())
+        switch (otherTimeInput.getOtherType().intValue())
         {
             // 外出申請の場合
             // シフト内か確認
@@ -663,7 +672,7 @@ public class PostController
                 }
                 else
                 {
-                    status = 6;
+                    status = 3;
                     return new Response(status);
                 }
                 // 重複する外出申請の取得
@@ -671,10 +680,9 @@ public class PostController
                 if(attendanceExceptionRequests.size() >0)
                 {
                     // 0より大きければ重複する内容があったことになるのでエラー
-                    status = 7;
+                    status = 3;
                     return new Response(status);
                 }
-                status = 1;
                 break;
             // 遅刻申請の場合
             // 始業時間は元となるシフト申請の始業時間
@@ -708,7 +716,7 @@ public class PostController
                 else
                 {
                     // どちらでもなければエラー
-                    status = 8;
+                    status = 3;
                     return new Response(status);
                 }
                 // 元となる申請の取得をしたら条件と合致するかシフトの就業まで(終業時間調度は許容)に終了するか
@@ -718,10 +726,9 @@ public class PostController
                 }
                 else
                 {
-                    status = 9;
+                    status = 3;
                     return new Response(status);
                 }
-                status = 1;
                 break;
             // 早退申請の場合
             // 終業時間は元となるシフト申請の終業時間
@@ -757,7 +764,7 @@ public class PostController
                 else
                 {
                     // どちらでもなければエラー
-                    status = 8;
+                    status = 3;
                     return new Response(status);
                 }
                 // 元となる申請の取得をしたら条件と合致するかシフトの開始(シフト開始直後は許容)の後始まるか
@@ -767,13 +774,25 @@ public class PostController
                 }
                 else
                 {
-                    status = 9;
+                    status = 3;
                     return new Response(status);
                 }
-                status = 1;
                 break;
             default:
                 break;
+        }
+        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        attendanceExceptionRequest.setAccountId(account);
+        attendanceExceptionRequest.setBeginTime(startTime);
+        attendanceExceptionRequest.setEndTime(endTime);
+        attendanceExceptionRequest.setAttendanceExceptionTypeId(attendanceExceptionTypeService.findByAttendanceExceptionTypeId(otherTimeInput.getOtherType()));
+        attendanceExceptionRequest.setRequestComment(otherTimeInput.getRequestComment());
+        attendanceExceptionRequest.setRequestDate(otherTimeInput.getRequestDate() == null ? null : stringToLocalDateTime.stringToLocalDateTime(otherTimeInput.getRequestDate()));
+        attendanceExceptionRequest.setRequestStatus(1);
+        attendanceExceptionRequest.setShiftId(shift);
+        if(attendanceExceptionRequestService.save(attendanceExceptionRequest) == "ok");
+        {
+            status = 1;
         }
         return new Response(status);
     }
@@ -781,13 +800,109 @@ public class PostController
     @PostMapping("/send/overtime")
     public Response overTimeSet(@RequestBody OverTimeInput overTimeInput, HttpSession session)
     {
+        StringToDuration stringToDuration = new StringToDuration();
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         // アカウントの取得
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        int status = 0;
+        if(Objects.isNull(account))
+        {
+            status = 3;
+            return new Response(status);
+        }
+
+        Shift shift = shiftService.findByAccountIdAndShiftId(account, overTimeInput.getShiftId());
+        if(Objects.isNull(shift))
+        {
+            status = 3;
+            return new Response(status);
+        }
+        // 残業の開始の後に残業の終了があること
+        LocalDateTime startTimeOverWork = stringToLocalDateTime.stringToLocalDateTime(overTimeInput.getBeginOverTime());
+        LocalDateTime endTimeOverWork = stringToLocalDateTime.stringToLocalDateTime(overTimeInput.getEndOverTime());
+        if(endTimeOverWork.isAfter(startTimeOverWork))
+        {
+            // 条件通りなら何もしない
+        }
+        else
+        {
+            status = 3;
+            return new Response(status);
+        }
         // 既に存在する残業と重複する場合申請NG
+        List<OverTimeRequest> overTimeRequests = overTimeRequestService.findByAccounIdAndRequestStatusWaitOrApprovedAndBeginWorkOrEndWorkBetween(account, startTimeOverWork, endTimeOverWork);
+        if(overTimeRequests.size() > 0)
+        {
+            // 1件でも存在すれば重複があったということなのでエラー
+            status = 3;
+            return new Response(status);
+        }
+        // シフトと時間が重なっていないこと
+        List<Shift> shifts = shiftService.shiftOverLapping(account, startTimeOverWork, endTimeOverWork);
+        if(shifts.size() > 0)
+        {
+            // 1件でも存在すれば重複があったということなのでエラー
+            status = 3;
+            return new Response(status);
+        }
         // 遅刻早退との重複NG
-        // 始業直後に休暇、終業直前に休暇が存在する場合申請NG
+        List<ShiftListOtherTime> shiftListOtherTimes = shiftListOtherTimeService.findByShiftId(shift);
+        List<ShiftListOtherTime> shiftListOtherTimesLateness = new ArrayList<ShiftListOtherTime>();
+        List<ShiftListOtherTime> shiftListOtherTimesLeaveEarly = new ArrayList<ShiftListOtherTime>();
+        // 勤怠例外のうち遅刻と早退を取得
+        for(ShiftListOtherTime shiftListOtherTime : shiftListOtherTimes)
+        {
+            if(shiftListOtherTime.getAttendanceExceptionId().getAttendanceExceptionTypeId().getAttendanceExceptionTypeId() == 2L)
+            {
+                shiftListOtherTimesLateness.add(shiftListOtherTime);
+            }
+            else if(shiftListOtherTime.getAttendanceExceptionId().getAttendanceExceptionTypeId().getAttendanceExceptionTypeId() == 3L)
+            {
+                shiftListOtherTimesLeaveEarly.add(shiftListOtherTime);
+            }
+        }
+        // 申請する残業が始業前で遅刻が存在する場合
+        if(endTimeOverWork.isEqual(shift.getBeginWork()) && shiftListOtherTimesLateness.size() > 0)
+        {
+            status = 3;
+            return new Response(status);
+        }
+        // 申請する残業が終業後で早退が存在する場合
+        if(startTimeOverWork.isEqual(shift.getEndWork()) && shiftListOtherTimesLeaveEarly.size() > 0)
+        {
+            status = 3;
+            return new Response(status);
+        }
         // 法定時間を超える申請(承認待ち、承認済み)はNG
-        Response response = new Response();
-        return response;
+        // 申請する月でそのアカウントの残業申請(承認待ち、承認済み)を取得法定時間を超えないことを確認
+        List<OverTimeRequest> overTimeRequestMonthList = overTimeRequestService.findByAccountIdAndRequestStatusWaitOrApprovedAndBeginWorkBetweenMonth(account, startTimeOverWork.getYear(), startTimeOverWork.getMonthValue());
+        Duration monthOverWorkTime = Duration.between(startTimeOverWork, endTimeOverWork);
+        for(OverTimeRequest overTimeRequest : overTimeRequestMonthList)
+        {
+            Duration overTime = Duration.between(overTimeRequest.getBeginWork(), overTimeRequest.getEndWork());
+            monthOverWorkTime = monthOverWorkTime.plus(overTime);
+        }
+        LegalTime legalTime = legalTimeService.getFirstByOrderByBeginDesc();
+        // メソッド内の値より後(大きい)ならエラー
+        if(monthOverWorkTime.compareTo(stringToDuration.stringToDuration(legalTime.getMonthlyOverWorkTime())) > 0)
+        {
+            status = 3;
+            return new Response(status);
+        }
+        OverTimeRequest overTimeRequest = new OverTimeRequest();
+        overTimeRequest.setAccountId(account);
+        overTimeRequest.setBeginWork(startTimeOverWork);
+        overTimeRequest.setEndWork(endTimeOverWork);
+        overTimeRequest.setRequestComment(overTimeInput.getRequestComment());
+        overTimeRequest.setRequestDate(overTimeInput.getRequestDate() == null ? null : stringToLocalDateTime.stringToLocalDateTime(overTimeInput.getRequestDate()));
+        overTimeRequest.setRequestStatus(1);
+        overTimeRequest.setShiftId(shift);
+        if(overTimeRequestService.save(overTimeRequest) == "ok")
+        {
+            status = 1;
+        }
+        return new Response(status);
     }
 
     @PostMapping("/send/monthly")

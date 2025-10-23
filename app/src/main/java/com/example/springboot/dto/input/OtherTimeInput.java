@@ -10,7 +10,7 @@ import lombok.Setter;
 public class OtherTimeInput
 {
     private Long shiftId;
-    private int otherType;
+    private Long otherType;
     private String beginOtherTime;
     private String endOtherTime;
     private String requestComment;

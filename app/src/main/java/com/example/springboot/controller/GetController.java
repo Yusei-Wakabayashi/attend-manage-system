@@ -477,7 +477,7 @@ public class GetController
         status = 1;
         requestDetilOtherTimeResponse.setStatus(status);
         requestDetilOtherTimeResponse.setShiftId(attendanceExceptionRequest.getShiftId().getShiftId().intValue());
-        requestDetilOtherTimeResponse.setTypeId(attendanceExceptionRequest.getAttendanceExceptionTypeId().getAttedanceExceptionTypeId().intValue());
+        requestDetilOtherTimeResponse.setTypeId(attendanceExceptionRequest.getAttendanceExceptionTypeId().getAttendanceExceptionTypeId().intValue());
         requestDetilOtherTimeResponse.setBeginOtherTime(localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getBeginTime()));
         requestDetilOtherTimeResponse.setEndOtherTime(localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getEndTime()));
         requestDetilOtherTimeResponse.setRequestComment(attendanceExceptionRequest.getRequestComment());
@@ -743,7 +743,7 @@ public class GetController
         for(AttendanceExceptionType attendanceExceptionType : attendanceExceptionTypes)
         {
             OtherTypeListResponse otherTypeListResponse = new OtherTypeListResponse();
-            otherTypeListResponse.setOtherTypeId(attendanceExceptionType.getAttedanceExceptionTypeId().intValue());
+            otherTypeListResponse.setOtherTypeId(attendanceExceptionType.getAttendanceExceptionTypeId().intValue());
             otherTypeListResponse.setOtherTypeName(attendanceExceptionType.getAttednaceExceptionTypeName());
             otherTypeListResponses.add(otherTypeListResponse);
         }

@@ -27,7 +27,7 @@ public class AttendanceExceptionType extends BaseTimeEntity
     @Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
     @Column(name = "attendance_exception_type_id", nullable = false, length = 20)
-    private Long attedanceExceptionTypeId;
+    private Long attendanceExceptionTypeId;
     @Column(name = "attendance_exception_type_name", nullable = false, length = 255)
     private String attednaceExceptionTypeName;
 

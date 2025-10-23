@@ -7,6 +7,8 @@ import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.transaction.Transactional;
 
@@ -123,6 +125,29 @@ public class ShiftService
         shiftListResponse.setOuting(shift.getOuting());
         shiftListResponse.setOverWork(shift.getOverWork());
         return shiftListResponse;
+    }
+
+    public List<Shift> shiftOverLapping(Long accountId, LocalDateTime startPeriod, LocalDateTime endPeriod)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        // 検索する際申請のリクエストが8時開始9時終了でシフトが9時開始18時終了があった際9時を含みたくないため1秒ずらしている
+        startPeriod.plusSeconds(1);
+        endPeriod.minusSeconds(1);
+        List<Shift> shiftListBegin = shiftRepository.findByAccountIdAndBeginWorkBetween(account, startPeriod, endPeriod);
+        List<Shift> shiftListEnd = shiftRepository.findByAccountIdAndEndWorkBetween(account, startPeriod, endPeriod);
+        List<Shift> shiftList = Stream.concat(shiftListBegin.stream(), shiftListEnd.stream()).distinct().collect(Collectors.toList());
+        return shiftList;
+    }
+
+    public List<Shift> shiftOverLapping(Account account, LocalDateTime startPeriod, LocalDateTime endPeriod)
+    {
+        // 検索する際申請のリクエストが8時開始9時終了でシフトが9時開始18時終了があった際9時を含みたくないため1秒ずらしている
+        startPeriod.plusSeconds(1);
+        endPeriod.minusSeconds(1);        List<Shift> shiftListBegin = shiftRepository.findByAccountIdAndBeginWorkBetween(account, startPeriod, endPeriod);
+        List<Shift> shiftListEnd = shiftRepository.findByAccountIdAndEndWorkBetween(account, startPeriod, endPeriod);
+        List<Shift> shiftList = Stream.concat(shiftListBegin.stream(), shiftListEnd.stream()).distinct().collect(Collectors.toList());
+        return shiftList;
     }
 
     public String save(Shift shift)

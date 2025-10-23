@@ -45,6 +45,7 @@ import com.example.springboot.model.Role;
 import com.example.springboot.model.Salt;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
+import com.example.springboot.model.ShiftListOtherTime;
 import com.example.springboot.model.ShiftListOverTime;
 import com.example.springboot.model.ShiftListShiftRequest;
 import com.example.springboot.model.ShiftRequest;
@@ -78,6 +79,7 @@ import com.example.springboot.service.PaydHolidayService;
 import com.example.springboot.service.PaydHolidayUseService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.ShiftChangeRequestService;
+import com.example.springboot.service.ShiftListOtherTimeService;
 import com.example.springboot.service.ShiftListOverTimeService;
 import com.example.springboot.service.ShiftListShiftRequestService;
 import com.example.springboot.service.ShiftRequestService;
@@ -169,6 +171,9 @@ public class TestMockMvcController
 
     @MockBean
     private PaydHolidayUseService paydHolidayUseService;
+
+    @MockBean
+    private ShiftListOtherTimeService shiftListOtherTimeService;
 
     @Test
     void loginSuccess() throws Exception
@@ -1155,7 +1160,7 @@ public class TestMockMvcController
 
         AttendanceExceptionType attendanceExceptionType = new AttendanceExceptionType();
         Long attendanceExceptionTypeId = 12L;
-        attendanceExceptionType.setAttedanceExceptionTypeId(attendanceExceptionTypeId);
+        attendanceExceptionType.setAttendanceExceptionTypeId(attendanceExceptionTypeId);
 
         AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
         Long attendanceExceptionRequestId = 1L;
@@ -1604,7 +1609,7 @@ public class TestMockMvcController
         AttendanceExceptionType attendanceExceptionType = new AttendanceExceptionType();
         Long attendanceExceptionTypeId = 2L;
         String attendanceExceptionTypeName = "遅刻";
-        attendanceExceptionType.setAttedanceExceptionTypeId(attendanceExceptionTypeId);
+        attendanceExceptionType.setAttendanceExceptionTypeId(attendanceExceptionTypeId);
         attendanceExceptionType.setAttednaceExceptionTypeName(attendanceExceptionTypeName);
         attendanceExceptionTypes.add(attendanceExceptionType);
 
@@ -2461,6 +2466,7 @@ public class TestMockMvcController
         when(shiftListOverTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOverTimes);
         when(shiftListShiftRequestService.findByShiftId(any(Shift.class))).thenReturn(shiftListShiftRequest);
         when(attendanceExceptionRequestService.findByAccountIdAndShiftIdAndOutingAndBeginTimeBetweenOrEndTimeBetweenAndRequestStatusWaitOrRequestStatusApproved(any(Account.class), any(Shift.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(attendanceExceptionRequests);
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn("ok");
         mockMvc.perform
         (
             post("/api/send/othertime")
@@ -2536,6 +2542,7 @@ public class TestMockMvcController
         when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(generalShift);
         when(shiftListOverTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOverTimes);
         when(shiftListShiftRequestService.findByShiftId(any(Shift.class))).thenReturn(shiftListShiftRequest);
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn("ok");
         mockMvc.perform
         (
             post("/api/send/othertime")
@@ -2611,6 +2618,7 @@ public class TestMockMvcController
         when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(generalShift);
         when(shiftListOverTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOverTimes);
         when(shiftListShiftRequestService.findByShiftId(any(Shift.class))).thenReturn(shiftListShiftRequest);
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn("ok");
         mockMvc.perform
         (
             post("/api/send/othertime")
@@ -2622,4 +2630,213 @@ public class TestMockMvcController
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(1));
     }
+
+    @Test
+    void overTimeRequstBeforeSuccess() throws Exception
+    {
+        int requestShiftId = 1;
+        String requestBeginOtherTime = "2025/12/23T07:00:00";
+        String requestEndOtherTime = "2025/12/23T09:00:00";
+        String requestComment = "";
+        String requestDate = "2025/09/02T10:00:00";
+        String json = String.format
+        ("""
+            {
+                "shiftId": "%s",
+                "beginOverTime": "%s",
+                "endOverTime": "%s",
+                "requestComment": "%s",
+                "requestDate": "%s"
+            }
+        """,
+        requestShiftId, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
+        );
+
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Shift shift = new Shift();
+        Long shiftId = 35L;
+        String shiftBegin = "2025/12/23T09:00:00";
+        String shiftEnd = "2025/12/23T18:00:00";
+        shift.setShiftId(shiftId);
+        shift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(shiftBegin));
+        shift.setEndWork(stringToLocalDateTime.stringToLocalDateTime(shiftEnd));
+
+        List<OverTimeRequest> overTimeRequests = new ArrayList<OverTimeRequest>();
+
+        List<Shift> shifts = new ArrayList<Shift>();
+
+        List<ShiftListOtherTime> shiftListOtherTimes = new ArrayList<ShiftListOtherTime>();
+
+        List<OverTimeRequest> overTimeRequestMonth = new ArrayList<OverTimeRequest>();
+        // 45時間ちょうどでエラーを起こさないかチェックするため10時間の残業を用意する
+        OverTimeRequest firstOverTimeRequest = new OverTimeRequest();
+        String firstOverTimeRequestBegin = "2025/12/10T00:00:00";
+        String firstOverTimeRequestEnd = "2025/12/10T10:00:00";
+        firstOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(firstOverTimeRequestBegin));
+        firstOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(firstOverTimeRequestEnd));
+
+        OverTimeRequest secondOverTimeRequest = new OverTimeRequest();
+        String secondOverTimeRequestBegin = "2025/12/11T00:00:00";
+        String secondOverTimeRequestEnd = "2025/12/11T10:00:00";
+        secondOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(secondOverTimeRequestBegin));
+        secondOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(secondOverTimeRequestEnd));
+
+        OverTimeRequest thirdOverTimeRequest = new OverTimeRequest();
+        String thirdOverTimeRequestBegin = "2025/12/12T00:00:00";
+        String thirdOverTimeRequestEnd = "2025/12/12T10:00:00";
+        thirdOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(thirdOverTimeRequestBegin));
+        thirdOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(thirdOverTimeRequestEnd));
+
+        OverTimeRequest fourthOverTimeRequest = new OverTimeRequest();
+        String fourthOverTimeRequestBegin = "2025/12/13T00:00:00";
+        String fourthOverTimeRequestEnd = "2025/12/13T10:00:00";
+        fourthOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(fourthOverTimeRequestBegin));
+        fourthOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(fourthOverTimeRequestEnd));
+
+        OverTimeRequest fifthOverTimeRequest = new OverTimeRequest();
+        String fifthOverTimeRequestBegin = "2025/12/14T06:00:00";
+        String fifthOverTimeRequestEnd = "2025/12/14T09:00:00";
+        fifthOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(fifthOverTimeRequestBegin));
+        fifthOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(fifthOverTimeRequestEnd));
+
+        overTimeRequestMonth.add(firstOverTimeRequest);
+        overTimeRequestMonth.add(secondOverTimeRequest);
+        overTimeRequestMonth.add(thirdOverTimeRequest);
+        overTimeRequestMonth.add(fourthOverTimeRequest);
+        overTimeRequestMonth.add(fifthOverTimeRequest);
+
+        LegalTime legalTime = new LegalTime();
+        String monthlyOverTime = "45:00:00";
+        legalTime.setMonthlyOverWorkTime(monthlyOverTime);
+        
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(shift);
+        when(overTimeRequestService.findByAccounIdAndRequestStatusWaitOrApprovedAndBeginWorkOrEndWorkBetween(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(overTimeRequests);
+        when(shiftService.shiftOverLapping(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(shifts);
+        when(shiftListOtherTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOtherTimes);
+        when(overTimeRequestService.findByAccountIdAndRequestStatusWaitOrApprovedAndBeginWorkBetweenMonth(any(Account.class), anyInt(), anyInt())).thenReturn(overTimeRequestMonth);
+        when(legalTimeService.getFirstByOrderByBeginDesc()).thenReturn(legalTime);
+        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn("ok");
+        mockMvc.perform
+        (
+            post("/api/send/overtime")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void overTimeRequestAfterSuccess() throws Exception
+    {
+        int requestShiftId = 1;
+        String requestBeginOtherTime = "2025/12/23T18:00:00";
+        String requestEndOtherTime = "2025/12/23T20:00:00";
+        String requestComment = "";
+        String requestDate = "2025/09/02T10:00:00";
+        String json = String.format
+        ("""
+            {
+                "shiftId": "%s",
+                "beginOverTime": "%s",
+                "endOverTime": "%s",
+                "requestComment": "%s",
+                "requestDate": "%s"
+            }
+        """,
+        requestShiftId, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
+        );
+
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Shift shift = new Shift();
+        Long shiftId = 35L;
+        String shiftBegin = "2025/12/23T09:00:00";
+        String shiftEnd = "2025/12/23T18:00:00";
+        shift.setShiftId(shiftId);
+        shift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(shiftBegin));
+        shift.setEndWork(stringToLocalDateTime.stringToLocalDateTime(shiftEnd));
+
+        List<OverTimeRequest> overTimeRequests = new ArrayList<OverTimeRequest>();
+
+        List<Shift> shifts = new ArrayList<Shift>();
+
+        List<ShiftListOtherTime> shiftListOtherTimes = new ArrayList<ShiftListOtherTime>();
+
+        List<OverTimeRequest> overTimeRequestMonth = new ArrayList<OverTimeRequest>();
+        // 45時間ちょうどでエラーを起こさないかチェックするため10時間の残業を用意する
+        OverTimeRequest firstOverTimeRequest = new OverTimeRequest();
+        String firstOverTimeRequestBegin = "2025/12/10T00:00:00";
+        String firstOverTimeRequestEnd = "2025/12/10T10:00:00";
+        firstOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(firstOverTimeRequestBegin));
+        firstOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(firstOverTimeRequestEnd));
+
+        OverTimeRequest secondOverTimeRequest = new OverTimeRequest();
+        String secondOverTimeRequestBegin = "2025/12/11T00:00:00";
+        String secondOverTimeRequestEnd = "2025/12/11T10:00:00";
+        secondOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(secondOverTimeRequestBegin));
+        secondOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(secondOverTimeRequestEnd));
+
+        OverTimeRequest thirdOverTimeRequest = new OverTimeRequest();
+        String thirdOverTimeRequestBegin = "2025/12/12T00:00:00";
+        String thirdOverTimeRequestEnd = "2025/12/12T10:00:00";
+        thirdOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(thirdOverTimeRequestBegin));
+        thirdOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(thirdOverTimeRequestEnd));
+
+        OverTimeRequest fourthOverTimeRequest = new OverTimeRequest();
+        String fourthOverTimeRequestBegin = "2025/12/13T00:00:00";
+        String fourthOverTimeRequestEnd = "2025/12/13T10:00:00";
+        fourthOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(fourthOverTimeRequestBegin));
+        fourthOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(fourthOverTimeRequestEnd));
+
+        OverTimeRequest fifthOverTimeRequest = new OverTimeRequest();
+        String fifthOverTimeRequestBegin = "2025/12/14T06:00:00";
+        String fifthOverTimeRequestEnd = "2025/12/14T09:00:00";
+        fifthOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(fifthOverTimeRequestBegin));
+        fifthOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(fifthOverTimeRequestEnd));
+
+        overTimeRequestMonth.add(firstOverTimeRequest);
+        overTimeRequestMonth.add(secondOverTimeRequest);
+        overTimeRequestMonth.add(thirdOverTimeRequest);
+        overTimeRequestMonth.add(fourthOverTimeRequest);
+        overTimeRequestMonth.add(fifthOverTimeRequest);
+
+        LegalTime legalTime = new LegalTime();
+        String monthlyOverTime = "45:00:00";
+        legalTime.setMonthlyOverWorkTime(monthlyOverTime);
+        
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(shift);
+        when(overTimeRequestService.findByAccounIdAndRequestStatusWaitOrApprovedAndBeginWorkOrEndWorkBetween(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(overTimeRequests);
+        when(shiftService.shiftOverLapping(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(shifts);
+        when(shiftListOtherTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOtherTimes);
+        when(overTimeRequestService.findByAccountIdAndRequestStatusWaitOrApprovedAndBeginWorkBetweenMonth(any(Account.class), anyInt(), anyInt())).thenReturn(overTimeRequestMonth);
+        when(legalTimeService.getFirstByOrderByBeginDesc()).thenReturn(legalTime);
+        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn("ok");
+        mockMvc.perform
+        (
+            post("/api/send/overtime")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
 }

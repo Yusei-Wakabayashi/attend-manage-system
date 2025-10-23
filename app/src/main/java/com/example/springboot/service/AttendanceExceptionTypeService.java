@@ -21,6 +21,12 @@ public class AttendanceExceptionTypeService
         return attendanceExceptionTypeRepository.findAll();
     }
 
+    public AttendanceExceptionType findByAttendanceExceptionTypeId(Long attendanceExceptionType)
+    {
+        return attendanceExceptionTypeRepository.findById(attendanceExceptionType)
+            .orElseThrow(() -> new RuntimeException("勤怠例外種類が見つかりません"));
+    }
+
     @Transactional
     public void resetAllTables()
     {

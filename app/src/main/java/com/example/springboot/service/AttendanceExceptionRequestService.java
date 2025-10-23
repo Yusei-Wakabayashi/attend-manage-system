@@ -62,7 +62,7 @@ public class AttendanceExceptionRequestService
         startPeriod.plusSeconds(1);
         endPeriod.minusSeconds(1);
         AttendanceExceptionType outing = new AttendanceExceptionType();
-        outing.setAttedanceExceptionTypeId(1L);
+        outing.setAttendanceExceptionTypeId(1L);
         int requestStatusWait = 1;
         int requestStatusApproved = 2;
         List<AttendanceExceptionRequest> beginTimeListWait = attendanceExceptionRequestRepsitory.findByAccountIdAndShiftIdAndAttendanceExceptionTypeIdAndBeginTimeBetweenAndRequestStatus(account, shift, outing, startPeriod, endPeriod, requestStatusWait);
@@ -83,7 +83,7 @@ public class AttendanceExceptionRequestService
         startPeriod.plusSeconds(1);
         endPeriod.minusSeconds(1);
         AttendanceExceptionType outing = new AttendanceExceptionType();
-        outing.setAttedanceExceptionTypeId(1L);
+        outing.setAttendanceExceptionTypeId(1L);
         int requestStatusWait = 1;
         int requestStatusApproved = 2;
         List<AttendanceExceptionRequest> beginTimeListWait = attendanceExceptionRequestRepsitory.findByAccountIdAndShiftIdAndAttendanceExceptionTypeIdAndBeginTimeBetweenAndRequestStatus(account, shift, outing, startPeriod, endPeriod, requestStatusWait);
@@ -104,7 +104,7 @@ public class AttendanceExceptionRequestService
         startPeriod.plusSeconds(1);
         endPeriod.minusSeconds(1);
         AttendanceExceptionType outing = new AttendanceExceptionType();
-        outing.setAttedanceExceptionTypeId(1L);
+        outing.setAttendanceExceptionTypeId(1L);
         int requestStatusWait = 1;
         int requestStatusApproved = 2;
         List<AttendanceExceptionRequest> beginTimeListWait = attendanceExceptionRequestRepsitory.findByAccountIdAndShiftIdAndAttendanceExceptionTypeIdAndBeginTimeBetweenAndRequestStatus(account, shift, outing, startPeriod, endPeriod, requestStatusWait);
@@ -123,7 +123,7 @@ public class AttendanceExceptionRequestService
         startPeriod.plusSeconds(1);
         endPeriod.minusSeconds(1);
         AttendanceExceptionType outing = new AttendanceExceptionType();
-        outing.setAttedanceExceptionTypeId(1L);
+        outing.setAttendanceExceptionTypeId(1L);
         int requestStatusWait = 1;
         int requestStatusApproved = 2;
         List<AttendanceExceptionRequest> beginTimeListWait = attendanceExceptionRequestRepsitory.findByAccountIdAndShiftIdAndAttendanceExceptionTypeIdAndBeginTimeBetweenAndRequestStatus(account, shift, outing, startPeriod, endPeriod, requestStatusWait);
@@ -134,5 +134,11 @@ public class AttendanceExceptionRequestService
         List<AttendanceExceptionRequest> allTimeListApproved = Stream.concat(beginTimeListApproved.stream(), endTimeListApproved.stream()).distinct().collect(Collectors.toList());
         List<AttendanceExceptionRequest> allTimeList = Stream.concat(allTimeListWait.stream(), allTimeListApproved.stream()).distinct().collect(Collectors.toList());
         return allTimeList;
+    }
+
+    public String save(AttendanceExceptionRequest attendanceExceptionRequest)
+    {
+        attendanceExceptionRequestRepsitory.save(attendanceExceptionRequest);
+        return "ok";
     }
 }
