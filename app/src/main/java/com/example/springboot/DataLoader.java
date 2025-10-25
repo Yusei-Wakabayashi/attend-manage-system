@@ -31,6 +31,7 @@ import com.example.springboot.service.AttendService;
 import com.example.springboot.service.AttendanceExceptionTypeService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.LegalTimeService;
+import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.SaltService;
 import com.example.springboot.service.ShiftChangeRequestService;
@@ -84,9 +85,13 @@ public class DataLoader implements CommandLineRunner
 
     @Autowired
     ApprovalSettingService approvalSettingService;
+
+    @Autowired
+    OverTimeRequestService overTimeRequestService;
     
     public void run(String... args) throws Exception
     {
+        overTimeRequestService.resetAllTables();
         approvalSettingService.resetAllTables();
         attendService.resetAllTables();
         shiftService.resetAllTables();

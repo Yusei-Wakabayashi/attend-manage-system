@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 import com.example.springboot.model.Account;
 import com.example.springboot.model.OverTimeRequest;
@@ -18,4 +20,7 @@ public interface OverTimeRequestRepository extends JpaRepository<OverTimeRequest
     List<OverTimeRequest> findByAccountIdIn(List<Account> accounts);
     List<OverTimeRequest> findByAccountIdAndRequestStatusAndBeginWorkBetween(Account account, int requestStatus, LocalDateTime startPeriod, LocalDateTime endPeriod);
     List<OverTimeRequest> findByAccountIdAndRequestStatusAndEndWorkBetween(Account account, int requestStatus, LocalDateTime startPeriod, LocalDateTime endPeriod);
+    @Modifying
+    @Query(value = "ALTER TABLE overtime_requests AUTO_INCREMENT = 1", nativeQuery = true)
+    void resetAutoIncrement();
 }
