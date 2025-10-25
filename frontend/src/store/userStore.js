@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
+//ログインのユーザー情報を保存するストア
 export const useUserStore = defineStore("user", () => {
   const name = ref("");
   const departmentName = ref("");

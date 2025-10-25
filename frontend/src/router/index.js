@@ -40,15 +40,13 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, next) => {
+router.beforeEach((to) => {
   const userStore = useUserStore()
 
   if (to.meta.requiresAdmin && !userStore.admin) {
     //管理者でなければアプリケーションのページに戻す
-    return next('/application')
+    return '/application'
   }
-
-  next()
 })
 
 export default router
