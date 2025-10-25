@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -167,5 +169,12 @@ public class OverTimeRequestService
     {
         overTimeRequestRepository.save(overTimeRequest);
         return "ok";
+    }
+
+    @Transactional
+    public void resetAllTables()
+    {
+        overTimeRequestRepository.deleteAll();;
+        overTimeRequestRepository.resetAutoIncrement();
     }
 }

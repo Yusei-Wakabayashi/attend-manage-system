@@ -21,8 +21,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @Entity
+@NoArgsConstructor
 @Table(name = "overtime_requests")
 public class OverTimeRequest extends BaseTimeEntity
 {
@@ -54,6 +54,6 @@ public class OverTimeRequest extends BaseTimeEntity
     @JoinColumn(name = "shift_id", referencedColumnName = "shift_id", nullable = false)
     private Shift shiftId;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "overTimeId",fetch = FetchType.LAZY)
     private ShiftListOverTime shiftListOverTimeFromOverTimeRequests;
 }
