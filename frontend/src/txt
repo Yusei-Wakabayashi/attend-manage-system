@@ -45,3 +45,6 @@ text-3xl	1.875rem（30px）	2.25rem（36px）	        強調タイトル
 休暇申請
 遅刻・早退・外出申請
 月次申請
+
+docker-compose down -v
+docker-compose up -d --build

@@ -1,8 +1,17 @@
-// src/main.js
 import { createApp } from 'vue'
+import { createPinia } from "pinia";
 import App from './App.vue'
-import './style.css' // ← これを追加
+import './style.css'
+import router from './router/index'
 
-import router from './router/index' // ← 追加
+const app = createApp(App);
 
-createApp(App).use(router).mount('#app') // ← routerをuseする
+//Piniaの作成と登録
+const pinia = createPinia();
+app.use(pinia);
+
+//Routerの登録
+app.use(router);
+
+//アプリをマウント
+app.mount('#app');

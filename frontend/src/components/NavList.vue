@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import { useUserStore } from "@/store/userStore"; 
 import axios from "axios";
 
 const navList = ref([
@@ -13,6 +14,8 @@ const route = useRoute();
 const isOpen = ref(false);
 const account = ref("");//アカウント情報
 
+const userStore = useUserStore();
+
 //ログインアカウント情報取得関数
 const getAccount = async () => {
   try {
@@ -24,6 +27,9 @@ const getAccount = async () => {
     );
 
     account.value = response.data;
+    // ✅ Piniaにも保存
+    userStore.setUser(response.data);
+    console.log("ログインアカウント:", account.value);
   } catch (error) {
     console.error("ログインアカウント取得エラー:", error);
   }

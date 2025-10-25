@@ -1,7 +1,10 @@
 <script setup>
 import NavList from "../components/NavList.vue";
+import { useUserStore } from "@/store/userStore";
 
-const buttonGroups = [
+const userStore = useUserStore(); //ログイン情報の取得
+
+const buttonGroupsAdmin = [
   {
     title: "🛠 業務設定",
     items: [
@@ -9,6 +12,9 @@ const buttonGroups = [
       { label: "承認者設定", color: "blue", path: "/approver" },
     ],
   },
+];
+
+const buttonGroups = [
   {
     title: "📝 各種申請",
     items: [
@@ -17,7 +23,11 @@ const buttonGroups = [
       { label: "打刻漏れ申請", color: "green", path: "/missingstamping" },
       { label: "休暇申請", color: "green", path: "/vacation" },
       { label: "残業申請", color: "green", path: "/overtime" },
-      { label: "遅刻・早退・外出申請", color: "green", path: "/attendancerequest" },
+      {
+        label: "遅刻・早退・外出申請",
+        color: "green",
+        path: "/attendancerequest",
+      },
       { label: "月次申請", color: "green", path: "/monthly" },
     ],
   },
@@ -41,6 +51,32 @@ const getColorClass = (color) => {
       >
         お知らせ（打刻漏れ申請をしていません）
       </h1>
+
+      <div v-if="userStore.admin">
+        <div
+          v-for="(group, gIndex) in buttonGroupsAdmin"
+          :key="gIndex"
+          class="mb-10 bg-gray-200 p-5"
+        >
+          <h2 class="text-lg font-semibold mb-4">{{ group.title }}</h2>
+          <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <router-link
+              v-for="(item, index) in group.items"
+              :key="index"
+              :to="item.path"
+            >
+              <button
+                :class="[
+                  'w-full py-4 rounded-md border-3 shadow-md font-bold text-white text-lg lg:text-xl cursor-pointer',
+                  getColorClass(item.color),
+                ]"
+              >
+                {{ item.label }}
+              </button>
+            </router-link>
+          </div>
+        </div>
+      </div>
 
       <div
         v-for="(group, gIndex) in buttonGroups"

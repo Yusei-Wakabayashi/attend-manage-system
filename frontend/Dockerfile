@@ -10,6 +10,8 @@ RUN npm ci
 # @tailwindcssをインストール
 RUN npm install -D tailwindcss@latest @tailwindcss/vite
 
+RUN npm install pinia
+
 # ソースコードをコピー
 COPY . .
 
