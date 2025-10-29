@@ -38,6 +38,7 @@ import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.dto.response.AttendListResponse;
+import com.example.springboot.dto.response.NewsListResponse;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
@@ -62,6 +63,7 @@ import com.example.springboot.model.AttendanceExceptionType;
 import com.example.springboot.model.Department;
 import com.example.springboot.model.LegalTime;
 import com.example.springboot.model.MonthlyRequest;
+import com.example.springboot.model.NewsList;
 import com.example.springboot.model.OverTimeRequest;
 import com.example.springboot.model.PaydHoliday;
 import com.example.springboot.model.PaydHolidayUse;
@@ -74,6 +76,7 @@ import com.example.springboot.service.AttendanceExceptionTypeService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.LegalTimeService;
 import com.example.springboot.service.MonthlyRequestService;
+import com.example.springboot.service.NewsListService;
 import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.PaydHolidayService;
 import com.example.springboot.service.PaydHolidayUseService;
@@ -174,6 +177,9 @@ public class TestMockMvcController
 
     @MockBean
     private ShiftListOtherTimeService shiftListOtherTimeService;
+
+    @MockBean
+    private NewsListService newsListService;
 
     @Test
     void loginSuccess() throws Exception
@@ -2839,4 +2845,44 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.status").value(1));
     }
 
+
+    @Test
+    void newsListSuccess() throws Exception
+    {
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUserName = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUserName);
+
+        List<NewsList> newsLists = new ArrayList<NewsList>();
+        NewsList newsList = new NewsList();
+        Long newsId = 35L;
+        String newsDate = "2025/07/08T22:33:33";
+        String newsDetil = "your stampRequest is not approved";
+        newsList.setNewsId(newsId);
+        newsList.setAccountId(generalAccount);
+        newsList.setDate(stringToLocalDateTime.stringToLocalDateTime(newsDate));
+        newsList.setNewsDetil(newsDetil);
+        newsLists.add(newsList);
+
+        NewsListResponse newsListResponse = new NewsListResponse();
+        newsListResponse.setDate(newsDate);
+        newsListResponse.setMessageDetil(newsDetil);
+
+        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(newsListService.findByAccountId(any(Account.class))).thenReturn(newsLists);
+        when(newsListService.newsListToNewsListResponse(any(NewsList.class))).thenReturn(newsListResponse);
+        mockMvc.perform
+        (
+            get("/api/reach/news")
+            .with(csrf())
+            .with(user(generalAccountUserName))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.newsList[0].date").value(newsDate))
+        .andExpect(jsonPath("$.newsList[0].messageDetil").value(newsDetil));
+    }
 }

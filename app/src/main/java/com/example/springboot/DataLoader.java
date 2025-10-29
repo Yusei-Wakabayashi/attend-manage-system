@@ -31,6 +31,7 @@ import com.example.springboot.service.AttendService;
 import com.example.springboot.service.AttendanceExceptionTypeService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.LegalTimeService;
+import com.example.springboot.service.NewsListService;
 import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.SaltService;
@@ -88,6 +89,9 @@ public class DataLoader implements CommandLineRunner
 
     @Autowired
     OverTimeRequestService overTimeRequestService;
+
+    @Autowired
+    NewsListService newsListService;
     
     public void run(String... args) throws Exception
     {
@@ -99,6 +103,7 @@ public class DataLoader implements CommandLineRunner
         shiftChangeRequestService.resetAllTables();
         stampRequestService.resetAllTables();
         styleService.resetAllTables();
+        newsListService.resetAllTables();
         accountService.resetAllTables();
         saltService.resetAllTables();
         roleService.resetAllTables();

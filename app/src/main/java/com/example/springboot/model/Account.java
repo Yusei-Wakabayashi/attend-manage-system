@@ -99,4 +99,6 @@ public class Account extends BaseTimeEntity
     private List<PaydHoliday> paydHolidayFromAccounts;
     @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
     private List<PaydHolidayUse> paydHolidayUseFromAccounts;
+    @OneToMany(mappedBy = "accountId", fetch = FetchType.LAZY)
+    private List<NewsList> newsListFromAccounts;
 }

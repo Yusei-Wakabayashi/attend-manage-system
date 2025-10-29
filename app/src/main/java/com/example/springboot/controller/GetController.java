@@ -21,6 +21,7 @@ import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.dto.response.ApproverResponse;
 import com.example.springboot.dto.response.AttendListResponse;
 import com.example.springboot.dto.response.MonthWorkInfoResponse;
+import com.example.springboot.dto.response.NewsListResponse;
 import com.example.springboot.dto.response.OtherTypeListResponse;
 import com.example.springboot.dto.response.PaydHolidayHistoryListResponse;
 import com.example.springboot.dto.response.RequestDetilMonthlyResponse;
@@ -53,6 +54,7 @@ import com.example.springboot.model.AttendanceExceptionRequest;
 import com.example.springboot.model.AttendanceExceptionType;
 import com.example.springboot.model.Department;
 import com.example.springboot.model.MonthlyRequest;
+import com.example.springboot.model.NewsList;
 import com.example.springboot.model.OverTimeRequest;
 import com.example.springboot.model.PaydHoliday;
 import com.example.springboot.model.PaydHolidayUse;
@@ -73,6 +75,7 @@ import com.example.springboot.service.AttendanceExceptionRequestService;
 import com.example.springboot.service.AttendanceExceptionTypeService;
 import com.example.springboot.service.DepartmentService;
 import com.example.springboot.service.MonthlyRequestService;
+import com.example.springboot.service.NewsListService;
 import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.PaydHolidayService;
 import com.example.springboot.service.PaydHolidayUseService;
@@ -155,6 +158,9 @@ public class GetController
 
     @Autowired
     PaydHolidayUseService paydHolidayUseService;
+
+    @Autowired
+    NewsListService newsListService;
 
     @GetMapping("/reach/approverlist")
     public ArrayResponse<ApproverListResponse> returnApproverList(HttpSession session)
@@ -1005,5 +1011,24 @@ public class GetController
 
         int status = 1;
         return new ArrayResponse<UserRequestListResponse>(status, userRequestListResponses, "requestList");
+    }
+
+    @GetMapping("/reach/news")
+    public ArrayResponse<NewsListResponse> returnNewsList(HttpSession session)
+    {
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        if(Objects.isNull(account))
+        {
+            throw new RuntimeException("アカウントが存在しません");
+        }
+        List<NewsList> newsLists = newsListService.findByAccountId(account);
+        List<NewsListResponse> newsListResponses = new ArrayList<NewsListResponse>();
+        for(NewsList newsList : newsLists)
+        {
+            NewsListResponse newsListResponse = newsListService.newsListToNewsListResponse(newsList);
+            newsListResponses.add(newsListResponse);
+        }
+        return new ArrayResponse<NewsListResponse>(1, newsListResponses, "newsList");
     }
 }
