@@ -139,4 +139,36 @@ public class VacationRequestService
         List<VacationRequest> vacationRequests = vacationRequestRepository.findByAccountIdIn(accounts);
         return vacationRequests;
     }
+
+    public List<VacationRequest> findByAccountIdAndBeginVacationBetweenAndRequestStatusWait(Long accountId, int year, int month)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);
+        LocalDate lastDay = yearMonth.atEndOfMonth();
+        LocalDateTime startPeriod = firstDay.atStartOfDay();
+        LocalDateTime endPeriod = lastDay.atTime(23,59,59);
+        int wait = 1;
+        List<VacationRequest> vacationRequests = vacationRequestRepository.findByAccountIdAndRequestStatusAndBeginVacationBetween(account, wait, startPeriod, endPeriod);
+        return vacationRequests;
+    }
+
+    public List<VacationRequest> findByAccountIdAndBeginVacationBetweenAndRequestStatusWait(Account account, int year, int month)
+    {
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);
+        LocalDate lastDay = yearMonth.atEndOfMonth();
+        LocalDateTime startPeriod = firstDay.atStartOfDay();
+        LocalDateTime endPeriod = lastDay.atTime(23,59,59);
+        int wait = 1;
+        List<VacationRequest> vacationRequests = vacationRequestRepository.findByAccountIdAndRequestStatusAndBeginVacationBetween(account, wait, startPeriod, endPeriod);
+        return vacationRequests;
+    }
+
+    public String save(VacationRequest vacationRequest)
+    {
+        vacationRequestRepository.save(vacationRequest);
+        return "ok";
+    }
 }

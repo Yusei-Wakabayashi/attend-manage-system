@@ -16,6 +16,7 @@ public interface AttendanceExceptionRequestRepsitory extends JpaRepository<Atten
     Optional<AttendanceExceptionRequest> findByAccountIdAndAttendanceExceptionId(Account accountId, Long id);
     List<AttendanceExceptionRequest> findByAccountId(Account account);
     List<AttendanceExceptionRequest> findByAccountIdIn(List<Account> accounts);
+    List<AttendanceExceptionRequest> findByAccountIdAndRequestStatusAndBeginTimeBetween(Account account, int requestStatus, LocalDateTime startPeriod, LocalDateTime endPeriod);
     List<AttendanceExceptionRequest> findByAccountIdAndShiftIdAndAttendanceExceptionTypeIdAndBeginTimeBetweenAndRequestStatus(Account account, Shift shift, AttendanceExceptionType attendanceExceptionType, LocalDateTime startPeriod, LocalDateTime endPeriod, int requestStatus);
     List<AttendanceExceptionRequest> findByAccountIdAndShiftIdAndAttendanceExceptionTypeIdAndEndTimeBetweenAndRequestStatus(Account account, Shift shift, AttendanceExceptionType attendanceExceptionType, LocalDateTime startPeriod, LocalDateTime endPeriod, int requestStatus);
 }

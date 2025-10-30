@@ -1,5 +1,6 @@
 package com.example.springboot.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +16,7 @@ public interface StampRequestRepository extends JpaRepository<StampRequest, Long
 {
     Optional<StampRequest> findByAccountIdAndStampId(Account accountId, Long Id);
     List<StampRequest> findByShiftIdAndRequestStatus(Shift id, int status);
+    List<StampRequest> findByAccountIdAndBeginWorkBetweenAndRequestStatus(Account account, LocalDateTime startPeriod, LocalDateTime endPeriod, int requestStatus);
     List<StampRequest> findByAccountId(Account account);
     List<StampRequest> findByAccountIdIn(List<Account> accounts);
     @Modifying

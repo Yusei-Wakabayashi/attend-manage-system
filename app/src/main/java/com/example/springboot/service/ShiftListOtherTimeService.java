@@ -28,4 +28,10 @@ public class ShiftListOtherTimeService
         List<ShiftListOtherTime> shiftListOtherTimes = shiftListOtherTimeRepository.findByShiftId(shift);
         return shiftListOtherTimes;
     }
+
+    public List<ShiftListOtherTime> findByShiftIdIn(List<Shift> shifts)
+    {
+        List<ShiftListOtherTime> shiftListOtherTimes = shiftListOtherTimeRepository.findByShiftIdIn(shifts);
+        return shiftListOtherTimes;
+    }
 }

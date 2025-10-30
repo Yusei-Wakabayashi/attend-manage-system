@@ -165,6 +165,32 @@ public class OverTimeRequestService
         return overTimeRequests;
     }
 
+    public List<OverTimeRequest> findByAccountIdAndBeginWorkAndRequstStatusWait(Long accountId, int year, int month)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);
+        LocalDate lastDay = yearMonth.atEndOfMonth();
+        LocalDateTime startPeriod = firstDay.atStartOfDay();
+        LocalDateTime endPeriod = lastDay.atTime(23,59,59);
+        int wait = 1;
+        List<OverTimeRequest> overTimeRequests = overTimeRequestRepository.findByAccountIdAndRequestStatusAndBeginWorkBetween(account, wait, startPeriod, endPeriod);
+        return overTimeRequests;
+    }
+
+    public List<OverTimeRequest> findByAccountIdAndBeginWorkAndRequstStatusWait(Account account, int year, int month)
+    {
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);
+        LocalDate lastDay = yearMonth.atEndOfMonth();
+        LocalDateTime startPeriod = firstDay.atStartOfDay();
+        LocalDateTime endPeriod = lastDay.atTime(23,59,59);
+        int wait = 1;
+        List<OverTimeRequest> overTimeRequests = overTimeRequestRepository.findByAccountIdAndRequestStatusAndBeginWorkBetween(account, wait, startPeriod, endPeriod);
+        return overTimeRequests;
+    }
+
     public String save(OverTimeRequest overTimeRequest)
     {
         overTimeRequestRepository.save(overTimeRequest);

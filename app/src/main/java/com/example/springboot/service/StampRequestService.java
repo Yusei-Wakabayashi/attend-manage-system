@@ -1,5 +1,8 @@
 package com.example.springboot.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.List;
 
 import javax.transaction.Transactional;
@@ -63,6 +66,32 @@ public class StampRequestService
     public List<StampRequest> findByAccountId(Account account)
     {
         return stampRequestRepository.findByAccountId(account);
+    }
+
+    public List<StampRequest> findByAccountIdAndBeginWorkBetweenAndRequestStatusWait(Long accountId, int year, int month)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);
+        LocalDate lastDay = yearMonth.atEndOfMonth();
+        LocalDateTime startPeriod = firstDay.atStartOfDay();
+        LocalDateTime endPeriod = lastDay.atTime(23,59,59);
+        int wait = 1;
+        List<StampRequest> stampRequests = stampRequestRepository.findByAccountIdAndBeginWorkBetweenAndRequestStatus(account, startPeriod, endPeriod, wait);
+        return stampRequests;
+    }
+
+    public List<StampRequest> findByAccountIdAndBeginWorkBetweenAndRequestStatusWait(Account account, int year, int month)
+    {
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);
+        LocalDate lastDay = yearMonth.atEndOfMonth();
+        LocalDateTime startPeriod = firstDay.atStartOfDay();
+        LocalDateTime endPeriod = lastDay.atTime(23,59,59);
+        int wait = 1;
+        List<StampRequest> stampRequests = stampRequestRepository.findByAccountIdAndBeginWorkBetweenAndRequestStatus(account, startPeriod, endPeriod, wait);
+        return stampRequests;
     }
 
     public String save(StampRequest stampRequest)

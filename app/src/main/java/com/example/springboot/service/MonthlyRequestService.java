@@ -64,4 +64,10 @@ public class MonthlyRequestService
     {
         return monthlyRequestRepository.findAll();
     }
+
+    public String save(MonthlyRequest monthlyRequest)
+    {
+        monthlyRequestRepository.save(monthlyRequest);
+        return "ok";
+    }
 }

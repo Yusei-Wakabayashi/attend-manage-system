@@ -1,6 +1,8 @@
 package com.example.springboot.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -134,6 +136,32 @@ public class AttendanceExceptionRequestService
         List<AttendanceExceptionRequest> allTimeListApproved = Stream.concat(beginTimeListApproved.stream(), endTimeListApproved.stream()).distinct().collect(Collectors.toList());
         List<AttendanceExceptionRequest> allTimeList = Stream.concat(allTimeListWait.stream(), allTimeListApproved.stream()).distinct().collect(Collectors.toList());
         return allTimeList;
+    }
+    
+    public List<AttendanceExceptionRequest> findByAccountIdAndBeginTimeBetweenAndRequestStatusWait(Long accountId, int year, int month)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);
+        LocalDate lastDay = yearMonth.atEndOfMonth();
+        LocalDateTime startPeriod = firstDay.atStartOfDay();
+        LocalDateTime endPeriod = lastDay.atTime(23,59,59);
+        int wait = 1;
+        List<AttendanceExceptionRequest> attendanceExceptionRequests = attendanceExceptionRequestRepsitory.findByAccountIdAndRequestStatusAndBeginTimeBetween(account, wait, startPeriod, endPeriod);
+        return attendanceExceptionRequests;
+    }
+
+    public List<AttendanceExceptionRequest> findByAccountIdAndBeginTimeBetweenAndRequestStatusWait(Account account, int year, int month)
+    {
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);
+        LocalDate lastDay = yearMonth.atEndOfMonth();
+        LocalDateTime startPeriod = firstDay.atStartOfDay();
+        LocalDateTime endPeriod = lastDay.atTime(23,59,59);
+        int wait = 1;
+        List<AttendanceExceptionRequest> attendanceExceptionRequests = attendanceExceptionRequestRepsitory.findByAccountIdAndRequestStatusAndBeginTimeBetween(account, wait, startPeriod, endPeriod);
+        return attendanceExceptionRequests;
     }
 
     public String save(AttendanceExceptionRequest attendanceExceptionRequest)

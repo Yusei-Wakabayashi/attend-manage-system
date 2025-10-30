@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.springboot.model.Attend;
 import com.example.springboot.model.AttendanceListSource;
 import com.example.springboot.model.Shift;
 import com.example.springboot.repository.AttendanceListSourceRepository;
@@ -38,6 +39,12 @@ public class AttendanceListSourceService
         List<Shift> shifts = new ArrayList<Shift>();
         shifts.add(shift);
         List<AttendanceListSource> attendanceListSources = attendanceListSourceRepository.findByShiftIdIn(shifts);
+        return attendanceListSources;
+    }
+
+    public List<AttendanceListSource> findByAttendIdIn(List<Attend> attends)
+    {
+        List<AttendanceListSource> attendanceListSources = attendanceListSourceRepository.findByAttendanceIdIn(attends);
         return attendanceListSources;
     }
 }

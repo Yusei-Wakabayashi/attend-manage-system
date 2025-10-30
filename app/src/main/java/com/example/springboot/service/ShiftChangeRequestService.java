@@ -1,8 +1,10 @@
 package com.example.springboot.service;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
@@ -107,6 +109,32 @@ public class ShiftChangeRequestService
     public List<ShiftChangeRequest> findByAccountIdIn(List<Account> accounts)
     {
         List<ShiftChangeRequest> shiftChangeRequests = shiftChangeRequestRepository.findByAccountIdIn(accounts);
+        return shiftChangeRequests;
+    }
+
+    public List<ShiftChangeRequest> findByAccountIdAndBeginWorkBetweenAndRequestStatusWait(Long accountId, int year, int month)
+    {
+        Account account = new Account();
+        account.setId(accountId);
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);
+        LocalDate lastDay = yearMonth.atEndOfMonth();
+        LocalDateTime startPeriod = firstDay.atStartOfDay();
+        LocalDateTime endPeriod = lastDay.atTime(23,59,59);
+        int wait = 1;
+        List<ShiftChangeRequest> shiftChangeRequests = shiftChangeRequestRepository.findByAccountIdAndBeginWorkBetweenAndRequestStatus(account, startPeriod, endPeriod, wait);
+        return shiftChangeRequests;
+    }
+
+    public List<ShiftChangeRequest> findByAccountIdAndBeginWorkBetweenAndRequestStatusWait(Account account, int year, int month)
+    {
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate firstDay = yearMonth.atDay(1);
+        LocalDate lastDay = yearMonth.atEndOfMonth();
+        LocalDateTime startPeriod = firstDay.atStartOfDay();
+        LocalDateTime endPeriod = lastDay.atTime(23,59,59);
+        int wait = 1;
+        List<ShiftChangeRequest> shiftChangeRequests = shiftChangeRequestRepository.findByAccountIdAndBeginWorkBetweenAndRequestStatus(account, startPeriod, endPeriod, wait);
         return shiftChangeRequests;
     }
 

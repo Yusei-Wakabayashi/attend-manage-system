@@ -10,4 +10,5 @@ import com.example.springboot.model.ShiftListOverTime;
 public interface ShiftListOverTimeRepository extends JpaRepository<ShiftListOverTime, Long>
 {
     List<ShiftListOverTime> findByShiftListId(Shift shift);
+    List<ShiftListOverTime> findByShiftListIdIn(List<Shift> shifts);
 }

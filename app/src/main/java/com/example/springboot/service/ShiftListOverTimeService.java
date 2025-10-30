@@ -28,4 +28,9 @@ public class ShiftListOverTimeService
         List<ShiftListOverTime> shiftListOverTimes = shiftListOverTimeRepository.findByShiftListId(shift);
         return shiftListOverTimes;
     }
+    public List<ShiftListOverTime> findByShiftIdIn(List<Shift> shifts)
+    {
+        List<ShiftListOverTime> shiftListOverTimes = shiftListOverTimeRepository.findByShiftListIdIn(shifts);
+        return shiftListOverTimes;
+    }
 }

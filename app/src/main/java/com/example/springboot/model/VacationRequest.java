@@ -59,4 +59,6 @@ public class VacationRequest extends BaseTimeEntity
 
     @OneToOne(fetch = FetchType.LAZY)
     private PaydHolidayUse paydHolidayUseFromVacationRequest;
+    @OneToOne(fetch = FetchType.LAZY)
+    private ShiftListVacation shiftListVacationFromVacationRequest;
 }

@@ -4,6 +4,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.springboot.dto.LoginPostData;
+import com.example.springboot.dto.change.DurationToString;
 import com.example.springboot.dto.change.StringToDuration;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.response.Response;
@@ -40,9 +42,12 @@ import com.example.springboot.dto.input.WithDrowInput;
 import com.example.springboot.dto.IdData;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
+import com.example.springboot.model.Attend;
 import com.example.springboot.model.AttendanceExceptionRequest;
+import com.example.springboot.model.AttendanceListSource;
 import com.example.springboot.model.LegalTime;
 import com.example.springboot.model.MonthlyRequest;
+import com.example.springboot.model.NewsList;
 import com.example.springboot.model.OverTimeRequest;
 import com.example.springboot.model.PaydHoliday;
 import com.example.springboot.model.Shift;
@@ -50,6 +55,7 @@ import com.example.springboot.model.ShiftChangeRequest;
 import com.example.springboot.model.ShiftListOtherTime;
 import com.example.springboot.model.ShiftListOverTime;
 import com.example.springboot.model.ShiftListShiftRequest;
+import com.example.springboot.model.ShiftListVacation;
 import com.example.springboot.model.ShiftRequest;
 import com.example.springboot.model.StampRequest;
 import com.example.springboot.model.Style;
@@ -57,18 +63,21 @@ import com.example.springboot.model.StylePlace;
 import com.example.springboot.model.Vacation;
 import com.example.springboot.model.VacationRequest;
 import com.example.springboot.service.AccountApproverService;
-// import com.example.springboot.model.Salt;
 import com.example.springboot.service.AccountService;
+import com.example.springboot.service.AttendService;
 import com.example.springboot.service.AttendanceExceptionRequestService;
 import com.example.springboot.service.AttendanceExceptionTypeService;
+import com.example.springboot.service.AttendanceListSourceService;
 import com.example.springboot.service.LegalTimeService;
 import com.example.springboot.service.MonthlyRequestService;
+import com.example.springboot.service.NewsListService;
 import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.PaydHolidayService;
 import com.example.springboot.service.ShiftChangeRequestService;
 import com.example.springboot.service.ShiftListOtherTimeService;
 import com.example.springboot.service.ShiftListOverTimeService;
 import com.example.springboot.service.ShiftListShiftRequestService;
+import com.example.springboot.service.ShiftListVacationService;
 import com.example.springboot.service.ShiftRequestService;
 import com.example.springboot.service.ShiftService;
 import com.example.springboot.service.StampRequestService;
@@ -76,7 +85,7 @@ import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
 import com.example.springboot.service.VacationRequestService;
 import com.example.springboot.service.VacationService;
-// import com.example.springboot.service.SaltService;
+import com.example.springboot.service.VacationTypeService;
 import com.example.springboot.util.SecurityUtil;
 
 @RequestMapping("/api")
@@ -140,6 +149,21 @@ public class PostController
 
     @Autowired
     private ShiftListOtherTimeService shiftListOtherTimeService;
+
+    @Autowired
+    private NewsListService newsListService;
+
+    @Autowired
+    private ShiftListVacationService shiftListVacationService;
+
+    @Autowired
+    private VacationTypeService vacationTypeService;
+
+    @Autowired
+    private AttendService attendService;
+
+    @Autowired
+    private AttendanceListSourceService attendanceListSourceService;
     
     @CrossOrigin
     @PostMapping("/send/login")
@@ -581,7 +605,7 @@ public class PostController
                 }
                 else
                 {
-                    status = 8;
+                    status = 3;
                     return new Response(status);
                 }
                 break;
@@ -616,9 +640,23 @@ public class PostController
 
                 break;
         }
-        status = 1;
-        Response response = new Response(status);
-        return response;
+        VacationRequest vacationRequest = new VacationRequest();
+        vacationRequest.setAccountId(account);
+        vacationRequest.setVacationTypeId(vacationTypeService.findById(Long.valueOf(vacationInput.getVacationType())));
+        vacationRequest.setBeginVacation(beginVacation);
+        vacationRequest.setEndVacation(endVacation);
+        vacationRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(vacationInput.getRequestDate()));
+        vacationRequest.setRequestComment(vacationInput.getRequestComment());
+        vacationRequest.setRequestStatus(1);
+        vacationRequest.setApprover(null);
+        vacationRequest.setApprovalTime(null);
+        vacationRequest.setApproverComment(null);
+        vacationRequest.setShiftId(shift);
+        if(vacationRequestService.save(vacationRequest) == "ok")
+        {
+            status = 1;
+        }
+        return new Response(status);
     }
 
     @PostMapping("/send/othertime")
@@ -908,9 +946,149 @@ public class PostController
     @PostMapping("/send/monthly")
     public Response monthlySet(@RequestBody MonthlyInput monthlyInput, HttpSession session)
     {
+        DurationToString durationToString = new DurationToString();
+        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+        int status = 0;
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.getAccountByUsername(username);
+        if(Objects.isNull(account))
+        {
+            status = 3;
+            return new Response(status);
+        }
         // お知らせから月次申請を行う年月の情報が不足している場合申請不可
-        Response response = new Response();
-        return response;
+        List<NewsList> newsLists = newsListService.findByAccountIdAndDateBetweenMonthly(account, monthlyInput.getYear(), monthlyInput.getMonth());
+        if(newsLists.size() > 0)
+        {
+            status = 3;
+            return new Response(status);
+        }
+        // 各申請に承認待ちステータスがない確認
+        List<ShiftRequest> shiftRequests = shiftRequestService.findByAccountIdAndBeginWorkBetweenAndRequestStatusWait(account, monthlyInput.getYear(), monthlyInput.getMonth());
+        List<ShiftChangeRequest> shiftChangeRequests = shiftChangeRequestService.findByAccountIdAndBeginWorkBetweenAndRequestStatusWait(account, monthlyInput.getYear(), monthlyInput.getMonth());
+        List<StampRequest> stampRequests = stampRequestService.findByAccountIdAndBeginWorkBetweenAndRequestStatusWait(account, monthlyInput.getYear(), monthlyInput.getMonth());
+        List<AttendanceExceptionRequest> attendanceExceptionRequests = attendanceExceptionRequestService.findByAccountIdAndBeginTimeBetweenAndRequestStatusWait(account, monthlyInput.getYear(), monthlyInput.getMonth());
+        List<OverTimeRequest> overTimeRequests = overTimeRequestService.findByAccountIdAndBeginWorkAndRequstStatusWait(account, monthlyInput.getYear(), monthlyInput.getMonth());
+        List<VacationRequest> vacationRequests = vacationRequestService.findByAccountIdAndBeginVacationBetweenAndRequestStatusWait(account, monthlyInput.getYear(), monthlyInput.getMonth());
+        if(shiftRequests.size() > 0 || shiftChangeRequests.size() > 0 || stampRequests.size() > 0 || attendanceExceptionRequests.size() > 0 || overTimeRequests.size() > 0 || vacationRequests.size() > 0)
+        {
+            status = 3;
+            return new Response(status);
+        }
+        // その月のシフトを取得
+        List<Shift> shifts = shiftService.findByAccountIdAndBeginWorkBetween(account, monthlyInput.getYear(), monthlyInput.getMonth());
+        // シフトから関連テーブルを検索
+        List<ShiftListOtherTime> shiftListOtherTimes = shiftListOtherTimeService.findByShiftIdIn(shifts);
+        List<ShiftListOverTime> shiftListOverTimes = shiftListOverTimeService.findByShiftIdIn(shifts);
+        List<ShiftListShiftRequest> shiftListShiftRequests = shiftListShiftRequestService.findByShiftIdIn(shifts);
+        List<ShiftListVacation> shiftListVacations = shiftListVacationService.findByShiftIdIn(shifts);
+        // 最終的に取得した申請のステータスを承認から月次申請済みに変更
+        int monthlyRequestStatus = 6;
+        for(ShiftListOtherTime shiftListOtherTime : shiftListOtherTimes)
+        {
+            AttendanceExceptionRequest attendanceExceptionRequest = shiftListOtherTime.getAttendanceExceptionId();
+            attendanceExceptionRequest.setRequestStatus(monthlyRequestStatus);
+            attendanceExceptionRequestService.save(attendanceExceptionRequest);
+        }
+        for(ShiftListOverTime shiftListOverTime : shiftListOverTimes)
+        {
+            OverTimeRequest overTimeRequest = shiftListOverTime.getOverTimeId();
+            overTimeRequest.setRequestStatus(monthlyRequestStatus);
+            overTimeRequestService.save(overTimeRequest);
+        }
+        for(ShiftListShiftRequest shiftListShiftRequest : shiftListShiftRequests)
+        {
+            // シフト時間変更申請がなければシフト申請を
+            if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
+            {
+                ShiftRequest shiftRequest = shiftListShiftRequest.getShiftRequestId();
+                shiftRequest.setRequestStatus(monthlyRequestStatus);
+                shiftRequestService.save(shiftRequest);
+            }
+            // シフト申請がなければシフト時間変更申請を
+            else if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
+            {
+                ShiftChangeRequest shiftChangeRequest = shiftListShiftRequest.getShiftChangeRequestId();
+                shiftChangeRequest.setRequestStatus(monthlyRequestStatus);
+                shiftChangeRequestService.save(shiftChangeRequest);
+            }
+        }
+        for(ShiftListVacation shiftListVacation : shiftListVacations)
+        {
+            VacationRequest vacationRequest = shiftListVacation.getVacationId();
+            vacationRequest.setRequestStatus(monthlyRequestStatus);
+            vacationRequestService.save(vacationRequest);
+        }
+
+        // その月の勤怠情報を取得
+        List<Attend> attends = attendService.findByAccountIdAndBeginWorkBetween(account, monthlyInput.getYear(), monthlyInput.getMonth());
+        // 勤怠情報から関連テーブルを検索
+        List<AttendanceListSource> attendanceListSources = attendanceListSourceService.findByAttendIdIn(attends);
+        // 最終的に取得した申請のステータスを承認から月次申請済みに変更
+        for(AttendanceListSource attendanceListSource : attendanceListSources)
+        {
+            StampRequest stampRequest = attendanceListSource.getStampRequestId();
+            stampRequest.setRequestStatus(monthlyRequestStatus);
+            stampRequestService.save(stampRequest);
+        }
+
+        // 必要な情報を再度取得し月次申請に登録
+        Duration monthWorkTime = Duration.ZERO;
+        Duration monthLateness = Duration.ZERO;
+        Duration monthLeaveEarly = Duration.ZERO;
+        Duration monthOuting = Duration.ZERO;
+        Duration monthOverWork = Duration.ZERO;
+        Duration monthAbsenceTime = Duration.ZERO;
+        Duration monthSpecialTime = Duration.ZERO;
+        Duration monthLateNightWorkTime = Duration.ZERO;
+        Duration monthHolidayWorkTime = Duration.ZERO;
+        Duration monthPaydHolidayTime = Duration.ZERO;
+
+        // 休暇の分け以外は取得できる
+        for(Attend attend : attends)
+        {
+            monthWorkTime = monthWorkTime.plus(Duration.between(LocalTime.MIDNIGHT, attend.getWorkTime().toLocalTime()));
+            monthLateness = monthLateness.plus(Duration.between(LocalTime.MIDNIGHT, attend.getLateness().toLocalTime()));
+            monthLeaveEarly = monthLeaveEarly.plus(Duration.between(LocalTime.MIDNIGHT, attend.getLeaveEarly().toLocalTime()));
+            monthOuting = monthOuting.plus(Duration.between(LocalTime.MIDNIGHT, attend.getOuting().toLocalTime()));
+            monthOverWork = monthOverWork.plus(Duration.between(LocalTime.MIDNIGHT, attend.getOverWork().toLocalTime()));
+            monthAbsenceTime = monthAbsenceTime.plus(Duration.between(LocalTime.MIDNIGHT, attend.getAbsenceTime().toLocalTime()));
+            monthSpecialTime = monthSpecialTime.plus(Duration.between(LocalTime.MIDNIGHT, attend.getVacationTime().toLocalTime()));
+            monthLateNightWorkTime = monthLateNightWorkTime.plus(Duration.between(LocalTime.MIDNIGHT, attend.getLateNightWork().toLocalTime()));
+            monthHolidayWorkTime = monthHolidayWorkTime.plus(Duration.between(LocalTime.MIDNIGHT, attend.getHolidayWork().toLocalTime()));
+        }
+        // 休暇はvacationlistからその月の有給の時間を取得、休暇時間から減算
+        List<Vacation> vacations = vacationService.findByAccountIdAndBeginVacationBetweenMonthAndPaydHoliday(account, monthlyInput.getYear(), monthlyInput.getMonth());
+        for(Vacation vacation : vacations)
+        {
+            monthPaydHolidayTime = monthPaydHolidayTime.plus(Duration.between(vacation.getBeginVacation(), vacation.getEndVacation()));
+        }
+        monthSpecialTime.minus(monthPaydHolidayTime);
+        MonthlyRequest monthlyRequest = new MonthlyRequest();
+        monthlyRequest.setAccountId(account);
+        monthlyRequest.setWorkTime(durationToString.durationToString(monthWorkTime));
+        monthlyRequest.setOverTime(durationToString.durationToString(monthOverWork));
+        monthlyRequest.setEarlyTime(durationToString.durationToString(monthLateness));
+        monthlyRequest.setLeavingTime(durationToString.durationToString(monthLeaveEarly));
+        monthlyRequest.setOutingTime(durationToString.durationToString(monthOuting));
+        monthlyRequest.setAbsenceTime(durationToString.durationToString(monthAbsenceTime));
+        monthlyRequest.setPaydHolidayTime(durationToString.durationToString(monthPaydHolidayTime));
+        monthlyRequest.setSpecialTime(durationToString.durationToString(monthSpecialTime));
+        monthlyRequest.setHolidayWorkTime(durationToString.durationToString(monthHolidayWorkTime));
+        monthlyRequest.setLateNightWorkTime(durationToString.durationToString(monthLateNightWorkTime));
+        monthlyRequest.setYear(monthlyInput.getYear());
+        monthlyRequest.setMonth(monthlyInput.getMonth());
+        monthlyRequest.setRequestComment(monthlyInput.getRequestComment());
+        monthlyRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(monthlyInput.getRequestDate()));
+        monthlyRequest.setRequestStatus(1);
+        monthlyRequest.setApprover(null);
+        monthlyRequest.setApprovalDate(null);
+        monthlyRequest.setApproverComment(null);
+        if(monthlyRequestService.save(monthlyRequest) == "ok")
+        {
+            status = 1;
+        }
+        return new Response(status);
     }
 
     @PostMapping("/send/legalcheck/shift")

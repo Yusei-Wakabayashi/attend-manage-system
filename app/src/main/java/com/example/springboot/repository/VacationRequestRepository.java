@@ -16,6 +16,7 @@ public interface VacationRequestRepository extends JpaRepository<VacationRequest
     Optional<VacationRequest> findByAccountIdAndVacationId(Account accountId, Long id);
     List<VacationRequest> findByAccountId(Account account);
     List<VacationRequest> findByAccountIdAndShiftId(Account account, Shift shift);
+    List<VacationRequest> findByAccountIdAndRequestStatusAndBeginVacationBetween(Account account, int requestStatus, LocalDateTime startPeriod, LocalDateTime endPeriod);
     List<VacationRequest> findByAccountIdAndRequestStatusAndVacationTypeId(Account account, int status, VacationType vacationType);
     List<VacationRequest> findByAccountIdAndVacationTypeIdAndRequestStatusAndBeginVacationBetween(Account account, VacationType vacationType, int requestStatus, LocalDateTime startPeriod, LocalDateTime endPeriod);
     List<VacationRequest> findByAccountIdIn(List<Account> accounts);
