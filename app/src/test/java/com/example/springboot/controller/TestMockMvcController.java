@@ -627,12 +627,10 @@ public class TestMockMvcController
         List<Shift> shifts = new ArrayList<Shift>();
         List<ShiftRequest> shiftRequests = new ArrayList<ShiftRequest>();
 
-    
-
-
         when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftService.findByAccountIdAndDayBeginWorkBetween(any(Account.class), any(LocalDateTime.class))).thenReturn(shifts);
         when(shiftRequestService.getAccountIdAndBeginWorkBetweenDay(any(Account.class), any(LocalDateTime.class))).thenReturn(shiftRequests);
+        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn("ok");
         mockMvc.perform(
             post("/api/send/shift")
             .contentType(MediaType.APPLICATION_JSON)
@@ -1266,6 +1264,7 @@ public class TestMockMvcController
         when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(generalShift);
         when(stampRequestService.findByShiftIdAndRequestStatusWait(any(Shift.class))).thenReturn(stampRequests);
+        when(stampRequestService.save(any(StampRequest.class))).thenReturn("ok");
         mockMvc.perform
         (
             post("/api/send/stamp")
@@ -2905,8 +2904,8 @@ public class TestMockMvcController
     @Test
     void monthlyRequestSuccess() throws Exception
     {
-        int year = 3;
-        int month = 13;
+        int year = 2025;
+        int month = 1;
         String requestComment = "";
         String requestDate = "2025/09/02T10:00:00";
         String json = String.format
@@ -2946,12 +2945,15 @@ public class TestMockMvcController
         shifts.add(shift);
 
         List<ShiftListShiftRequest> shiftListShiftRequests = new ArrayList<ShiftListShiftRequest>();
+
         ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
         ShiftRequest shiftRequest = new ShiftRequest();
         shiftListShiftRequest.setShiftRequestId(shiftRequest);
+
         ShiftListShiftRequest generalShiftListShiftRequest = new ShiftListShiftRequest();
         ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
         generalShiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
+
         shiftListShiftRequests.add(shiftListShiftRequest);
         shiftListShiftRequests.add(generalShiftListShiftRequest);
 
@@ -3014,10 +3016,341 @@ public class TestMockMvcController
         when(attendService.findByAccountIdAndBeginWorkBetween(any(Account.class), anyInt(), anyInt())).thenReturn(attends);
         when(attendanceListSourceService.findByAttendIdIn(anyList())).thenReturn(attendanceListSources);
         when(vacationService.findByAccountIdAndBeginVacationBetweenMonthAndPaydHoliday(any(Account.class), anyInt(), anyInt())).thenReturn(vacations);
+        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn("ok");
+        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn("ok");
+        when(stampRequestService.save(any(StampRequest.class))).thenReturn("ok");
+        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn("ok");
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn("ok");
+        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn("ok");
         when(monthlyRequestService.save(any(MonthlyRequest.class))).thenReturn("ok");
         mockMvc.perform
         (
             post("/api/send/monthly")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void withdrowShiftSuccess() throws Exception
+    {
+        int requestId = 1;
+        int requestType = 1;
+        String json = String.format
+        ("""
+            {
+                "requestId": "%s",
+                "requestType": "%s"
+            }
+        """,
+        requestId, requestType
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        ShiftRequest shiftRequest = new ShiftRequest();
+        shiftRequest.setRequestStatus(1);
+
+        when(accountService.getAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
+        when(shiftRequestService.findByAccountIdAndShiftRequestId(any(Account.class), anyLong())).thenReturn(shiftRequest);
+        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn("ok");
+        mockMvc.perform
+        (
+            post("/api/send/withdrow")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void withdrowShiftChaneSuccess() throws Exception
+    {
+        int requestId = 5;
+        int requestType = 2;
+        String json = String.format
+        ("""
+            {
+                "requestId": "%s",
+                "requestType": "%s"
+            }
+        """,
+        requestId, requestType
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
+        shiftChangeRequest.setRequestStatus(1);
+
+        when(accountService.getAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
+        when(shiftChangeRequestService.findByAccountIdAndShiftChangeRequestId(any(Account.class), anyLong())).thenReturn(shiftChangeRequest);
+        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn("ok");
+        mockMvc.perform
+        (
+            post("/api/send/withdrow")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void withdrowStampSuccess() throws Exception
+    {
+        int requestId = 3;
+        int requestType = 3;
+        String json = String.format
+        ("""
+            {
+                "requestId": "%s",
+                "requestType": "%s"
+            }
+        """,
+        requestId, requestType
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        StampRequest stampRequest = new StampRequest();
+        stampRequest.setRequestStatus(1);
+
+        when(accountService.getAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
+        when(stampRequestService.findByAccountIdAndStampId(any(Account.class), anyLong())).thenReturn(stampRequest);
+        when(stampRequestService.save(any(StampRequest.class))).thenReturn("ok");
+        mockMvc.perform
+        (
+            post("/api/send/withdrow")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void withdrowVacationSuccess() throws Exception
+    {
+        int requestId = 8;
+        int requestType = 4;
+        String json = String.format
+        ("""
+            {
+                "requestId": "%s",
+                "requestType": "%s"
+            }
+        """,
+        requestId, requestType
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        VacationRequest vacationRequest = new VacationRequest();
+        vacationRequest.setRequestStatus(1);
+
+        when(accountService.getAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
+        when(vacationRequestService.findByAccountIdAndVacationId(any(Account.class), anyLong())).thenReturn(vacationRequest);
+        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn("ok");
+        mockMvc.perform
+        (
+            post("/api/send/withdrow")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void withdrowOverTimeSuccess() throws Exception
+    {
+        int requestId = 2;
+        int requestType = 5;
+        String json = String.format
+        ("""
+            {
+                "requestId": "%s",
+                "requestType": "%s"
+            }
+        """,
+        requestId, requestType
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        OverTimeRequest overTimeRequest = new OverTimeRequest();
+        overTimeRequest.setRequestStatus(1);
+
+        when(accountService.getAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
+        when(overTimeRequestService.findByAccountIdAndOverTimeRequestId(any(Account.class), anyLong())).thenReturn(overTimeRequest);
+        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn("ok");
+        mockMvc.perform
+        (
+            post("/api/send/withdrow")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void withdrowOtherTimeSuccess() throws Exception
+    {
+        int requestId = 38;
+        int requestType = 6;
+        String json = String.format
+        ("""
+            {
+                "requestId": "%s",
+                "requestType": "%s"
+            }
+        """,
+        requestId, requestType
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        attendanceExceptionRequest.setRequestStatus(1);
+
+        when(accountService.getAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
+        when(attendanceExceptionRequestService.findByAccountIdAndAttendanceExceptionId(any(Account.class), anyLong())).thenReturn(attendanceExceptionRequest);
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn("ok");
+        mockMvc.perform
+        (
+            post("/api/send/withdrow")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void withdrowMonthlySuccess() throws Exception
+    {
+        int requestId = 29;
+        int requestType = 7;
+        String json = String.format
+        ("""
+            {
+                "requestId": "%s",
+                "requestType": "%s"
+            }
+        """,
+        requestId, requestType
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        MonthlyRequest monthlyRequest = new MonthlyRequest();
+        monthlyRequest.setRequestStatus(1);
+
+        List<Shift> shifts = new ArrayList<Shift>();
+        Shift shift = new Shift();
+        shifts.add(shift);
+
+        List<ShiftListOtherTime> shiftListOtherTimes = new ArrayList<ShiftListOtherTime>();
+        ShiftListOtherTime shiftListOtherTime = new ShiftListOtherTime();
+        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        shiftListOtherTime.setAttendanceExceptionId(attendanceExceptionRequest);
+        shiftListOtherTimes.add(shiftListOtherTime);
+
+        List<ShiftListOverTime> shiftListOverTimes = new ArrayList<ShiftListOverTime>();
+        ShiftListOverTime shiftListOverTime = new ShiftListOverTime();
+        OverTimeRequest overTimeRequest = new OverTimeRequest();
+        shiftListOverTime.setOverTimeId(overTimeRequest);
+        shiftListOverTimes.add(shiftListOverTime);
+
+        List<ShiftListShiftRequest> shiftListShiftRequests = new ArrayList<ShiftListShiftRequest>();
+        ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
+        ShiftRequest shiftRequest = new ShiftRequest();
+        shiftListShiftRequest.setShiftRequestId(shiftRequest);
+        ShiftListShiftRequest shiftListShiftChangeRequest = new ShiftListShiftRequest();
+        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
+        shiftListShiftChangeRequest.setShiftChangeRequestId(shiftChangeRequest);
+        shiftListShiftRequests.add(shiftListShiftRequest);
+        shiftListShiftRequests.add(shiftListShiftChangeRequest);
+
+        List<ShiftListVacation> shiftListVacations = new ArrayList<ShiftListVacation>();
+        ShiftListVacation shiftListVacation = new ShiftListVacation();
+        VacationRequest vacationRequest = new VacationRequest();
+        shiftListVacation.setVacationId(vacationRequest);
+        shiftListVacations.add(shiftListVacation);
+
+        List<Attend> attends = new ArrayList<Attend>();
+        Attend attend = new Attend();
+        attends.add(attend);
+
+        List<AttendanceListSource> attendanceListSources = new ArrayList<AttendanceListSource>();
+        AttendanceListSource attendanceListSource = new AttendanceListSource();
+        StampRequest stampRequest = new StampRequest();
+        attendanceListSource.setStampRequestId(stampRequest);
+        attendanceListSources.add(attendanceListSource);
+        when(accountService.getAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
+        when(monthlyRequestService.findByAccountIdAndMothlyRequestId(any(Account.class), anyLong())).thenReturn(monthlyRequest);
+        when(shiftService.findByAccountIdAndBeginWorkBetween(any(Account.class), anyInt(), anyInt())).thenReturn(shifts);
+        when(shiftListOtherTimeService.findByShiftIdIn(anyList())).thenReturn(shiftListOtherTimes);
+        when(shiftListOverTimeService.findByShiftIdIn(anyList())).thenReturn(shiftListOverTimes);
+        when(shiftListShiftRequestService.findByShiftIdIn(anyList())).thenReturn(shiftListShiftRequests);
+        when(shiftListVacationService.findByShiftIdIn(anyList())).thenReturn(shiftListVacations);
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn("ok");
+        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn("ok");
+        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn("ok");
+        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn("ok");
+        when(stampRequestService.save(any(StampRequest.class))).thenReturn("ok");
+        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn("ok");
+        when(monthlyRequestService.save(any(MonthlyRequest.class))).thenReturn("ok");
+        mockMvc.perform
+        (
+            post("/api/send/withdrow")
             .contentType(MediaType.APPLICATION_JSON)
             .content(json)
             .with(csrf())

@@ -9,6 +9,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class WithDrowInput
 {
-    private int requestId;
+    private Long requestId;
     private int requestType;
 }
