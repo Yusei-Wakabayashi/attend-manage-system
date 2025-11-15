@@ -16,13 +16,13 @@ public class ApprovalSettingService
 {
     @Autowired
     ApprovalSettingRepository approvalSettingRepository;
-    public List<ApprovalSetting> getApprovalSettings(Role roleId)
+    public List<ApprovalSetting> findApprovalSettings(Role roleId)
     {
         List<ApprovalSetting> approvalSettings = approvalSettingRepository.findByRoleId(roleId);
         return approvalSettings;
     }
 
-    public List<ApprovalSetting> getApprovalSettingsByApprover(Role roleId)
+    public List<ApprovalSetting> findApprovalSettingsByApprover(Role roleId)
     {
         List<ApprovalSetting> approvalSettings = approvalSettingRepository.findByApprovalId(roleId);
         return approvalSettings;

@@ -191,10 +191,9 @@ public class OverTimeRequestService
         return overTimeRequests;
     }
 
-    public String save(OverTimeRequest overTimeRequest)
+    public OverTimeRequest save(OverTimeRequest overTimeRequest)
     {
-        overTimeRequestRepository.save(overTimeRequest);
-        return "ok";
+        return overTimeRequestRepository.save(overTimeRequest);
     }
 
     @Transactional

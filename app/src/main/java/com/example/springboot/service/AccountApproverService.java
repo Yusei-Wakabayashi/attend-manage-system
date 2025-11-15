@@ -1,6 +1,7 @@
 package com.example.springboot.service;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.transaction.Transactional;
 
@@ -16,7 +17,34 @@ public class AccountApproverService
 {
     @Autowired
     AccountApproverRepository accountApproverRepository;
-    public AccountApprover getAccountApproverByAccount(Account account)
+
+    @Autowired
+    AccountService accountService;
+
+    @Transactional
+    public int updateApprover(String username, Long newAccountId)
+    {
+        Account account = accountService.findAccountByUsername(username);
+        if(Objects.isNull(account))
+        {
+            return 3;
+        }
+        AccountApprover accountApprover = findAccountApproverByAccount(account);
+        Account newAdmin = accountService.findAccountByAccountId(newAccountId);
+        if(Objects.isNull(newAdmin))
+        {
+            return 3;
+        }
+        accountApprover.setApproverId(newAdmin);
+        AccountApprover resultAccountApprover = save(accountApprover);
+        if(Objects.isNull(resultAccountApprover) || Objects.isNull(resultAccountApprover))
+        {
+            return 4;
+        }
+        return 1;
+    }
+
+    public AccountApprover findAccountApproverByAccount(Account account)
     {
         return accountApproverRepository.findByAccountId(account)
             .orElseThrow(() -> new RuntimeException("承認者が見つかりません"));
@@ -27,7 +55,7 @@ public class AccountApproverService
         return accountApproverRepository.findByApproverId(approver);
     }
 
-    public AccountApprover getAccountAndApprover(Long accountId, Long approverId)
+    public AccountApprover findAccountAndApprover(Long accountId, Long approverId)
     {
         Account account = new Account();
         Account approver = new Account();
@@ -37,7 +65,7 @@ public class AccountApproverService
             .orElseThrow(() -> new RuntimeException("情報が見つかりません"));
     }
 
-    public AccountApprover getAccountAndApprover(Account account, Long approverId)
+    public AccountApprover findAccountAndApprover(Account account, Long approverId)
     {
         Account approver = new Account();
         approver.setId(approverId);
@@ -45,7 +73,7 @@ public class AccountApproverService
             .orElseThrow(() -> new RuntimeException("情報が見つかりません"));
     }
 
-    public AccountApprover getAccountAndApprover(Long accountId, Account approver)
+    public AccountApprover findAccountAndApprover(Long accountId, Account approver)
     {
         Account account = new Account();
         account.setId(accountId);
@@ -53,17 +81,17 @@ public class AccountApproverService
             .orElseThrow(() -> new RuntimeException("情報が見つかりません"));
     }
 
-    public AccountApprover getAccountAndApprover(Account account, Account approver)
+    public AccountApprover findAccountAndApprover(Account account, Account approver)
     {
         return accountApproverRepository.findByAccountIdAndApproverId(account, approver)
             .orElseThrow(() -> new RuntimeException("情報が見つかりません"));
     }
 
-    public String save(AccountApprover accountApprover)
+    public AccountApprover save(AccountApprover accountApprover)
     {
-        accountApproverRepository.save(accountApprover);
-        return "ok";
+        return accountApproverRepository.save(accountApprover);
     }
+
     @Transactional
     public void resetAllTables()
     {

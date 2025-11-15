@@ -20,19 +20,19 @@ public class AccountService
     @Autowired
     private AccountRepository accountRepository;
 
-    public Account getAccountByAccountId(Long accountId)
+    public Account findAccountByAccountId(Long accountId)
     {
         return accountRepository.findById(accountId)
             .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
     }
     
-    public Account getAccountByUsername(String username)
+    public Account findAccountByUsername(String username)
     {
         return accountRepository.findByUsername(username)
             .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
     }
 
-    public List<Account> getAccountByRoleId(Long roleId)
+    public List<Account> findAccountByRoleId(Long roleId)
     {
         Role role = new Role();
         role.setId(roleId);
@@ -44,7 +44,7 @@ public class AccountService
         return accounts;
     }
 
-    public List<Account> getAccountByApprovalSetting(List<ApprovalSetting> approvalSettings)
+    public List<Account> findAccountByApprovalSetting(List<ApprovalSetting> approvalSettings)
     {
         List<Role> roles = new ArrayList<Role>();
         for(ApprovalSetting approvalSetting: approvalSettings)
@@ -54,7 +54,7 @@ public class AccountService
         List<Account> accounts = accountRepository.findByRoleIdIn(roles);
         return accounts;
     }
-    public List<ApproverListResponse> getApproverList(List<Account> accounts)
+    public List<ApproverListResponse> findApproverList(List<Account> accounts)
     {
         List<ApproverListResponse> responseList = new ArrayList<>();
 

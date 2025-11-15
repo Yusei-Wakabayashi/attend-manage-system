@@ -20,6 +20,12 @@ public class VacationRequestService
     @Autowired
     private VacationRequestRepository vacationRequestRepository;
 
+    public VacationRequest findById(Long id)
+    {
+        return vacationRequestRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("休暇申請が見つかりません"));
+    }
+
     public VacationRequest findByAccountIdAndVacationId(Account account, Long id)
     {
         return vacationRequestRepository.findByAccountIdAndVacationId(account, id)
@@ -166,9 +172,8 @@ public class VacationRequestService
         return vacationRequests;
     }
 
-    public String save(VacationRequest vacationRequest)
+    public VacationRequest save(VacationRequest vacationRequest)
     {
-        vacationRequestRepository.save(vacationRequest);
-        return "ok";
+        return vacationRequestRepository.save(vacationRequest);
     }
 }

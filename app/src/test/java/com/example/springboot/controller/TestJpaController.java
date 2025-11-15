@@ -82,7 +82,7 @@ public class TestJpaController
         
         List<Account> accounts = new ArrayList<>();
         accounts.add(account);
-        List<ApproverListResponse> approverListResponses = accountService.getApproverList(accounts);
+        List<ApproverListResponse> approverListResponses = accountService.findApproverList(accounts);
         assertNotNull(approverListResponses);
         assertEquals(adminAccountId, approverListResponses.get(0).getId());
         assertEquals(adminAccountName, approverListResponses.get(0).getName());
@@ -121,7 +121,7 @@ public class TestJpaController
         }
         when(accountRepository.findByRoleIdIn(roles)).thenReturn(accounts);
         // 以下はテストしたいserviceのメソッドを実行している
-        List<Account> responseAccounts = accountService.getAccountByApprovalSetting(approvalSettings);
+        List<Account> responseAccounts = accountService.findAccountByApprovalSetting(approvalSettings);
         assertNotNull(responseAccounts);
         assertEquals(adminName, responseAccounts.get(0).getName());
     }
@@ -144,7 +144,7 @@ public class TestJpaController
         styles.add(homeStyle);
 
         when(stylePlaceRepository.findAll()).thenReturn(styles);
-        List<AllStyleListResponse> response = stylePlaceService.getStyleList();
+        List<AllStyleListResponse> response = stylePlaceService.findStyleList();
         assertNotNull(response);
         assertEquals(workStyleName, response.get(0).getName());
         assertEquals(homeStyleName, response.get(1).getName());

@@ -41,6 +41,8 @@ public class ShiftRequest extends BaseTimeEntity
     private LocalDateTime beginBreak;
     @Column(name = "end_Break", nullable = false)
     private LocalDateTime endBreak;
+    @Column(name = "vacation_work", nullable = false)
+    private boolean vacationWork;
     @Column(name = "request_comment", nullable = true, length = 255)
     private String requestComment;
     @Column(name = "request_date", nullable = false)

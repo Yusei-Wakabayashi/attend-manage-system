@@ -21,6 +21,12 @@ public class StampRequestService
     @Autowired
     private StampRequestRepository stampRequestRepository;
 
+    public StampRequest findById(Long id)
+    {
+        return stampRequestRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("打刻漏れ申請がありません"));
+    }
+
     public StampRequest findByAccountIdAndStampId(Account account, Long id)
     {
         return stampRequestRepository.findByAccountIdAndStampId(account, id)
@@ -94,10 +100,9 @@ public class StampRequestService
         return stampRequests;
     }
 
-    public String save(StampRequest stampRequest)
+    public StampRequest save(StampRequest stampRequest)
     {
-        stampRequestRepository.save(stampRequest);
-        return "ok";
+        return stampRequestRepository.save(stampRequest);
     }
 
     @Transactional

@@ -22,6 +22,12 @@ public class AttendanceExceptionRequestService
     @Autowired
     private AttendanceExceptionRequestRepsitory attendanceExceptionRequestRepsitory;
 
+    public AttendanceExceptionRequest findById(Long id)
+    {
+        return attendanceExceptionRequestRepsitory.findById(id)
+            .orElseThrow(() -> new RuntimeException("勤怠例外申請が見つかりません"));
+    }
+
     public AttendanceExceptionRequest findByAccountIdAndAttendanceExceptionId(Long accountId, Long id)
     {
         Account account = new Account();
@@ -164,9 +170,8 @@ public class AttendanceExceptionRequestService
         return attendanceExceptionRequests;
     }
 
-    public String save(AttendanceExceptionRequest attendanceExceptionRequest)
+    public AttendanceExceptionRequest save(AttendanceExceptionRequest attendanceExceptionRequest)
     {
-        attendanceExceptionRequestRepsitory.save(attendanceExceptionRequest);
-        return "ok";
+        return attendanceExceptionRequestRepsitory.save(attendanceExceptionRequest);
     }
 }

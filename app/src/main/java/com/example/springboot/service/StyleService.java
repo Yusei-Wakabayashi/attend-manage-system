@@ -1,5 +1,7 @@
 package com.example.springboot.service;
 
+import java.util.Objects;
+
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,14 +19,24 @@ public class StyleService
 
     @Autowired
     StylePlaceService stylePlaceService;
+
+    @Transactional
+    public int updateStyle(Account account, Long newStyleId)
+    {
+        if(Objects.isNull(account))
+        {
+            return 3;
+        }
+        return 1;
+    }
     
-    public Style getStyleById(Long id)
+    public Style findStyleById(Long id)
     {
         return styleRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("スタイルが見つかりません"));
     }
 
-    public Style getStyleByAccountId(Long id)
+    public Style findStyleByAccountId(Long id)
     {
         Account account = new Account();
         account.setId(id);
@@ -32,16 +44,15 @@ public class StyleService
             .orElseThrow(() -> new RuntimeException("スタイルが見つかりません"));
     }
 
-    public Style getStyleByAccountId(Account id)
+    public Style findStyleByAccountId(Account id)
     {
         return styleRepository.findByAccountId(id)
             .orElseThrow(() -> new RuntimeException("スタイルが見つかりません"));
     }
 
-    public String save(Style style)
+    public Style save(Style style)
     {
-        styleRepository.save(style);
-        return "ok";
+        return styleRepository.save(style);
     }
 
     @Transactional

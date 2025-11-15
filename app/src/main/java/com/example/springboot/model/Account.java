@@ -14,7 +14,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 
 import com.example.springboot.BaseTimeEntity;
 
@@ -26,7 +25,7 @@ import lombok.Setter;
 @Getter
 @Entity
 @NoArgsConstructor
-@Table(name = "accounts", uniqueConstraints = {@UniqueConstraint(name = "salts", columnNames = {"salt_id"})}) // 外部キーにユニーク制約追加
+@Table(name = "accounts")
 public class Account extends BaseTimeEntity
 {
     @Id
@@ -35,11 +34,8 @@ public class Account extends BaseTimeEntity
     private Long id;
     @Column(name = "username", nullable = false, length = 255)
     private String username;
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "salt_id", nullable = false)
-    private Salt saltId;
     @Column(name = "password", nullable = false)
-    private byte[] password;
+    private String password;
     @Column(name = "name", nullable = false, length = 255)
     private String name;
     @Column(name = "gender", nullable = true, length = 255)

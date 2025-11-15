@@ -168,12 +168,12 @@ public class GetController
         // 認証情報にあるリクエストを送ってきたユーザー名を取得
         String username = SecurityUtil.getCurrentUsername();
         // ユーザー名からアカウントオブジェクトを取得
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         // 承認者として適切な役職の取得
-        List<ApprovalSetting> approvalSettings = approvalSettingService.getApprovalSettings(account.getRoleId());
+        List<ApprovalSetting> approvalSettings = approvalSettingService.findApprovalSettings(account.getRoleId());
         // 役職を基に承認者の取得
-        List<Account> accounts = accountService.getAccountByApprovalSetting(approvalSettings);
-        List<ApproverListResponse> approverListResponses = accountService.getApproverList(accounts);
+        List<Account> accounts = accountService.findAccountByApprovalSetting(approvalSettings);
+        List<ApproverListResponse> approverListResponses = accountService.findApproverList(accounts);
         return new ArrayResponse<>(1,approverListResponses, "approverlist");
     }
 
@@ -182,7 +182,7 @@ public class GetController
     {
         // ログイン済みか確認
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         List<AllStyleListResponse> styleListResponse = new ArrayList<AllStyleListResponse>();
         ArrayResponse<AllStyleListResponse> arrayResponse = new ArrayResponse<AllStyleListResponse>();
         if(account.equals(null))
@@ -192,7 +192,7 @@ public class GetController
             arrayResponse.setKey("styleList");
             return arrayResponse;
         }
-        styleListResponse = stylePlaceService.getStyleList();
+        styleListResponse = stylePlaceService.findStyleList();
         arrayResponse.setStatus(1);
         arrayResponse.setList(styleListResponse);
         arrayResponse.setKey("styleList");
@@ -204,14 +204,14 @@ public class GetController
     {
         AccountInfoResponse accountInfo = new AccountInfoResponse();
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         // 役職情報の取得
-        Role role = roleService.getRoleById(account.getRoleId().getId());
+        Role role = roleService.findRoleById(account.getRoleId().getId());
         // 部署情報の取得
-        Department department = departmentService.getDepartmentById(account.getDepartmentId().getId());
+        Department department = departmentService.findDepartmentById(account.getDepartmentId().getId());
         // 役職idが承認者として設定されているか確認
         Boolean admin;
-        List<ApprovalSetting> approvalSettings = approvalSettingService.getApprovalSettingsByApprover(role);
+        List<ApprovalSetting> approvalSettings = approvalSettingService.findApprovalSettingsByApprover(role);
         if(approvalSettings.isEmpty())
         {
             // 配列が空なら承認者でない
@@ -233,7 +233,7 @@ public class GetController
     public ArrayResponse<ShiftListResponse> returnShiftList(HttpSession session, @ModelAttribute YearMonthParam request)
     {
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         // accountidを基にshift_listテーブルを検索、shiftListResponseに格納
         List<ShiftListResponse> shiftListResponse = new ArrayList<ShiftListResponse>();
         ArrayResponse<ShiftListResponse> arrayResponse = new ArrayResponse<ShiftListResponse>();
@@ -256,7 +256,7 @@ public class GetController
         int status = 0;
         // securityutilから名前を取得
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         // 認証情報がなければエラー
         if(account.equals(null))
         {
@@ -292,7 +292,7 @@ public class GetController
         int status = 0;
         // securityutilから名前を取得
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         RequestDetilShiftChangeResponse requestDetilShiftChangeResponse = new RequestDetilShiftChangeResponse();
         // 認証情報がなければエラー
         if(account.equals(null))
@@ -333,7 +333,7 @@ public class GetController
         int status = 0;
         // securityutilから名前を取得
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         RequestDetilStampResponse requestDetilStampResponse = new RequestDetilStampResponse();
         // 認証情報がなければエラー
         if(Objects.isNull(account))
@@ -370,7 +370,7 @@ public class GetController
     public ArrayResponse<AttendListResponse> returnAttendList(HttpSession session, @ModelAttribute YearMonthParam request)
     {
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         List<AttendListResponse> attendListResponse = new ArrayList<AttendListResponse>();
         List<Attend> attendList = attendService.findByAccountIdAndBeginWorkBetween(account.getId(), request.getYear(), request.getMonth());
         ArrayResponse<AttendListResponse> arrayResponse = new ArrayResponse<AttendListResponse>();
@@ -391,7 +391,7 @@ public class GetController
         RequestDetilVacationResponse requestDetilVacation = new RequestDetilVacationResponse();
         // securityutilから名前を取得
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         int status = 0;
         if(Objects.isNull(account))
         {
@@ -429,7 +429,7 @@ public class GetController
         RequestDetilOverTimeResponse requestDetilOverTimeResponse = new RequestDetilOverTimeResponse();
         // securityutilから名前を取得
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         int status = 0;
         if(Objects.isNull(account))
         {
@@ -458,6 +458,7 @@ public class GetController
         requestDetilOverTimeResponse.setApprovalTime(Objects.isNull(overTimeRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(overTimeRequest.getApprovalTime()));
         return requestDetilOverTimeResponse;
     }
+
     @GetMapping("/reach/requestdetil/othertime")
     public RequestDetilOtherTimeResponse returnOtherTimeDetil(HttpSession session, RequestIdInput request)
     {
@@ -465,7 +466,7 @@ public class GetController
         RequestDetilOtherTimeResponse requestDetilOtherTimeResponse = new RequestDetilOtherTimeResponse();
         // securityutilから名前を取得
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         int status = 0;
         if(Objects.isNull(account))
         {
@@ -503,7 +504,7 @@ public class GetController
         RequestDetilMonthlyResponse requestDetilMonthlyResponse = new RequestDetilMonthlyResponse();
         // securityutilから名前を取得
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         int status = 0;
         if(Objects.isNull(account))
         {
@@ -547,7 +548,7 @@ public class GetController
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         int status = 0;
         List<RequestListResponse> requestListResponse = new ArrayList<RequestListResponse>();
         // そのアカウントの申請(シフト、シフト時間変更、打刻漏れ、勤怠例外、残業、休暇、月次)をそれぞれ取得し必要な情報だけを設定
@@ -624,7 +625,7 @@ public class GetController
     {
         DurationToString durationToString = new DurationToString();
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         MonthWorkInfoResponse monthWorkInfoResponse = new MonthWorkInfoResponse();
         int status = 0;
         if(Objects.isNull(account))
@@ -683,10 +684,10 @@ public class GetController
     public StyleResponse returnStyle(HttpSession session)
     {
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         int status = 0;
 
-        Style style = styleService.getStyleByAccountId(account);
+        Style style = styleService.findStyleByAccountId(account);
         StyleResponse response = new StyleResponse();
         status = 1;
         response.setStatus(status);
@@ -699,9 +700,9 @@ public class GetController
     public ApproverResponse returnApprover(HttpSession session)
     {
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         int status = 0;
-        Account adminAccount = accountApproverService.getAccountApproverByAccount(account).getApproverId();
+        Account adminAccount = accountApproverService.findAccountApproverByAccount(account).getApproverId();
         ApproverResponse approverResponse = new ApproverResponse();
         status = 1;
         approverResponse.setStatus(status);
@@ -716,7 +717,7 @@ public class GetController
     public ArrayResponse<VacationTypeListResponse> returnAllVacationType(HttpSession session)
     {
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         if(Objects.isNull(account))
         {
         }
@@ -734,11 +735,12 @@ public class GetController
         status = 1;
         return new ArrayResponse<VacationTypeListResponse>(status, vacationTypeListResponses, "vacationTypes");
     }
+
     @GetMapping("/reach/allothertypelist")
     public ArrayResponse<OtherTypeListResponse> returnAllOtherTypes(HttpSession session)
     {
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         if(Objects.isNull(account))
         {
 
@@ -762,7 +764,7 @@ public class GetController
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         ArrayResponse<PaydHolidayHistoryListResponse> response = new ArrayResponse<>();
         int status = 0;
 
@@ -806,10 +808,10 @@ public class GetController
     public ArrayResponse<AttendListResponse> returnUserAttendList(HttpSession session, UserAttendInput request)
     {
         String username = SecurityUtil.getCurrentUsername();
-        Account adminAccount = accountService.getAccountByUsername(username);
+        Account adminAccount = accountService.findAccountByUsername(username);
 
         // リクエストを送ってきているのは承認者なので引数に注意しながらメソッドに渡す
-        AccountApprover accountApprover = accountApproverService.getAccountAndApprover(request.getAccountId(), adminAccount);
+        AccountApprover accountApprover = accountApproverService.findAccountAndApprover(request.getAccountId(), adminAccount);
         // 情報が取得できていなければ利用者の承認者として設定されていないことになる
         if(Objects.isNull(accountApprover))
         {
@@ -831,9 +833,9 @@ public class GetController
     public ArrayResponse<ShiftListResponse> returnUserShiftList(HttpSession session, UserShiftInput request)
     {
         String username = SecurityUtil.getCurrentUsername();
-        Account adminAccount = accountService.getAccountByUsername(username);
+        Account adminAccount = accountService.findAccountByUsername(username);
         // リクエストを送ってきているのは承認者なので引数に注意しながらメソッドに渡す
-        AccountApprover accountApprover = accountApproverService.getAccountAndApprover(request.getAccountId(), adminAccount);
+        AccountApprover accountApprover = accountApproverService.findAccountAndApprover(request.getAccountId(), adminAccount);
         // 情報が取得できていなければ利用者の承認者として設定されていないことになる
         if(Objects.isNull(accountApprover))
         {
@@ -855,13 +857,13 @@ public class GetController
     {
         DurationToString durationToString = new DurationToString();
         String username = SecurityUtil.getCurrentUsername();
-        Account adminAccount = accountService.getAccountByUsername(username);
+        Account adminAccount = accountService.findAccountByUsername(username);
         if(Objects.isNull(adminAccount))
         {
             throw new NullPointerException("アカウントの情報が正しくありません");
         }
         // 管理者のアカウントと利用者のアカウントの引数の順番に注意
-        AccountApprover accountApprover = accountApproverService.getAccountAndApprover(request.getAccountId(), adminAccount);
+        AccountApprover accountApprover = accountApproverService.findAccountAndApprover(request.getAccountId(), adminAccount);
         if(Objects.isNull(accountApprover))
         {
             throw new NullPointerException("正しく情報が渡されていません");
@@ -919,7 +921,7 @@ public class GetController
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         String username = SecurityUtil.getCurrentUsername();
-        Account adminAccount = accountService.getAccountByUsername(username);
+        Account adminAccount = accountService.findAccountByUsername(username);
         List<AccountApprover> accountApprovers = accountApproverService.findByApproverId(adminAccount);
         List<Account> accounts = new ArrayList<Account>();
         for(AccountApprover accountApprover : accountApprovers)
@@ -1017,7 +1019,7 @@ public class GetController
     public ArrayResponse<NewsListResponse> returnNewsList(HttpSession session)
     {
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         if(Objects.isNull(account))
         {
             throw new RuntimeException("アカウントが存在しません");

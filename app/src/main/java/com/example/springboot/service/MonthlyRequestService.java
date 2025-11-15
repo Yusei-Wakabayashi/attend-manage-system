@@ -14,18 +14,25 @@ public class MonthlyRequestService
 {
     @Autowired
     private MonthlyRequestRepository monthlyRequestRepository;
+
+    public MonthlyRequest findById(Long id)
+    {
+        return monthlyRequestRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("月次申請が見つかりません"));
+    }
+
     public MonthlyRequest findByAccountIdAndMothlyRequestId(Long accountId, Long id)
     {
         Account account = new Account();
         account.setId(accountId);
         return monthlyRequestRepository.findByAccountIdAndMonthRequestId(account, id)
-            .orElseThrow(() -> new RuntimeException(""));
+            .orElseThrow(() -> new RuntimeException("月次申請が見つかりません"));
     }
 
     public MonthlyRequest findByAccountIdAndMothlyRequestId(Account account, Long id)
     {
         return monthlyRequestRepository.findByAccountIdAndMonthRequestId(account, id)
-            .orElseThrow(() -> new RuntimeException(""));
+            .orElseThrow(() -> new RuntimeException("月次申請が見つかりません"));
     }
 
     public List<MonthlyRequest> findByAccountId(Long accountId)
@@ -65,9 +72,8 @@ public class MonthlyRequestService
         return monthlyRequestRepository.findAll();
     }
 
-    public String save(MonthlyRequest monthlyRequest)
+    public MonthlyRequest save(MonthlyRequest monthlyRequest)
     {
-        monthlyRequestRepository.save(monthlyRequest);
-        return "ok";
+        return monthlyRequestRepository.save(monthlyRequest);
     }
 }

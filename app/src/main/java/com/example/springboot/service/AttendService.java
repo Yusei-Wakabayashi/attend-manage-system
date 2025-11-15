@@ -22,7 +22,7 @@ public class AttendService
     @Autowired
     AttendRepository attendRepository;
 
-    public Attend getAttendById(Long id)
+    public Attend findAttendById(Long id)
     {
         return attendRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("出勤簿が見つかりません"));

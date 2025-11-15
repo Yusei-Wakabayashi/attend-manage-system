@@ -33,4 +33,9 @@ public class ShiftListShiftRequestService
         List<ShiftListShiftRequest> shiftListShiftRequests = shiftListShiftRequestRepository.findByShiftIdIn(shifts);
         return shiftListShiftRequests;
     }
+
+    public ShiftListShiftRequest save(ShiftListShiftRequest shiftListShiftRequest)
+    {
+        return shiftListShiftRequestRepository.save(shiftListShiftRequest);
+    }
 }

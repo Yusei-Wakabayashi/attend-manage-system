@@ -7,11 +7,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ApprovalInput
+public class RequestJudgmentInput
 {
-    private int requestId;
+    private Long requestId;
     private int requestType;
-    private int approvalStatus;
     private String approvalComment;
     private String requestTime;
 }

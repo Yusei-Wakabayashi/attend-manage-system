@@ -13,7 +13,7 @@ public class RoleService
 {
     @Autowired
     RoleRepository roleRepository;
-    public Role getRoleById(Long id)
+    public Role findRoleById(Long id)
     {
         return roleRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("役職が見つかりません"));

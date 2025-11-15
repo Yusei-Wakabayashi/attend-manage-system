@@ -34,4 +34,14 @@ public class ShiftListOtherTimeService
         List<ShiftListOtherTime> shiftListOtherTimes = shiftListOtherTimeRepository.findByShiftIdIn(shifts);
         return shiftListOtherTimes;
     }
+
+    public ShiftListOtherTime save(ShiftListOtherTime shiftListOtherTime)
+    {
+        return shiftListOtherTimeRepository.save(shiftListOtherTime);
+    }
+
+    public void deleteByShiftListOtherTime(ShiftListOtherTime shiftListOtherTime)
+    {
+        shiftListOtherTimeRepository.delete(shiftListOtherTime);
+    }
 }

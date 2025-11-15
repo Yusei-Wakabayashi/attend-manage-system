@@ -14,13 +14,13 @@ public class LegalTimeService
     @Autowired
     private LegalTimeRepository legalTimeRepository;
 
-    public LegalTime getFirstByOrderByBeginDesc()
+    public LegalTime findFirstByOrderByBeginDesc()
     {
         return legalTimeRepository.findFirstByOrderByBeginDesc()
             .orElseThrow(() -> new RuntimeException("データが見つかりません"));
     }
 
-    public LegalTime getLegalTimeByLegalTimeId(Long id)
+    public LegalTime findLegalTimeByLegalTimeId(Long id)
     {
         return legalTimeRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("データが見つかりません"));

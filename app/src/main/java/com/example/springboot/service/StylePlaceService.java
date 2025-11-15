@@ -18,7 +18,7 @@ public class StylePlaceService
     @Autowired
     StylePlaceRepository stylePlaceRepository;
 
-    public StylePlace getStylePlaceById(Long id)
+    public StylePlace findStylePlaceById(Long id)
     {
         return stylePlaceRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("勤怠場所が見つかりません"));
@@ -30,15 +30,15 @@ public class StylePlaceService
         return "ok";
     }
 
-    public List<StylePlace> getAll()
+    public List<StylePlace> findAll()
     {
         return stylePlaceRepository.findAll();
     }
 
-    public List<AllStyleListResponse> getStyleList()
+    public List<AllStyleListResponse> findStyleList()
     {
         List<StylePlace> stylePlaces = stylePlaceRepository.findAll();
-        List<AllStyleListResponse> styleListResponse = new ArrayList();
+        List<AllStyleListResponse> styleListResponse = new ArrayList<AllStyleListResponse>();
         for(StylePlace stylePlace: stylePlaces)
         {
             AllStyleListResponse allStyleListResponse = new AllStyleListResponse

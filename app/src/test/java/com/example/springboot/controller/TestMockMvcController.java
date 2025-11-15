@@ -14,7 +14,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 
-import java.security.MessageDigest;
 import java.sql.Time;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -30,6 +29,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.springboot.Config;
@@ -43,7 +43,6 @@ import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
 import com.example.springboot.model.Role;
-import com.example.springboot.model.Salt;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
 import com.example.springboot.model.ShiftListOtherTime;
@@ -106,6 +105,9 @@ public class TestMockMvcController
 {
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     @MockBean
     private AccountService accountService;
@@ -194,40 +196,46 @@ public class TestMockMvcController
     @Test
     void loginSuccess() throws Exception
     {
-        Salt salt = new Salt();
-        salt.setId(1L);
-        salt.setText("somesalt");
+        Account generalAccount = new Account();
+        String generalAccountUsername = "testuser";
+        String generalAccountPassword = "password";
+        generalAccount.setUsername(generalAccountUsername);
+        generalAccount.setPassword(passwordEncoder.encode(generalAccountPassword));
 
-        Account account = new Account();
-        account.setUsername("testuser");
-        account.setSaltId(salt);
-        byte[] hashed = MessageDigest.getInstance("SHA-256").digest("passwordsomesalt".getBytes());
-        account.setPassword(hashed);
+        String json = String.format
+        (
+            """
+                {
+                    "username": "%s",
+                    "password": "%s"
+                }
+            """,
+            generalAccountUsername, generalAccountPassword
+        );
 
-        when(accountService.getAccountByUsername(any())).thenReturn(account);
-        mockMvc.perform(
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
+        mockMvc.perform
+        (
             post("/api/send/login")
             .contentType(MediaType.APPLICATION_JSON)
-            .content
-            ("""
-                {
-                    "username": "testuser",
-                    "password": "password"
-                }
-            """)
+            .content(json)
             .with(csrf()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.status").value(1));
+            .andExpect(jsonPath("$.status").value(1)
+        );
     }
 
     @Test
     void logoutAuthenticatedUserSuccess() throws Exception
     {
-        mockMvc.perform(post("/api/send/logout")
+        mockMvc.perform
+        (
+            post("/api/send/logout")
             .with(csrf())
             .with(user("testuser")))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.status").value(1));
+            .andExpect(jsonPath("$.status").value(1)
+        );
     }
 
     @Test
@@ -266,64 +274,58 @@ public class TestMockMvcController
         List<ApproverListResponse> approverListResponses = new ArrayList<ApproverListResponse>();
         approverListResponses.add(approverListResponse);
 
-        when(accountService.getAccountByUsername(generalAccountName)).thenReturn(generalAccount);
-        when(approvalSettingService.getApprovalSettings(generalAccount.getRoleId())).thenReturn(approvalSettings);
-        when(accountService.getAccountByApprovalSetting(approvalSettings)).thenReturn(accounts);
-        when(accountService.getApproverList(accounts)).thenReturn(approverListResponses);
-        mockMvc.perform(get("/api/reach/approverlist")
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(approvalSettingService.findApprovalSettings(any(Role.class))).thenReturn(approvalSettings);
+        when(accountService.findAccountByApprovalSetting(anyList())).thenReturn(accounts);
+        when(accountService.findApproverList(anyList())).thenReturn(approverListResponses);
+        mockMvc.perform
+        (
+            get("/api/reach/approverlist")
             .with(csrf())
-            .with(user("testuser")))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.status").value(1))
-            .andExpect(jsonPath("$.approverlist[0].id").value(adminAccountId))
-            .andExpect(jsonPath("$.approverlist[0].name").value(adminAccountName))
-            .andExpect(jsonPath("$.approverlist[0].departmentName").value(adminDepartmentName))
-            .andExpect(jsonPath("$.approverlist[0].roleName").value(adminRoleName));
+            .with(user(generalAccountName))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1))
+        .andExpect(jsonPath("$.approverlist[0].id").value(adminAccountId))
+        .andExpect(jsonPath("$.approverlist[0].name").value(adminAccountName))
+        .andExpect(jsonPath("$.approverlist[0].departmentName").value(adminDepartmentName))
+        .andExpect(jsonPath("$.approverlist[0].roleName").value(adminRoleName));
     }
 
     @Test
     void approversetSuccess() throws Exception
     {
+        Account generalAccount = new Account();
         Long generalAccountId = 1L;
         String generalAccountName = "testuser";
-        Long adminAccountId = 2L;
-        String adminAccountName = "adminuser";
-        Long newAdminAccountId = 3L;
-        String newAdminAccountName = "newadmin";
-        Account generalAccount = new Account();
         generalAccount.setId(generalAccountId);
         generalAccount.setUsername(generalAccountName);
-        Account adminAccount = new Account();
-        adminAccount.setId(adminAccountId);
-        adminAccount.setUsername(adminAccountName);
-        Account newAdminAccount = new Account();
-        newAdminAccount.setId(newAdminAccountId);
-        newAdminAccount.setUsername(newAdminAccountName);
-        AccountApprover accountApprover = new AccountApprover();
-        accountApprover.setAccountId(generalAccount);
-        accountApprover.setApproverId(adminAccount);
-        AccountApprover newAccountApprover = new AccountApprover();
-        newAccountApprover.setAccountId(generalAccount);
-        newAccountApprover.setApproverId(newAdminAccount);
-        when(accountService.getAccountByUsername(generalAccountName)).thenReturn(generalAccount);
-        when(accountApproverService.getAccountApproverByAccount(generalAccount)).thenReturn(accountApprover);
-        when(accountService.getAccountByAccountId(newAdminAccountId)).thenReturn(newAdminAccount);
-        when(accountApproverService.save(any())).thenReturn("ok");
-        mockMvc.perform(
+
+        int sendNewAdminAccountId = 3;
+        String json = String.format
+        (
+            """
+                {
+                    "approver": "%s"
+                }
+            """,
+            sendNewAdminAccountId
+        );
+
+        when(accountService.findAccountByUsername(generalAccountName)).thenReturn(generalAccount);
+        when(accountApproverService.updateApprover(anyString(), anyLong())).thenReturn(1);
+        mockMvc.perform
+        (
             post("/api/send/approverset")
             .contentType(MediaType.APPLICATION_JSON)
-            .content
-            ("""
-                {
-                    "approver": "3"
-                }
-            """)
+            .content(json)
             .with(csrf())
             .with(user(generalAccountName))
         )
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(1));
     }
+
     @Test
     void getAllStyleListSuccess() throws Exception
     {
@@ -349,9 +351,10 @@ public class TestMockMvcController
         styleListResponse.add(styleTypeWork);
         styleListResponse.add(styleTypeHome);
 
-        when(accountService.getAccountByUsername(generalAccountName)).thenReturn(generalAccount);
-        when(stylePlaceService.getStyleList()).thenReturn(styleListResponse);
-        mockMvc.perform(
+        when(accountService.findAccountByUsername(generalAccountName)).thenReturn(generalAccount);
+        when(stylePlaceService.findStyleList()).thenReturn(styleListResponse);
+        mockMvc.perform
+        (
             get("/api/reach/allstylelist")
             .with(csrf())
             .with(user(generalAccountName))
@@ -362,6 +365,7 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.styleList[1].name").value(homeStylePlaceName));
 
     }
+
     @Test
     void styleSetSuccess() throws Exception
     {
@@ -389,24 +393,30 @@ public class TestMockMvcController
         newStyle.setStyleId(generalStyleId);
         newStyle.setAccountId(generalAccount);
         newStyle.setStylePlaceId(newStylePlace);
-        // whenでセーブした際に返す文字列
-        String responseText = "ok";
 
-        when(accountService.getAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
-        when(styleService.getStyleByAccountId(generalAccount.getId())).thenReturn(style);
-        when(stylePlaceService.getStylePlaceById(generalNewStylePlaceId)).thenReturn(newStylePlace);
-        when(styleService.save(any())).thenReturn(responseText);
-        mockMvc.perform(
+        int sendStyle = 2;
+
+        String json = String.format
+        (
+            """
+                {
+                    "style": "%s"
+                }
+            """,
+            sendStyle
+        );
+
+        when(accountService.findAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
+        when(styleService.findStyleByAccountId(generalAccount.getId())).thenReturn(style);
+        when(stylePlaceService.findStylePlaceById(generalNewStylePlaceId)).thenReturn(newStylePlace);
+        when(styleService.save(any())).thenReturn(newStyle);
+        mockMvc.perform
+        (
             post("/api/send/style")
             .contentType(MediaType.APPLICATION_JSON)
-            .content
-            ("""
-                {
-                    "style": "2"
-                }
-            """)
+            .content(json)
             .with(csrf())
-            .with(user("testuser"))
+            .with(user(generalAccountUsername))
         )
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(1));
@@ -436,11 +446,13 @@ public class TestMockMvcController
         account.setDepartmentId(department);
 
         List<ApprovalSetting> approvalSettings = new ArrayList<ApprovalSetting>();
-        when(accountService.getAccountByUsername(any())).thenReturn(account);
-        when(roleService.getRoleById(any())).thenReturn(role);
-        when(departmentService.getDepartmentById(any())).thenReturn(department);
-        when(approvalSettingService.getApprovalSettingsByApprover(any())).thenReturn(approvalSettings);
-        mockMvc.perform(
+
+        when(accountService.findAccountByUsername(any())).thenReturn(account);
+        when(roleService.findRoleById(any())).thenReturn(role);
+        when(departmentService.findDepartmentById(any())).thenReturn(department);
+        when(approvalSettingService.findApprovalSettingsByApprover(any())).thenReturn(approvalSettings);
+        mockMvc.perform
+        (
             get("/api/reach/accountinfo")
             .with(csrf())
             .with(user(generalAccountName))
@@ -486,11 +498,12 @@ public class TestMockMvcController
         approvalSetting.setApprovalId(role);
         approvalSettings.add(approvalSetting);
 
-        when(accountService.getAccountByUsername(any())).thenReturn(account);
-        when(roleService.getRoleById(any())).thenReturn(role);
-        when(departmentService.getDepartmentById(any())).thenReturn(department);
-        when(approvalSettingService.getApprovalSettingsByApprover(any())).thenReturn(approvalSettings);
-        mockMvc.perform(
+        when(accountService.findAccountByUsername(any())).thenReturn(account);
+        when(roleService.findRoleById(any())).thenReturn(role);
+        when(departmentService.findDepartmentById(any())).thenReturn(department);
+        when(approvalSettingService.findApprovalSettingsByApprover(any())).thenReturn(approvalSettings);
+        mockMvc.perform
+        (
             get("/api/reach/accountinfo")
             .with(csrf())
             .with(user(adminAccountName))
@@ -543,11 +556,12 @@ public class TestMockMvcController
         List<Shift> generalShifts = new ArrayList<Shift>();
         generalShifts.add(generalShift);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         // when(shiftService.findByAccountId(anyLong())).thenReturn(generalShifts);
         when(shiftService.findByAccountIdAndBeginWorkBetween(anyLong(), anyInt(), anyInt())).thenReturn(generalShifts);
         when(shiftService.shiftToShiftListResponse(any(Shift.class))).thenReturn(generalShiftListResponse);
-        mockMvc.perform(
+        mockMvc.perform
+        (
             get("/api/reach/shiftlist")
             .param("year", "2025")
             .param("month", "6")
@@ -578,16 +592,17 @@ public class TestMockMvcController
         String generalRequestComment = "";
         String generalRequestDate = "2025/08/02T00:00:11";
         String json = String.format
-        ("""
-            {
-                "beginWork": "%s",
-                "beginBreak": "%s",
-                "endBreak": "%s",
-                "endWork": "%s",
-                "requestComment": "%s",
-                "requestDate": "%s"
-            }
-        """,
+        (
+            """
+                {
+                    "beginWork": "%s",
+                    "beginBreak": "%s",
+                    "endBreak": "%s",
+                    "endWork": "%s",
+                    "requestComment": "%s",
+                    "requestDate": "%s"
+                }
+            """,
         generalBeginWork, generalBeginBreak, generalEndBreak, generalEndWork, generalRequestComment, generalRequestDate
         );
 
@@ -627,11 +642,16 @@ public class TestMockMvcController
         List<Shift> shifts = new ArrayList<Shift>();
         List<ShiftRequest> shiftRequests = new ArrayList<ShiftRequest>();
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        ShiftRequest shiftRequest = new ShiftRequest();
+        Long shiftRequestId = 2L;
+        shiftRequest.setShiftRequestId(shiftRequestId);
+
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftService.findByAccountIdAndDayBeginWorkBetween(any(Account.class), any(LocalDateTime.class))).thenReturn(shifts);
-        when(shiftRequestService.getAccountIdAndBeginWorkBetweenDay(any(Account.class), any(LocalDateTime.class))).thenReturn(shiftRequests);
-        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn("ok");
-        mockMvc.perform(
+        when(shiftRequestService.findAccountIdAndBeginWorkBetweenDay(any(Account.class), any(LocalDateTime.class))).thenReturn(shiftRequests);
+        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn(shiftRequest);
+        mockMvc.perform
+        (
             post("/api/send/shift")
             .contentType(MediaType.APPLICATION_JSON)
             .content(json)
@@ -682,9 +702,10 @@ public class TestMockMvcController
         shiftRequest.setApproverComment(approverComment);
         shiftRequest.setApprovalTime(approvalTime);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftRequestService.findByAccountIdAndShiftRequestId(any(Account.class),anyLong())).thenReturn(shiftRequest);
-        mockMvc.perform(
+        mockMvc.perform
+        (
             get("/api/reach/requestdetil/shift")
             .param("requestId","1")
             .with(csrf())
@@ -750,9 +771,10 @@ public class TestMockMvcController
         shiftChangeRequest.setApprovalTime(approvalTime);
         shiftChangeRequest.setShiftId(shift);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftChangeRequestService.findByAccountIdAndShiftChangeRequestId(any(Account.class),anyLong())).thenReturn(shiftChangeRequest);
-        mockMvc.perform(
+        mockMvc.perform
+        (
             get("/api/reach/requestdetil/changetime")
             .param("requestId","1")
             .with(csrf())
@@ -773,6 +795,7 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.approverComment").value(approverComment))
         .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : localDateTimeToString.localDateTimeToString(approvalTime)));
     }
+
     @Test
     void stampRequestDetilSuccess() throws Exception
     {
@@ -818,9 +841,10 @@ public class TestMockMvcController
         stampRequest.setApprovalTime(approvalTime);
         stampRequest.setShiftId(shift);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(stampRequestService.findByAccountIdAndStampId(any(Account.class),anyLong())).thenReturn(stampRequest);
-        mockMvc.perform(
+        mockMvc.perform
+        (
             get("/api/reach/requestdetil/stamp")
             .param("requestId","1")
             .with(csrf())
@@ -854,17 +878,18 @@ public class TestMockMvcController
         String generalRequestDate = "2025/08/02T00:00:11";
         int generalId = 1;
         String json = String.format
-        ("""
-            {
-                "beginWork": "%s",
-                "beginBreak": "%s",
-                "endBreak": "%s",
-                "endWork": "%s",
-                "requestComment": "%s",
-                "requestDate": "%s",
-                "shiftId": "%s"
-            }
-        """,
+        (
+            """
+                {
+                    "beginWork": "%s",
+                    "beginBreak": "%s",
+                    "endBreak": "%s",
+                    "endWork": "%s",
+                    "requestComment": "%s",
+                    "requestDate": "%s",
+                    "shiftId": "%s"
+                }
+            """,
         generalBeginWork, generalBeginBreak, generalEndBreak, generalEndWork, generalRequestComment, generalRequestDate, generalId
         );
 
@@ -913,18 +938,20 @@ public class TestMockMvcController
 
         List<ShiftChangeRequest> generalShiftChangeRequests = new ArrayList<ShiftChangeRequest>();
         ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
+        Long shiftChangeRequestId = 35L;
+        shiftChangeRequest.setShiftChangeId(shiftChangeRequestId);
         shiftChangeRequest.setShiftId(shift);
         shiftChangeRequest.setBeginWork(generalBeginWorkTimeShift);
         shiftChangeRequest.setEndWork(generalEndWorkTimeShift);
         shiftChangeRequest.setBeginBreak(generalBeginBreakTimeShift);
         shiftChangeRequest.setEndBreak(generalEndBreakTimeShift);
 
-
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(shift);
         when(shiftChangeRequestService.findByAccountIdAndShiftIdAndRequestStatusWait(any(Account.class), anyLong())).thenReturn(generalShiftChangeRequests);
-        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn("ok");
-        mockMvc.perform(
+        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn(shiftChangeRequest);
+        mockMvc.perform
+        (
             post("/api/send/changetime")
             .contentType(MediaType.APPLICATION_JSON)
             .content(json)
@@ -934,6 +961,7 @@ public class TestMockMvcController
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(1));
     }
+
     @Test
     void attendListSuccess() throws Exception
     {
@@ -993,10 +1021,11 @@ public class TestMockMvcController
 
         List<Attend> generalAttends = new ArrayList<Attend>();
         generalAttends.add(generalAttend);
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(attendService.findByAccountIdAndBeginWorkBetween(anyLong(), anyInt(), anyInt())).thenReturn(generalAttends);
         when(attendService.attendToAttendListResponse(any(Attend.class))).thenReturn(generalAttendListResponse);
-        mockMvc.perform(
+        mockMvc.perform
+        (
             get("/api/reach/attendlist")
             .param("year", "2025")
             .param("month", "6")
@@ -1066,9 +1095,10 @@ public class TestMockMvcController
         vacationRequest.setApprovalTime(approvalTime);
         vacationRequest.setShiftId(shift);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(vacationRequestService.findByAccountIdAndVacationId(any(Account.class),anyLong())).thenReturn(vacationRequest);
-        mockMvc.perform(
+        mockMvc.perform
+        (
             get("/api/reach/requestdetil/vacation")
             .param("requestId","1")
             .with(csrf())
@@ -1130,9 +1160,10 @@ public class TestMockMvcController
         overTimeRequest.setApprovalTime(approvalTime);
         overTimeRequest.setShiftId(shift);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(overTimeRequestService.findByAccountIdAndOverTimeRequestId(any(Account.class),anyLong())).thenReturn(overTimeRequest);
-        mockMvc.perform(
+        mockMvc.perform
+        (
             get("/api/reach/requestdetil/overtime")
             .param("requestId","1")
             .with(csrf())
@@ -1198,9 +1229,10 @@ public class TestMockMvcController
         attendanceExceptionRequest.setApprovalTime(approvalTime);
         attendanceExceptionRequest.setShiftId(shift);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(attendanceExceptionRequestService.findByAccountIdAndAttendanceExceptionId(any(Account.class),anyLong())).thenReturn(attendanceExceptionRequest);
-        mockMvc.perform(
+        mockMvc.perform
+        (
             get("/api/reach/requestdetil/othertime")
             .param("requestId","1")
             .with(csrf())
@@ -1221,6 +1253,7 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : localDateTimeToString.localDateTimeToString(approvalTime)));
 
     }
+
     @Test
     void stampRequestSuccess() throws Exception
     {
@@ -1233,17 +1266,18 @@ public class TestMockMvcController
         String generalRequestDate = "2025/08/02T00:00:11";
         int generalId = 1;
         String json = String.format
-        ("""
-            {
-                "beginWork": "%s",
-                "beginBreak": "%s",
-                "endBreak": "%s",
-                "endWork": "%s",
-                "requestComment": "%s",
-                "requestDate": "%s",
-                "shiftId": "%s"
-            }
-        """,
+        (
+            """
+                {
+                    "beginWork": "%s",
+                    "beginBreak": "%s",
+                    "endBreak": "%s",
+                    "endWork": "%s",
+                    "requestComment": "%s",
+                    "requestDate": "%s",
+                    "shiftId": "%s"
+                }
+            """,
         generalBeginWork, generalBeginBreak, generalEndBreak, generalEndWork, generalRequestComment, generalRequestDate, generalId
         );
 
@@ -1261,10 +1295,14 @@ public class TestMockMvcController
 
         List<StampRequest> stampRequests = new ArrayList<StampRequest>();
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        StampRequest stampRequest = new StampRequest();
+        Long stampRequestId = 3L;
+        stampRequest.setStampId(stampRequestId);
+
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(generalShift);
         when(stampRequestService.findByShiftIdAndRequestStatusWait(any(Shift.class))).thenReturn(stampRequests);
-        when(stampRequestService.save(any(StampRequest.class))).thenReturn("ok");
+        when(stampRequestService.save(any(StampRequest.class))).thenReturn(stampRequest);
         mockMvc.perform
         (
             post("/api/send/stamp")
@@ -1331,7 +1369,7 @@ public class TestMockMvcController
         generalMonthlyRequest.setApprovalDate(Objects.isNull(generalApprovalTime) ? null : stringToLocalDateTime.stringToLocalDateTime(generalApprovalTime));
         generalMonthlyRequest.setApproverComment(genearlApproverComment);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(monthlyRequestService.findByAccountIdAndMothlyRequestId(any(Account.class), anyLong())).thenReturn(generalMonthlyRequest);
         mockMvc.perform
         (
@@ -1362,6 +1400,7 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.approverComment").value(genearlApproverComment))
         .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(generalApprovalTime) ? "" : localDateTimeToString.localDateTimeToString(LocalDateTime.parse(generalRequestDate, DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")))));
     }
+
     @Test
     void requestListResponseSuccess() throws Exception
     {
@@ -1432,7 +1471,7 @@ public class TestMockMvcController
         generalMonthlyRequest.setRequestStatus(generalRequestStatus);
         monthlyRequests.add(generalMonthlyRequest);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftRequestService.findByAccountId(any(Account.class))).thenReturn(shiftRequests);
         when(shiftChangeRequestService.findByAccountId(any(Account.class))).thenReturn(shiftChangeRequests);
         when(stampRequestService.findByAccountId(any(Account.class))).thenReturn(stampRequests);
@@ -1494,7 +1533,7 @@ public class TestMockMvcController
         vacation.setEndVacation(stringToLocalDateTime.stringToLocalDateTime("2025/09/08T02:00:00"));
         vacations.add(vacation);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(attendService.findByAccountIdAndBeginWorkBetween(any(Account.class), anyInt(),anyInt())).thenReturn(attends);
         when(vacationService.findByAccountIdAndBeginVacationBetweenMonthAndPaydHoliday(any(Account.class), anyInt(), anyInt())).thenReturn(vacations);
         mockMvc.perform
@@ -1527,8 +1566,8 @@ public class TestMockMvcController
         generalStyle.setStyleId(generalStyleId);
         generalStyle.setStylePlaceId(generalStylePlace);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(styleService.getStyleByAccountId(any(Account.class))).thenReturn(generalStyle);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(styleService.findStyleByAccountId(any(Account.class))).thenReturn(generalStyle);
         mockMvc.perform
         (
             get("/api/reach/style")
@@ -1568,8 +1607,8 @@ public class TestMockMvcController
         accountApprover.setAccountId(generalAccount);
         accountApprover.setApproverId(adminAccount);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(accountApproverService.getAccountApproverByAccount(any(Account.class))).thenReturn(accountApprover);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountApproverService.findAccountApproverByAccount(any(Account.class))).thenReturn(accountApprover);
         mockMvc.perform
         (
             get("/api/reach/approver")
@@ -1599,7 +1638,7 @@ public class TestMockMvcController
         vacationType.setVacationName(vacationTypeName);
         vacationTypes.add(vacationType);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(vacationTypeService.findAll()).thenReturn(vacationTypes);
         mockMvc.perform
         (
@@ -1628,7 +1667,7 @@ public class TestMockMvcController
         attendanceExceptionType.setAttednaceExceptionTypeName(attendanceExceptionTypeName);
         attendanceExceptionTypes.add(attendanceExceptionType);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(attendanceExceptionTypeService.findAll()).thenReturn(attendanceExceptionTypes);
         mockMvc.perform
         (
@@ -1734,7 +1773,11 @@ public class TestMockMvcController
         paydHolidayVacationRequest.setEndVacation(stringToLocalDateTime.stringToLocalDateTime(paydHolidayVacationRequestEnd));
         paydHolidayVacationRequests.add(paydHolidayVacationRequest);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        VacationRequest vacationRequest = new VacationRequest();
+        Long vacationRequestId = 3L;
+        vacationRequest.setVacationId(vacationRequestId);
+
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(generalShift);
         when(vacationRequestService.findByAccountIdAndShiftId(any(Account.class), any(Shift.class))).thenReturn(vacationRequests);
         when(shiftListOverTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOverTimes);
@@ -1742,7 +1785,7 @@ public class TestMockMvcController
         when(paydHolidayService.findByAccountIdAndLimitAfter(any(Account.class))).thenReturn(paydHolidays);
         when(vacationRequestService.findByAccountIdAndRequestStatusWaitAndVacationTypePaydHoiday(any(Account.class))).thenReturn(paydHolidayVacationRequests);
         when(vacationTypeService.findById(anyLong())).thenReturn(generalVacationType);
-        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn("ok");
+        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn(vacationRequest);
         mockMvc.perform
         (
             post("/api/send/vacation")
@@ -1781,7 +1824,7 @@ public class TestMockMvcController
         generalPaydHolidayUse.setTime(Time.valueOf(generalPaydHolidayUseTime));
         paydHolidayUses.add(generalPaydHolidayUse);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(paydHolidayService.findByAccountId(any(Account.class))).thenReturn(paydHolidays);
         when(paydHolidayUseService.findByAccountId(any(Account.class))).thenReturn(paydHolidayUses);
         mockMvc.perform
@@ -1869,8 +1912,8 @@ public class TestMockMvcController
 
         List<Attend> generalAttends = new ArrayList<Attend>();
         generalAttends.add(generalAttend);
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(accountApproverService.getAccountAndApprover(anyLong(), any(Account.class))).thenReturn(accountApprover);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountApproverService.findAccountAndApprover(anyLong(), any(Account.class))).thenReturn(accountApprover);
         when(attendService.findByAccountIdAndBeginWorkBetween(anyLong(), anyInt(), anyInt())).thenReturn(generalAttends);
         when(attendService.attendToAttendListResponse(any(Attend.class))).thenReturn(generalAttendListResponse);
         mockMvc.perform(
@@ -1947,8 +1990,8 @@ public class TestMockMvcController
         List<Shift> generalShifts = new ArrayList<Shift>();
         generalShifts.add(generalShift);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(accountApproverService.getAccountAndApprover(anyLong(), any(Account.class))).thenReturn(accountApprover);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountApproverService.findAccountAndApprover(anyLong(), any(Account.class))).thenReturn(accountApprover);
         when(shiftService.findByAccountIdAndBeginWorkBetween(anyLong(), anyInt(), anyInt())).thenReturn(generalShifts);
         when(shiftService.shiftToShiftListResponse(any(Shift.class))).thenReturn(generalShiftListResponse);
         mockMvc.perform(
@@ -2025,8 +2068,8 @@ public class TestMockMvcController
         vacation.setEndVacation(stringToLocalDateTime.stringToLocalDateTime("2025/09/08T02:00:00"));
         vacations.add(vacation);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(adminAccount);
-        when(accountApproverService.getAccountAndApprover(anyLong(), any(Account.class))).thenReturn(accountApprover);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(adminAccount);
+        when(accountApproverService.findAccountAndApprover(anyLong(), any(Account.class))).thenReturn(accountApprover);
         when(attendService.findByAccountIdAndBeginWorkBetween(any(Account.class), anyInt(), anyInt())).thenReturn(attends);
         when(vacationService.findByAccountIdAndBeginVacationBetweenMonthAndPaydHoliday(any(Account.class), anyInt(), anyInt())).thenReturn(vacations);
         mockMvc.perform
@@ -2159,7 +2202,7 @@ public class TestMockMvcController
         monthlyRequest.setRequestStatus(monthlyRequestRequestStatus);
         monthlyRequests.add(monthlyRequest);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(adminAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(adminAccount);
         when(accountApproverService.findByApproverId(any(Account.class))).thenReturn(accountApprovers);
         when(shiftRequestService.findByAccountIdIn(anyList())).thenReturn(shiftRequests);
         when(shiftChangeRequestService.findByAccountIdIn(anyList())).thenReturn(shiftChangeRequests);
@@ -2283,13 +2326,13 @@ public class TestMockMvcController
 
         List<Vacation> vacations = new ArrayList<Vacation>();
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(legalTimeService.getFirstByOrderByBeginDesc()).thenReturn(legalTime);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(legalTimeService.findFirstByOrderByBeginDesc()).thenReturn(legalTime);
         when(shiftService.findByAccountIdAndBeginWorkBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(generalShifts);
         when(shiftListShiftRequestService.findByShiftIdIn(anyList())).thenReturn(shiftListShiftRequests);
         when(vacationService.findByAccountIdAndBeginVacationBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(vacations);
-        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn("ok");
-        mockMvc.perform(
+        mockMvc.perform
+        (
             post("/api/send/legalcheck/shift")
             .contentType(MediaType.APPLICATION_JSON)
             .content(json)
@@ -2411,14 +2454,14 @@ public class TestMockMvcController
 
         List<Vacation> vacations = new ArrayList<Vacation>();
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(shift);
-        when(legalTimeService.getFirstByOrderByBeginDesc()).thenReturn(legalTime);
+        when(legalTimeService.findFirstByOrderByBeginDesc()).thenReturn(legalTime);
         when(shiftService.findByAccountIdAndBeginWorkBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(generalShifts);
         when(shiftListShiftRequestService.findByShiftIdIn(anyList())).thenReturn(shiftListShiftRequests);
         when(vacationService.findByAccountIdAndBeginVacationBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(vacations);
-        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn("ok");
-        mockMvc.perform(
+        mockMvc.perform
+        (
             post("/api/send/legalcheck/shiftchange")
             .contentType(MediaType.APPLICATION_JSON)
             .content(json)
@@ -2439,17 +2482,18 @@ public class TestMockMvcController
         String requestComment = "";
         String requestDate = "2025/09/02T10:00:00";
         String json = String.format
-        ("""
-            {
-                "shiftId": "%s",
-                "otherType": "%s",
-                "beginOtherTime": "%s",
-                "endOtherTime": "%s",
-                "requestComment": "%s",
-                "requestDate": "%s"
-            }
-        """,
-        requestShiftId, requestOtherType, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
+        (
+            """
+                {
+                    "shiftId": "%s",
+                    "otherType": "%s",
+                    "beginOtherTime": "%s",
+                    "endOtherTime": "%s",
+                    "requestComment": "%s",
+                    "requestDate": "%s"
+                }
+            """,
+            requestShiftId, requestOtherType, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
         );
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         Account generalAccount = new Account();
@@ -2481,13 +2525,16 @@ public class TestMockMvcController
         shiftListShiftRequest.setShiftRequestId(shiftRequest);
 
         List<AttendanceExceptionRequest> attendanceExceptionRequests = new ArrayList<AttendanceExceptionRequest>();
+        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        Long attendanceExceptionRequestId = 34L;
+        attendanceExceptionRequest.setAttendanceExceptionId(attendanceExceptionRequestId);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(generalShift);
         when(shiftListOverTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOverTimes);
         when(shiftListShiftRequestService.findByShiftId(any(Shift.class))).thenReturn(shiftListShiftRequest);
         when(attendanceExceptionRequestService.findByAccountIdAndShiftIdAndOutingAndBeginTimeBetweenOrEndTimeBetweenAndRequestStatusWaitOrRequestStatusApproved(any(Account.class), any(Shift.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(attendanceExceptionRequests);
-        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn("ok");
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
         mockMvc.perform
         (
             post("/api/send/othertime")
@@ -2510,17 +2557,18 @@ public class TestMockMvcController
         String requestComment = "";
         String requestDate = "2025/09/02T10:00:00";
         String json = String.format
-        ("""
-            {
-                "shiftId": "%s",
-                "otherType": "%s",
-                "beginOtherTime": "%s",
-                "endOtherTime": "%s",
-                "requestComment": "%s",
-                "requestDate": "%s"
-            }
-        """,
-        requestShiftId, requestOtherType, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
+        (
+            """
+                {
+                    "shiftId": "%s",
+                    "otherType": "%s",
+                    "beginOtherTime": "%s",
+                    "endOtherTime": "%s",
+                    "requestComment": "%s",
+                    "requestDate": "%s"
+                }
+            """,
+            requestShiftId, requestOtherType, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
         );
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         Account generalAccount = new Account();
@@ -2559,11 +2607,15 @@ public class TestMockMvcController
         shiftChangeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(shiftChangeRequestEnd));
         shiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        Long attendanceExceptionRequestId = 34L;
+        attendanceExceptionRequest.setAttendanceExceptionId(attendanceExceptionRequestId);
+
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(generalShift);
         when(shiftListOverTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOverTimes);
         when(shiftListShiftRequestService.findByShiftId(any(Shift.class))).thenReturn(shiftListShiftRequest);
-        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn("ok");
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
         mockMvc.perform
         (
             post("/api/send/othertime")
@@ -2586,17 +2638,17 @@ public class TestMockMvcController
         String requestComment = "";
         String requestDate = "2025/09/02T10:00:00";
         String json = String.format
-        ("""
-            {
-                "shiftId": "%s",
-                "otherType": "%s",
-                "beginOtherTime": "%s",
-                "endOtherTime": "%s",
-                "requestComment": "%s",
-                "requestDate": "%s"
-            }
-        """,
-        requestShiftId, requestOtherType, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
+            ("""
+                {
+                    "shiftId": "%s",
+                    "otherType": "%s",
+                    "beginOtherTime": "%s",
+                    "endOtherTime": "%s",
+                    "requestComment": "%s",
+                    "requestDate": "%s"
+                }
+            """,
+            requestShiftId, requestOtherType, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
         );
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         Account generalAccount = new Account();
@@ -2635,11 +2687,15 @@ public class TestMockMvcController
         shiftChangeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(shiftChangeRequestEnd));
         shiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        Long attendanceExceptionRequestId = 43L;
+        attendanceExceptionRequest.setAttendanceExceptionId(attendanceExceptionRequestId);
+
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(generalShift);
         when(shiftListOverTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOverTimes);
         when(shiftListShiftRequestService.findByShiftId(any(Shift.class))).thenReturn(shiftListShiftRequest);
-        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn("ok");
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
         mockMvc.perform
         (
             post("/api/send/othertime")
@@ -2661,16 +2717,17 @@ public class TestMockMvcController
         String requestComment = "";
         String requestDate = "2025/09/02T10:00:00";
         String json = String.format
-        ("""
-            {
-                "shiftId": "%s",
-                "beginOverTime": "%s",
-                "endOverTime": "%s",
-                "requestComment": "%s",
-                "requestDate": "%s"
-            }
-        """,
-        requestShiftId, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
+        (
+            """
+                {
+                    "shiftId": "%s",
+                    "beginOverTime": "%s",
+                    "endOverTime": "%s",
+                    "requestComment": "%s",
+                    "requestDate": "%s"
+                }
+            """,
+            requestShiftId, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
         );
 
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
@@ -2732,18 +2789,22 @@ public class TestMockMvcController
         overTimeRequestMonth.add(fourthOverTimeRequest);
         overTimeRequestMonth.add(fifthOverTimeRequest);
 
+        OverTimeRequest newOverTimeRequest = new OverTimeRequest();
+        Long newOverTimeRequestId = 43L;
+        newOverTimeRequest.setOverTimeId(newOverTimeRequestId);
+
         LegalTime legalTime = new LegalTime();
         String monthlyOverTime = "45:00:00";
         legalTime.setMonthlyOverWorkTime(monthlyOverTime);
         
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(shift);
         when(overTimeRequestService.findByAccounIdAndRequestStatusWaitOrApprovedAndBeginWorkOrEndWorkBetween(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(overTimeRequests);
         when(shiftService.shiftOverLapping(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(shifts);
         when(shiftListOtherTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOtherTimes);
         when(overTimeRequestService.findByAccountIdAndRequestStatusWaitOrApprovedAndBeginWorkBetweenMonth(any(Account.class), anyInt(), anyInt())).thenReturn(overTimeRequestMonth);
-        when(legalTimeService.getFirstByOrderByBeginDesc()).thenReturn(legalTime);
-        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn("ok");
+        when(legalTimeService.findFirstByOrderByBeginDesc()).thenReturn(legalTime);
+        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn(newOverTimeRequest);
         mockMvc.perform
         (
             post("/api/send/overtime")
@@ -2765,16 +2826,16 @@ public class TestMockMvcController
         String requestComment = "";
         String requestDate = "2025/09/02T10:00:00";
         String json = String.format
-        ("""
-            {
-                "shiftId": "%s",
-                "beginOverTime": "%s",
-                "endOverTime": "%s",
-                "requestComment": "%s",
-                "requestDate": "%s"
-            }
-        """,
-        requestShiftId, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
+        (   """
+                {
+                    "shiftId": "%s",
+                    "beginOverTime": "%s",
+                    "endOverTime": "%s",
+                    "requestComment": "%s",
+                    "requestDate": "%s"
+                }
+            """,
+            requestShiftId, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
         );
 
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
@@ -2839,15 +2900,19 @@ public class TestMockMvcController
         LegalTime legalTime = new LegalTime();
         String monthlyOverTime = "45:00:00";
         legalTime.setMonthlyOverWorkTime(monthlyOverTime);
+
+        OverTimeRequest newOverTimeRequest = new OverTimeRequest();
+        Long newOverTimeRequestId = 34L;
+        newOverTimeRequest.setOverTimeId(newOverTimeRequestId);
         
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(shift);
         when(overTimeRequestService.findByAccounIdAndRequestStatusWaitOrApprovedAndBeginWorkOrEndWorkBetween(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(overTimeRequests);
         when(shiftService.shiftOverLapping(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(shifts);
         when(shiftListOtherTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOtherTimes);
         when(overTimeRequestService.findByAccountIdAndRequestStatusWaitOrApprovedAndBeginWorkBetweenMonth(any(Account.class), anyInt(), anyInt())).thenReturn(overTimeRequestMonth);
-        when(legalTimeService.getFirstByOrderByBeginDesc()).thenReturn(legalTime);
-        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn("ok");
+        when(legalTimeService.findFirstByOrderByBeginDesc()).thenReturn(legalTime);
+        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn(newOverTimeRequest);
         mockMvc.perform
         (
             post("/api/send/overtime")
@@ -2859,7 +2924,6 @@ public class TestMockMvcController
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(1));
     }
-
 
     @Test
     void newsListSuccess() throws Exception
@@ -2886,7 +2950,7 @@ public class TestMockMvcController
         newsListResponse.setDate(newsDate);
         newsListResponse.setMessageDetil(newsDetil);
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(newsListService.findByAccountId(any(Account.class))).thenReturn(newsLists);
         when(newsListService.newsListToNewsListResponse(any(NewsList.class))).thenReturn(newsListResponse);
         mockMvc.perform
@@ -2909,15 +2973,16 @@ public class TestMockMvcController
         String requestComment = "";
         String requestDate = "2025/09/02T10:00:00";
         String json = String.format
-        ("""
-            {
-                "year": "%s",
-                "month": "%s",
-                "requestComment": "%s",
-                "requestDate": "%s"
-            }
-        """,
-        year, month, requestComment, requestDate
+        (
+            """
+                {
+                    "year": "%s",
+                    "month": "%s",
+                    "requestComment": "%s",
+                    "requestDate": "%s"
+                }
+            """,
+            year, month, requestComment, requestDate
         );
 
         Account generalAccount = new Account();
@@ -3000,7 +3065,11 @@ public class TestMockMvcController
 
         List<Vacation> vacations = new ArrayList<Vacation>();
 
-        when(accountService.getAccountByUsername(anyString())).thenReturn(generalAccount);
+        MonthlyRequest monthlyRequest = new MonthlyRequest();
+        Long monthlyRequestId = 34L;
+        monthlyRequest.setMonthRequestId(monthlyRequestId);
+
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(newsListService.findByAccountIdAndDateBetweenMonthly(any(Account.class), anyInt(), anyInt())).thenReturn(newsLists);
         when(shiftRequestService.findByAccountIdAndBeginWorkBetweenAndRequestStatusWait(any(Account.class), anyInt(), anyInt())).thenReturn(shiftRequests);
         when(shiftChangeRequestService.findByAccountIdAndBeginWorkBetweenAndRequestStatusWait(any(Account.class), anyInt(), anyInt())).thenReturn(shiftChangeRequests);
@@ -3016,13 +3085,13 @@ public class TestMockMvcController
         when(attendService.findByAccountIdAndBeginWorkBetween(any(Account.class), anyInt(), anyInt())).thenReturn(attends);
         when(attendanceListSourceService.findByAttendIdIn(anyList())).thenReturn(attendanceListSources);
         when(vacationService.findByAccountIdAndBeginVacationBetweenMonthAndPaydHoliday(any(Account.class), anyInt(), anyInt())).thenReturn(vacations);
-        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn("ok");
-        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn("ok");
-        when(stampRequestService.save(any(StampRequest.class))).thenReturn("ok");
-        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn("ok");
-        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn("ok");
-        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn("ok");
-        when(monthlyRequestService.save(any(MonthlyRequest.class))).thenReturn("ok");
+        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn(shiftRequest);
+        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn(shiftChangeRequest);
+        when(stampRequestService.save(any(StampRequest.class))).thenReturn(stampRequest);
+        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn(vacationRequest);
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
+        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn(overTimeRequest);
+        when(monthlyRequestService.save(any(MonthlyRequest.class))).thenReturn(monthlyRequest);
         mockMvc.perform
         (
             post("/api/send/monthly")
@@ -3041,13 +3110,14 @@ public class TestMockMvcController
         int requestId = 1;
         int requestType = 1;
         String json = String.format
-        ("""
-            {
-                "requestId": "%s",
-                "requestType": "%s"
-            }
-        """,
-        requestId, requestType
+        (
+            """
+                {
+                    "requestId": "%s",
+                    "requestType": "%s"
+                }
+            """,
+            requestId, requestType
         );
 
         Account generalAccount = new Account();
@@ -3057,11 +3127,13 @@ public class TestMockMvcController
         generalAccount.setUsername(generalAccountUsername);
 
         ShiftRequest shiftRequest = new ShiftRequest();
+        Long shiftRequestid = 43L;
+        shiftRequest.setShiftRequestId(shiftRequestid);
         shiftRequest.setRequestStatus(1);
 
-        when(accountService.getAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
         when(shiftRequestService.findByAccountIdAndShiftRequestId(any(Account.class), anyLong())).thenReturn(shiftRequest);
-        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn("ok");
+        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn(shiftRequest);
         mockMvc.perform
         (
             post("/api/send/withdrow")
@@ -3080,13 +3152,14 @@ public class TestMockMvcController
         int requestId = 5;
         int requestType = 2;
         String json = String.format
-        ("""
-            {
-                "requestId": "%s",
-                "requestType": "%s"
-            }
-        """,
-        requestId, requestType
+        (
+            """
+                {
+                    "requestId": "%s",
+                    "requestType": "%s"
+                }
+            """,
+            requestId, requestType
         );
 
         Account generalAccount = new Account();
@@ -3096,11 +3169,13 @@ public class TestMockMvcController
         generalAccount.setUsername(generalAccountUsername);
 
         ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
+        Long shiftChangeRequestId = 97L;
+        shiftChangeRequest.setShiftChangeId(shiftChangeRequestId);
         shiftChangeRequest.setRequestStatus(1);
 
-        when(accountService.getAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
         when(shiftChangeRequestService.findByAccountIdAndShiftChangeRequestId(any(Account.class), anyLong())).thenReturn(shiftChangeRequest);
-        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn("ok");
+        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn(shiftChangeRequest);
         mockMvc.perform
         (
             post("/api/send/withdrow")
@@ -3119,13 +3194,14 @@ public class TestMockMvcController
         int requestId = 3;
         int requestType = 3;
         String json = String.format
-        ("""
-            {
-                "requestId": "%s",
-                "requestType": "%s"
-            }
-        """,
-        requestId, requestType
+        (
+            """
+                {
+                    "requestId": "%s",
+                    "requestType": "%s"
+                }
+            """,
+            requestId, requestType
         );
 
         Account generalAccount = new Account();
@@ -3135,11 +3211,13 @@ public class TestMockMvcController
         generalAccount.setUsername(generalAccountUsername);
 
         StampRequest stampRequest = new StampRequest();
+        Long stampRequestId = 9L;
+        stampRequest.setStampId(stampRequestId);
         stampRequest.setRequestStatus(1);
 
-        when(accountService.getAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
         when(stampRequestService.findByAccountIdAndStampId(any(Account.class), anyLong())).thenReturn(stampRequest);
-        when(stampRequestService.save(any(StampRequest.class))).thenReturn("ok");
+        when(stampRequestService.save(any(StampRequest.class))).thenReturn(stampRequest);
         mockMvc.perform
         (
             post("/api/send/withdrow")
@@ -3158,13 +3236,14 @@ public class TestMockMvcController
         int requestId = 8;
         int requestType = 4;
         String json = String.format
-        ("""
-            {
-                "requestId": "%s",
-                "requestType": "%s"
-            }
-        """,
-        requestId, requestType
+        (
+            """
+                {
+                    "requestId": "%s",
+                    "requestType": "%s"
+                }
+            """,
+            requestId, requestType
         );
 
         Account generalAccount = new Account();
@@ -3174,11 +3253,13 @@ public class TestMockMvcController
         generalAccount.setUsername(generalAccountUsername);
 
         VacationRequest vacationRequest = new VacationRequest();
+        Long vacationRequestId = 30L;
+        vacationRequest.setVacationId(vacationRequestId);
         vacationRequest.setRequestStatus(1);
 
-        when(accountService.getAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
         when(vacationRequestService.findByAccountIdAndVacationId(any(Account.class), anyLong())).thenReturn(vacationRequest);
-        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn("ok");
+        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn(vacationRequest);
         mockMvc.perform
         (
             post("/api/send/withdrow")
@@ -3197,13 +3278,14 @@ public class TestMockMvcController
         int requestId = 2;
         int requestType = 5;
         String json = String.format
-        ("""
-            {
-                "requestId": "%s",
-                "requestType": "%s"
-            }
-        """,
-        requestId, requestType
+        (
+            """
+                {
+                    "requestId": "%s",
+                    "requestType": "%s"
+                }
+            """,
+            requestId, requestType
         );
 
         Account generalAccount = new Account();
@@ -3213,11 +3295,13 @@ public class TestMockMvcController
         generalAccount.setUsername(generalAccountUsername);
 
         OverTimeRequest overTimeRequest = new OverTimeRequest();
+        Long overTimeRequestId = 498L;
+        overTimeRequest.setOverTimeId(overTimeRequestId);
         overTimeRequest.setRequestStatus(1);
 
-        when(accountService.getAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
         when(overTimeRequestService.findByAccountIdAndOverTimeRequestId(any(Account.class), anyLong())).thenReturn(overTimeRequest);
-        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn("ok");
+        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn(overTimeRequest);
         mockMvc.perform
         (
             post("/api/send/withdrow")
@@ -3236,13 +3320,14 @@ public class TestMockMvcController
         int requestId = 38;
         int requestType = 6;
         String json = String.format
-        ("""
-            {
-                "requestId": "%s",
-                "requestType": "%s"
-            }
-        """,
-        requestId, requestType
+        (
+            """
+                {
+                    "requestId": "%s",
+                    "requestType": "%s"
+                }
+            """,
+            requestId, requestType
         );
 
         Account generalAccount = new Account();
@@ -3252,11 +3337,13 @@ public class TestMockMvcController
         generalAccount.setUsername(generalAccountUsername);
 
         AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        Long attendanceExceptionRequestId = 49L;
+        attendanceExceptionRequest.setAttendanceExceptionId(attendanceExceptionRequestId);
         attendanceExceptionRequest.setRequestStatus(1);
 
-        when(accountService.getAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
+        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
         when(attendanceExceptionRequestService.findByAccountIdAndAttendanceExceptionId(any(Account.class), anyLong())).thenReturn(attendanceExceptionRequest);
-        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn("ok");
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
         mockMvc.perform
         (
             post("/api/send/withdrow")
@@ -3275,13 +3362,14 @@ public class TestMockMvcController
         int requestId = 29;
         int requestType = 7;
         String json = String.format
-        ("""
-            {
-                "requestId": "%s",
-                "requestType": "%s"
-            }
-        """,
-        requestId, requestType
+        (
+            """
+                {
+                    "requestId": "%s",
+                    "requestType": "%s"
+                }
+            """,
+            requestId, requestType
         );
 
         Account generalAccount = new Account();
@@ -3291,6 +3379,8 @@ public class TestMockMvcController
         generalAccount.setUsername(generalAccountUsername);
 
         MonthlyRequest monthlyRequest = new MonthlyRequest();
+        Long monthlyRequestId = 4398L;
+        monthlyRequest.setMonthRequestId(monthlyRequestId);
         monthlyRequest.setRequestStatus(1);
 
         List<Shift> shifts = new ArrayList<Shift>();
@@ -3313,6 +3403,7 @@ public class TestMockMvcController
         ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
         ShiftRequest shiftRequest = new ShiftRequest();
         shiftListShiftRequest.setShiftRequestId(shiftRequest);
+
         ShiftListShiftRequest shiftListShiftChangeRequest = new ShiftListShiftRequest();
         ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
         shiftListShiftChangeRequest.setShiftChangeRequestId(shiftChangeRequest);
@@ -3334,20 +3425,21 @@ public class TestMockMvcController
         StampRequest stampRequest = new StampRequest();
         attendanceListSource.setStampRequestId(stampRequest);
         attendanceListSources.add(attendanceListSource);
-        when(accountService.getAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
+
+        when(accountService.findAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
         when(monthlyRequestService.findByAccountIdAndMothlyRequestId(any(Account.class), anyLong())).thenReturn(monthlyRequest);
         when(shiftService.findByAccountIdAndBeginWorkBetween(any(Account.class), anyInt(), anyInt())).thenReturn(shifts);
         when(shiftListOtherTimeService.findByShiftIdIn(anyList())).thenReturn(shiftListOtherTimes);
         when(shiftListOverTimeService.findByShiftIdIn(anyList())).thenReturn(shiftListOverTimes);
         when(shiftListShiftRequestService.findByShiftIdIn(anyList())).thenReturn(shiftListShiftRequests);
         when(shiftListVacationService.findByShiftIdIn(anyList())).thenReturn(shiftListVacations);
-        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn("ok");
-        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn("ok");
-        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn("ok");
-        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn("ok");
-        when(stampRequestService.save(any(StampRequest.class))).thenReturn("ok");
-        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn("ok");
-        when(monthlyRequestService.save(any(MonthlyRequest.class))).thenReturn("ok");
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
+        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn(overTimeRequest);
+        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn(shiftRequest);
+        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn(shiftChangeRequest);
+        when(stampRequestService.save(any(StampRequest.class))).thenReturn(stampRequest);
+        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn(vacationRequest);
+        when(monthlyRequestService.save(any(MonthlyRequest.class))).thenReturn(monthlyRequest);
         mockMvc.perform
         (
             post("/api/send/withdrow")

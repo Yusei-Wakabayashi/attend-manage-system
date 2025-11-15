@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -19,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,6 +35,7 @@ import com.example.springboot.dto.input.LegalCheckShiftInput;
 import com.example.springboot.dto.input.MonthlyInput;
 import com.example.springboot.dto.input.OtherTimeInput;
 import com.example.springboot.dto.input.OverTimeInput;
+import com.example.springboot.dto.input.RequestJudgmentInput;
 import com.example.springboot.dto.input.ShiftChangeInput;
 import com.example.springboot.dto.input.ShiftInput;
 import com.example.springboot.dto.input.StampInput;
@@ -94,6 +95,9 @@ import com.example.springboot.util.SecurityUtil;
 @CrossOrigin(origins = {"http://localhost:5173"})
 public class PostController
 {
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Autowired
     private AccountService accountService;
 
@@ -168,31 +172,31 @@ public class PostController
     
     @CrossOrigin
     @PostMapping("/send/login")
-    public Response login(@RequestBody LoginPostData data, HttpSession session)
+    public Response login(@RequestBody LoginPostData data)
     {
-        try{
-            MessageDigest md = MessageDigest.getInstance("SHA256");
-            String username = data.getId();
-            String password = data.getPassword();
-            Account account = accountService.getAccountByUsername(username);
-            byte[] perfectPassword = md.digest((password + account.getSaltId().getText()).getBytes());
-            if (Arrays.equals(perfectPassword, account.getPassword()))
-            {
-                // 保存する認証情報を作成
-                UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(account.getUsername(), null, List.of(new SimpleGrantedAuthority("ROLE_USER"))); // 認証が完了しているためpasswordなどの情報は保存していない
-                // 認証情報を保存
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-                return new Response(1);
-            }
-            else
-            {
-                return new Response(6);
-            }
-        }
-        catch(NoSuchAlgorithmException ex1)
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.findAccountByUsername(username);
+        if(Objects.isNull(account))
         {
             return new Response(4);
+        }
+
+        boolean valid = passwordEncoder.matches(data.getPassword(), account.getPassword());
+        if(valid)
+        {
+            UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken
+                (
+                    account.getUsername(),
+                    null,
+                    List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                );
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+            return new Response(1);
+        }
+        else
+        {
+            return new Response(6);
         }
     }
 
@@ -209,61 +213,51 @@ public class PostController
     }
 
     @PostMapping("/send/approverset")
-    public Response approverSet(@RequestBody IdData idData, HttpSession session)
+    public Response approverSet(@RequestBody IdData idData)
     {
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
-        AccountApprover accountApprover = accountApproverService.getAccountApproverByAccount(account);
-        Account newAccount = accountService.getAccountByAccountId(idData.getId());
-        accountApprover.setApproverId(newAccount);
-        String response = accountApproverService.save(accountApprover);
-        if (response.equals("ok"))
-        {
-            return new Response(1);
-        }
-        return new Response(4);
+        int result = accountApproverService.updateApprover(username, idData.getId());
+        return new Response(result);
     }
     
     @PostMapping("/send/style")
-    public Response styleSet(@RequestBody IdData idData, HttpSession session)
+    public Response styleSet(@RequestBody IdData idData)
     {
+        int status = 0;
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
-        Style style = styleService.getStyleByAccountId(account.getId());
-        StylePlace newStylePlace = stylePlaceService.getStylePlaceById(idData.getId());
+        Account account = accountService.findAccountByUsername(username);
+        Style style = styleService.findStyleByAccountId(account.getId());
+        StylePlace newStylePlace = stylePlaceService.findStylePlaceById(idData.getId());
         style.setStylePlaceId(newStylePlace);
-        String response = styleService.save(style);
-        if (response.equals("ok"))
+        Style resultStyle = styleService.save(style);
+        if (Objects.isNull(resultStyle) || Objects.isNull(resultStyle.getStyleId()))
         {
-            return new Response(1);
+            status = 3;
+            return new Response(status);
         }
-        return new Response(4);
+        status = 1;
+        return new Response(status);
     }
 
     @PostMapping("/send/shift")
-    public Response shiftSet(@RequestBody ShiftInput shiftInput, HttpSession session)
+    public Response shiftSet(@RequestBody ShiftInput shiftInput)
     {
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         int status = 0;
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         if(Objects.isNull(account))
         {
             status = 4;
             return new Response(status);
         }
         // 始業時間、終業時間、休憩開始時間、休憩終了時間が現在取得時間より後になっていることを確認
-        // 2025/09/02追記シフト申請の出し忘れも考慮して現在時間より前でも申請可能に
         LocalDateTime nowTime = LocalDateTime.now();
         LocalDateTime beginWork = stringToLocalDateTime.stringToLocalDateTime(shiftInput.getBeginWork());
         LocalDateTime endWork = stringToLocalDateTime.stringToLocalDateTime(shiftInput.getEndWork());
         LocalDateTime beginBreak = stringToLocalDateTime.stringToLocalDateTime(shiftInput.getBeginBreak());
         LocalDateTime endBreak = stringToLocalDateTime.stringToLocalDateTime(shiftInput.getEndBreak());
-        // if(beginWork.isBefore(nowTime) || endWork.isBefore(nowTime) || beginBreak.isBefore(nowTime) || endBreak.isBefore(nowTime))
-        // {
-        //     // 現在取得時間より前の時の処理
-        //     return new Response(3);
-        // }
+
         // 始業時間より終業時間が後になっていること、休憩開始時間より休憩終了時間が後になっていること、始業時間より休憩開始時間が後になっていること、休憩終了時間より終業時間が後になっていること
         if(endWork.isAfter(beginWork) && endBreak.isAfter(beginBreak) && beginBreak.isAfter(beginWork) && endWork.isAfter(endBreak))
         {
@@ -278,7 +272,7 @@ public class PostController
         // 承認されたシフトで同じ日に重複していないことを確認
         List<Shift> shifts = shiftService.findByAccountIdAndDayBeginWorkBetween(account, beginWork);
         // シフト申請で同じ日に申請が出ていないことを確認
-        List<ShiftRequest> shiftRequests = shiftRequestService.getAccountIdAndBeginWorkBetweenDay(account, beginWork);
+        List<ShiftRequest> shiftRequests = shiftRequestService.findAccountIdAndBeginWorkBetweenDay(account, beginWork);
         // 0より大きかったら申請できない
         if(shiftRequests.size() > 0 || shifts.size() > 0)
         {
@@ -299,7 +293,7 @@ public class PostController
             status = 3;
             return new Response(status);
         }
-        // シフト申請に登録
+        // シフト申請に登録(サービス層で行うべきこと？)
         ShiftRequest shiftRequest = new ShiftRequest();
         shiftRequest.setAccountId(account);
         shiftRequest.setBeginWork(beginWork);
@@ -312,11 +306,13 @@ public class PostController
         shiftRequest.setApprover(null);
         shiftRequest.setApprovalTime(null);
         shiftRequest.setApproverComment(null);
-        String saveResult = shiftRequestService.save(shiftRequest);
-        if(saveResult == "ok")
+        ShiftRequest resultShiftRequest = shiftRequestService.save(shiftRequest);
+        if(Objects.isNull(resultShiftRequest) || Objects.isNull(resultShiftRequest.getShiftRequestId()))
         {
-            status = 1;
+            status = 3;
+            return new Response(status);
         }
+        status = 1;
         return new Response(status);
     }
 
@@ -326,7 +322,7 @@ public class PostController
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         int status = 0;
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         // accountの情報があるか
         if(Objects.isNull(account))
         {
@@ -377,7 +373,7 @@ public class PostController
             status = 3;
             return new Response(status);
         }
-
+        // シフト時間変更申請(サービス層で行うべき?)
         ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
         shiftChangeRequest.setAccountId(account);
         shiftChangeRequest.setBeginWork(beginWork);
@@ -391,19 +387,22 @@ public class PostController
         shiftChangeRequest.setApprovalTime(null);
         shiftChangeRequest.setApproverComment(null);
         shiftChangeRequest.setShiftId(shift);
-        String saveResult = shiftChangeRequestService.save(shiftChangeRequest);
-        if(saveResult == "ok")
+        ShiftChangeRequest resultShiftChangeRequest = shiftChangeRequestService.save(shiftChangeRequest);
+        if(Objects.isNull(resultShiftChangeRequest) || Objects.isNull(resultShiftChangeRequest.getShiftChangeId()))
         {
-            status = 1;
+            status = 3;
+            return new Response(status);
         }
+        status = 1;
         return new Response(status);
     }
+
     @PostMapping("/send/stamp")
     public Response stampSet(@RequestBody StampInput stampInput, HttpSession session)
     {
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         int status = 0;
         // accountの情報があるか
         if(Objects.isNull(account))
@@ -474,6 +473,7 @@ public class PostController
             return new Response(status);
         }
         int requestStatus = 1;
+        // 打刻漏れ申請登録(サービス層で行うべき？)
         StampRequest stampRequest = new StampRequest();
         stampRequest.setAccountId(account);
         stampRequest.setBeginWork(beginWork);
@@ -487,11 +487,13 @@ public class PostController
         stampRequest.setApprovalTime(null);
         stampRequest.setApproverComment(null);
         stampRequest.setShiftId(shift);
-        String saveResult = stampRequestService.save(stampRequest);
-        if(saveResult == "ok")
+        StampRequest resultStampRequest = stampRequestService.save(stampRequest);
+        if(Objects.isNull(resultStampRequest) || Objects.isNull(resultStampRequest))
         {
-            status = 1;
+            status = 3;
+            return new Response(status);
         }
+        status = 1;
         return new Response(status);
     }
 
@@ -503,7 +505,7 @@ public class PostController
         int status = 0;
         // アカウントの取得
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         // 休暇の時刻が形式に沿っているか
         LocalDateTime beginVacation = stringToLocalDateTime.stringToLocalDateTime(vacationInput.getBeginVacation());
         LocalDateTime endVacation = stringToLocalDateTime.stringToLocalDateTime(vacationInput.getEndVacation());
@@ -650,6 +652,7 @@ public class PostController
 
                 break;
         }
+        // 休暇申請登録(サービス層で行うべき?)
         VacationRequest vacationRequest = new VacationRequest();
         vacationRequest.setAccountId(account);
         vacationRequest.setVacationTypeId(vacationTypeService.findById(Long.valueOf(vacationInput.getVacationType())));
@@ -662,11 +665,13 @@ public class PostController
         vacationRequest.setApprovalTime(null);
         vacationRequest.setApproverComment(null);
         vacationRequest.setShiftId(shift);
-        String saveResult = vacationRequestService.save(vacationRequest);
-        if(saveResult == "ok")
+        VacationRequest resultVacationRequest = vacationRequestService.save(vacationRequest);
+        if(Objects.isNull(resultVacationRequest) || Objects.isNull(resultVacationRequest.getVacationId()))
         {
-            status = 1;
+            status = 3;
+            return new Response(status);
         }
+        status = 1;
         return new Response(status);
     }
 
@@ -677,7 +682,7 @@ public class PostController
         // アカウントの取得
         int status = 0;
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         if(Objects.isNull(account))
         {
             status = 3;
@@ -830,6 +835,7 @@ public class PostController
             default:
                 break;
         }
+        // 勤怠例外申請登録(サービス層で行うべき？)
         AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
         attendanceExceptionRequest.setAccountId(account);
         attendanceExceptionRequest.setBeginTime(startTime);
@@ -839,11 +845,13 @@ public class PostController
         attendanceExceptionRequest.setRequestDate(otherTimeInput.getRequestDate() == null ? null : stringToLocalDateTime.stringToLocalDateTime(otherTimeInput.getRequestDate()));
         attendanceExceptionRequest.setRequestStatus(1);
         attendanceExceptionRequest.setShiftId(shift);
-        String saveResult = attendanceExceptionRequestService.save(attendanceExceptionRequest);
-        if(saveResult == "ok");
+        AttendanceExceptionRequest resultAttendanceExceptionRequest = attendanceExceptionRequestService.save(attendanceExceptionRequest);
+        if(Objects.isNull(resultAttendanceExceptionRequest) || Objects.isNull(resultAttendanceExceptionRequest.getAttendanceExceptionId()))
         {
-            status = 1;
+            status = 3;
+            return new Response(status);
         }
+        status = 1;
         return new Response(status);
     }
 
@@ -854,7 +862,7 @@ public class PostController
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         // アカウントの取得
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         int status = 0;
         if(Objects.isNull(account))
         {
@@ -933,13 +941,14 @@ public class PostController
             Duration overTime = Duration.between(overTimeRequest.getBeginWork(), overTimeRequest.getEndWork());
             monthOverWorkTime = monthOverWorkTime.plus(overTime);
         }
-        LegalTime legalTime = legalTimeService.getFirstByOrderByBeginDesc();
+        LegalTime legalTime = legalTimeService.findFirstByOrderByBeginDesc();
         // メソッド内の値より後(大きい)ならエラー
         if(monthOverWorkTime.compareTo(stringToDuration.stringToDuration(legalTime.getMonthlyOverWorkTime())) > 0)
         {
             status = 3;
             return new Response(status);
         }
+        // 残業申請登録(サービス層で行うべき?)
         OverTimeRequest overTimeRequest = new OverTimeRequest();
         overTimeRequest.setAccountId(account);
         overTimeRequest.setBeginWork(startTimeOverWork);
@@ -948,11 +957,13 @@ public class PostController
         overTimeRequest.setRequestDate(overTimeInput.getRequestDate() == null ? null : stringToLocalDateTime.stringToLocalDateTime(overTimeInput.getRequestDate()));
         overTimeRequest.setRequestStatus(1);
         overTimeRequest.setShiftId(shift);
-        String saveResult = overTimeRequestService.save(overTimeRequest);
-        if(saveResult == "ok")
+        OverTimeRequest requestOverTimeRequest = overTimeRequestService.save(overTimeRequest);
+        if(Objects.isNull(requestOverTimeRequest) || Objects.isNull(requestOverTimeRequest.getOverTimeId()))
         {
-            status = 1;
+            status = 3;
+            return new Response(status);
         }
+        status = 1;
         return new Response(status);
     }
 
@@ -963,7 +974,7 @@ public class PostController
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         int status = 0;
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         if(Objects.isNull(account))
         {
             status = 3;
@@ -1095,6 +1106,7 @@ public class PostController
             monthPaydHolidayTime = monthPaydHolidayTime.plus(Duration.between(vacation.getBeginVacation(), vacation.getEndVacation()));
         }
         monthSpecialTime.minus(monthPaydHolidayTime);
+        // 月次申請登録(サービス層で行うべき?)
         MonthlyRequest monthlyRequest = new MonthlyRequest();
         monthlyRequest.setAccountId(account);
         monthlyRequest.setWorkTime(durationToString.durationToString(monthWorkTime));
@@ -1115,11 +1127,13 @@ public class PostController
         monthlyRequest.setApprover(null);
         monthlyRequest.setApprovalDate(null);
         monthlyRequest.setApproverComment(null);
-        String saveResult = monthlyRequestService.save(monthlyRequest);
-        if(saveResult == "ok")
+        MonthlyRequest resultMonthlyRequest = monthlyRequestService.save(monthlyRequest);
+        if(Objects.isNull(resultMonthlyRequest) || Objects.isNull(resultMonthlyRequest.getMonthRequestId()))
         {
-            status = 1;
+            status = 3;
+            return new Response(status);
         }
+        status = 1;
         return new Response(status);
     }
 
@@ -1129,7 +1143,7 @@ public class PostController
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         StringToDuration stringToDuration = new StringToDuration();
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         int status = 0;
 
         LocalDateTime beginWork = stringToLocalDateTime.stringToLocalDateTime(legalCheckShiftInput.getBeginWork());
@@ -1137,7 +1151,7 @@ public class PostController
         LocalDateTime beginBreak = stringToLocalDateTime.stringToLocalDateTime(legalCheckShiftInput.getBeginBreak());
         LocalDateTime endBreak = stringToLocalDateTime.stringToLocalDateTime(legalCheckShiftInput.getEndBreak());
 
-        LegalTime legalTime = legalTimeService.getFirstByOrderByBeginDesc();
+        LegalTime legalTime = legalTimeService.findFirstByOrderByBeginDesc();
         // 労働時間が8時間(所定労働時間)になっているか確認
         // 休憩が1時間を超えているか確認
         Duration standardWorkTime = stringToDuration.stringToDuration(legalTime.getScheduleWorkTime());
@@ -1219,7 +1233,7 @@ public class PostController
             // 申請する日を含む一週(月曜日から日曜日)の合計労働時間が法定時間を超える(シフトで予定されている労働時間)
             status = 7;
         }
-        else if(workTime.equals(standardWorkTime))
+        else if(Objects.equals(workTime, standardWorkTime))
         {
             // 労働時間が所定労働時間と等しい
             status = 1;
@@ -1239,7 +1253,7 @@ public class PostController
         StringToDuration stringToDuration = new StringToDuration();
 
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
 
         int status = 0;
 
@@ -1255,7 +1269,7 @@ public class PostController
         LocalDateTime beginBreak = stringToLocalDateTime.stringToLocalDateTime(legalCheckShiftChangeInput.getBeginBreak());
         LocalDateTime endBreak = stringToLocalDateTime.stringToLocalDateTime(legalCheckShiftChangeInput.getEndBreak());
 
-        LegalTime legalTime = legalTimeService.getFirstByOrderByBeginDesc();
+        LegalTime legalTime = legalTimeService.findFirstByOrderByBeginDesc();
         // 労働時間が8時間(所定労働時間)になっているか確認
         // 休憩が1時間を超えているか確認
         Duration standardWorkTime = stringToDuration.stringToDuration(legalTime.getScheduleWorkTime());
@@ -1357,7 +1371,7 @@ public class PostController
             // 申請する日を含む一週(月曜日から日曜日)の合計労働時間が法定時間を超える(シフトで予定されている労働時間)
             status = 7;
         }
-        else if(workTime.equals(standardWorkTime))
+        else if(Objects.equals(workTime, standardWorkTime))
         {
             // 労働時間が所定労働時間と等しい
             status = 1;
@@ -1370,12 +1384,13 @@ public class PostController
 
         return new Response(status);
     }
+
     @PostMapping("/send/withdrow")
     public Response withDrow(@RequestBody WithDrowInput withDrowInput, HttpSession session)
     {
         int status = 0;
         String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.getAccountByUsername(username);
+        Account account = accountService.findAccountByUsername(username);
         if(Objects.isNull(account))
         {
             status = 3;
@@ -1403,11 +1418,13 @@ public class PostController
                 {
                     shiftRequest.setRequestStatus(5);
                     // 正常に更新できたか
-                    String saveResult = shiftRequestService.save(shiftRequest);
-                    if(saveResult == "ok")
+                    ShiftRequest resultShiftRequest = shiftRequestService.save(shiftRequest);
+                    if(Objects.isNull(resultShiftRequest))
                     {
-                        status = 1;
+                        status = 3;
+                        return new Response(status);
                     }
+                    status = 1;
                 }
                 else
                 {
@@ -1429,11 +1446,13 @@ public class PostController
                 {
                     shiftChangeRequest.setRequestStatus(5);
                     // 正常に更新できたか
-                    String saveResult = shiftChangeRequestService.save(shiftChangeRequest);
-                    if(saveResult == "ok")
+                    ShiftChangeRequest resultShiftChangeRequest = shiftChangeRequestService.save(shiftChangeRequest);
+                    if(Objects.isNull(resultShiftChangeRequest))
                     {
-                        status = 1;
+                        status = 3;
+                        return new Response(status);
                     }
+                    status = 1;
                 }
                 else
                 {
@@ -1455,11 +1474,13 @@ public class PostController
                 {
                     stampRequest.setRequestStatus(5);
                     // 正常に更新できたか
-                    String saveResult = stampRequestService.save(stampRequest);
-                    if(saveResult == "ok")
+                    StampRequest resultStampRequest = stampRequestService.save(stampRequest);
+                    if(Objects.isNull(resultStampRequest))
                     {
-                        status = 1;
+                        status = 3;
+                        return new Response(status);
                     }
+                    status = 1;
                 }
                 else
                 {
@@ -1481,11 +1502,13 @@ public class PostController
                 {
                     vacationRequest.setRequestStatus(5);
                     // 正常に更新できたか
-                    String saveResult = vacationRequestService.save(vacationRequest);
-                    if(saveResult == "ok")
+                    VacationRequest resultVacationRequest = vacationRequestService.save(vacationRequest);
+                    if(Objects.isNull(resultVacationRequest))
                     {
-                        status = 1;
+                        status = 3;
+                        return new Response(status);
                     }
+                    status = 1;
                 }
                 else
                 {
@@ -1506,16 +1529,18 @@ public class PostController
                 if(overTimeRequest.getRequestStatus() == 1)
                 {
                     overTimeRequest.setRequestStatus(5);
-                    String saveResult = overTimeRequestService.save(overTimeRequest);
-                    if(saveResult == "ok")
+                    OverTimeRequest resultOverTimeRequest = overTimeRequestService.save(overTimeRequest);
+                    if(Objects.isNull(resultOverTimeRequest))
                     {
-                        status = 1;
+                        status = 3;
+                        return new Response(status);
                     }
+                    status = 1;
                 }
                 else
                 {
                     status = 3;
-                    return new Response();
+                    return new Response(status);
                 }
                 break;
             // 勤怠例外申請
@@ -1532,11 +1557,13 @@ public class PostController
                 {
                     attendanceExceptionRequest.setRequestStatus(5);
                     // 正常に更新できたか
-                    String saveResult = attendanceExceptionRequestService.save(attendanceExceptionRequest);
-                    if(saveResult == "ok")
+                    AttendanceExceptionRequest resultAttendanceExceptionRequest = attendanceExceptionRequestService.save(attendanceExceptionRequest);
+                    if(Objects.isNull(resultAttendanceExceptionRequest))
                     {
-                        status = 1;
+                        status = 3;
+                        return new Response(status);
                     }
+                    status = 1;
                 }
                 else
                 {
@@ -1626,11 +1653,13 @@ public class PostController
                 }
                 // 正常に更新できたか
                 monthlyRequest.setRequestStatus(5);
-                String saveResult = monthlyRequestService.save(monthlyRequest);
-                if(saveResult == "ok")
+                MonthlyRequest resultMonthlyRequest = monthlyRequestService.save(monthlyRequest);
+                if(Objects.isNull(resultMonthlyRequest))
                 {
-                    status = 1;
+                    status = 3;
+                    return new Response(status);
                 }
+                status = 1;
                 break;
             default:
                 break;
@@ -1639,9 +1668,358 @@ public class PostController
     }
     
     @PostMapping("/send/approval")
-    public Response approval(@RequestBody WithDrowInput withDrowInput, HttpSession session)
+    public Response approval(@RequestBody RequestJudgmentInput requestJudgmentInput, HttpSession session)
     {
-        return new Response();
+        int status = 0;
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.findAccountByUsername(username);
+        if(Objects.isNull(account))
+        {
+            status = 3;
+            return new Response(status);
+        }
+
+        // 申請を取得
+        // 申請者の承認者であることを確認
+        // 申請の状態が申請待ち状態であることを確認
+
+        int request = requestJudgmentInput.getRequestType();
+        switch (request)
+        {
+            // シフト申請
+            case 1:
+                ShiftRequest shiftRequest = shiftRequestService.findById(requestJudgmentInput.getRequestId());
+                Account shiftGeneralAccount = shiftRequest.getAccountId();
+                AccountApprover shiftAccountApprover = accountApproverService.findAccountAndApprover(shiftGeneralAccount, account);
+                // 申請者の承認者の情報がなければエラー
+                if(Objects.isNull(shiftAccountApprover))
+                {
+                    status = 3;
+                    return new Response(status);
+                }
+                // 申請の状態確認
+                if(shiftRequest.getRequestStatus() == 1)
+                {
+                    // 承認に変更
+                    shiftRequest.setRequestStatus(2);
+                    shiftRequestService.save(shiftRequest);
+                }
+                else
+                {
+                    status = 3;
+                    return new Response(status);
+                }
+                // シフトに記録
+                Shift shiftRequestShift = shiftRequestService.shiftRequestToShift(shiftRequest);
+                Shift resultShiftRequestShift = shiftService.save(shiftRequestShift);
+                if(Objects.isNull(resultShiftRequestShift))
+                {
+                    status = 3;
+                    return new Response(status);
+                }
+                // シフトとシフトに関する申請テーブル登録
+                ShiftListShiftRequest shiftShiftListShiftRequest = new ShiftListShiftRequest();
+                shiftShiftListShiftRequest.setShiftId(resultShiftRequestShift);
+                shiftShiftListShiftRequest.setShiftRequestId(shiftRequest);
+                ShiftListShiftRequest resultShiftShiftListShiftRequest = shiftListShiftRequestService.save(shiftShiftListShiftRequest);
+                if(Objects.isNull(resultShiftShiftListShiftRequest))
+                {
+                    status = 3;
+                    return new Response(status);
+                }
+                status = 1;
+                break;
+            // シフト時間変更申請
+            case 2:
+                ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findById(requestJudgmentInput.getRequestId());
+                Account shiftChangeGeneralAccount = shiftChangeRequest.getAccountId();
+                AccountApprover shiftChangeAccountApprover = accountApproverService.findAccountAndApprover(shiftChangeGeneralAccount, account);
+                if(Objects.isNull(shiftChangeAccountApprover))
+                {
+                    status = 3;
+                    return new Response(status);
+                }
+                // シフトで既に勤怠情報が確定していればエラー
+                AttendanceListSource shiftChangeAttendanceListSource = attendanceListSourceService.findByShiftId(shiftChangeRequest.getShiftId());
+                if(Objects.isNull(shiftChangeAttendanceListSource))
+                {
+                    // nullが想定通り
+                }
+                else
+                {
+                    status = 3;
+                    return new Response(status);
+                }
+                // 申請の状態確認
+                if(shiftChangeRequest.getRequestStatus() == 1)
+                {
+                    // 承認に変更
+                    shiftChangeRequest.setRequestStatus(2);
+                    shiftChangeRequestService.save(shiftChangeRequest);
+                }
+                else
+                {
+                    status = 3;
+                    return new Response(status);
+                }
+                // シフトに記録
+                Shift shiftChangeRequestShift = shiftChangeRequestService.shiftChangeRequestToShift(shiftChangeRequest);
+                Shift resultShiftChangeRequestShift = shiftService.save(shiftChangeRequestShift);
+                if(Objects.isNull(resultShiftChangeRequestShift))
+                {
+                    status = 3;
+                    return new Response(status);
+                }
+                // シフトとシフトに関する申請テーブル
+                ShiftListShiftRequest shiftChangeShiftListShiftRequest = shiftListShiftRequestService.findByShiftId(resultShiftChangeRequestShift);
+                shiftChangeShiftListShiftRequest.setShiftRequestId(null);
+                shiftChangeShiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
+                ShiftListShiftRequest resultShiftChangeShiftListShiftRequest = shiftListShiftRequestService.save(shiftChangeShiftListShiftRequest);
+                if(Objects.isNull(resultShiftChangeShiftListShiftRequest))
+                {
+                    status = 3;
+                    return new Response(status);
+                }
+                // シフトに関連する申請で反映状態のものがあれば却下し関連テーブルは削除する
+                List<ShiftListOtherTime> shiftChangeShiftListOtherTimes = shiftListOtherTimeService.findByShiftId(resultShiftChangeRequestShift);
+                for(ShiftListOtherTime shiftChangeShiftListOtherTime : shiftChangeShiftListOtherTimes)
+                {
+                    AttendanceExceptionRequest shiftChangeAttendanceExceptionRequest = shiftChangeShiftListOtherTime.getAttendanceExceptionId();
+                    shiftChangeAttendanceExceptionRequest.setRequestStatus(3);
+                    shiftListOtherTimeService.deleteByShiftListOtherTime(shiftChangeShiftListOtherTime);
+                }
+                List<ShiftListOverTime> shiftChangeShiftListOverTimes = shiftListOverTimeService.findByShiftId(resultShiftChangeRequestShift);
+                for(ShiftListOverTime shiftChangeShiftListOverTime : shiftChangeShiftListOverTimes)
+                {
+                    OverTimeRequest shiftChangeOverTimeRequest = shiftChangeShiftListOverTime.getOverTimeId();
+                    shiftChangeOverTimeRequest.setRequestStatus(3);
+                    shiftListOverTimeService.deleteByShiftListOverTime(shiftChangeShiftListOverTime);
+                }
+                List<ShiftListVacation> shiftChangeShiftListVacations = shiftListVacationService.findByShiftId(resultShiftChangeRequestShift);
+                for(ShiftListVacation shiftChangeShiftListVacation : shiftChangeShiftListVacations)
+                {
+                    VacationRequest shiftChangeVacationRequest = shiftChangeShiftListVacation.getVacationId();
+                    shiftChangeVacationRequest.setRequestStatus(3);
+                    shiftListVacationService.deleteByShiftListVacationId(shiftChangeShiftListVacation);
+                }
+                status = 1;
+                break;
+            // 打刻漏れ申請
+            case 3:
+                StampRequest stampRequest = stampRequestService.findById(requestJudgmentInput.getRequestId());
+
+                // 勤怠テーブルに記録
+                // 遅刻時間、早退時間、外出時間、労働時間、休憩時間、残業時間、休日労働時間(法定時間より)、深夜労働時間(法定時間より取得した内容から計算)、休暇時間()、欠勤時間()
+                // 勤怠と勤怠に関する情報源テーブル
+                break;
+            // 休暇申請
+            case 4:
+                VacationRequest vacationRequest = vacationRequestService.findById(requestJudgmentInput.getRequestId());
+                // シフトの休暇時間
+                // シフトと休暇テーブル
+                // 休暇テーブル(計算の際に間に休憩が挟まっているもしくは休暇の前後に休憩が入っている場合休憩を除いて計算する必要がある)
+                // 有給休暇消費テーブル
+                break;
+            // 残業申請
+            case 5:
+                OverTimeRequest overTimeRequest = overTimeRequestService.findById(requestJudgmentInput.getRequestId());
+                // シフトの残業時間
+                // シフトと残業テーブル
+                break;
+            // 遅刻、早退、残業申請
+            case 6:
+                AttendanceExceptionRequest attendanceExceptionRequest = attendanceExceptionRequestService.findById(requestJudgmentInput.getRequestId());
+                // シフトの遅刻時間、早退時間、外出時間
+                // シフト内で労働時間内にどれだけ外出しているか計算
+                // シフトと勤怠例外テーブル
+                break;
+            // 月次申請
+            case 7:
+                MonthlyRequest monthlyRequest = monthlyRequestService.findById(requestJudgmentInput.getRequestId());
+                // 申請者の承認者か
+                Account monthGeneralAccount = monthlyRequest.getAccountId();
+                if(Objects.isNull(monthGeneralAccount))
+                {
+                    status = 3;
+                    return new Response(status);
+                }
+                // 申請の状態は?
+                if(monthlyRequest.getRequestStatus() == 1)
+                {
+                    monthlyRequest.setRequestStatus(2);
+                    monthlyRequestService.save(monthlyRequest);
+                }
+                else
+                {
+                    status = 3;
+                    return new Response(status);
+                }
+                status = 1;
+                break;
+
+            default:
+                status = 3;
+                break;
+        }
+        return new Response(status);
+    }
+
+    @PostMapping("/send/reject")
+    public Response reject(@RequestBody RequestJudgmentInput requestJudgmentInput, HttpSession session)
+    {
+       int status = 0;
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.findAccountByUsername(username);
+        if(Objects.isNull(account))
+        {
+            status = 3;
+            return new Response(status);
+        }
+
+        // 申請を取得
+        // 申請者の承認者であることを確認
+        // 申請の状態が申請待ち状態であることを確認
+
+        int request = requestJudgmentInput.getRequestType();
+        switch (request)
+        {
+            // シフト申請
+            case 1:
+                ShiftRequest shiftRequest = shiftRequestService.findById(requestJudgmentInput.getRequestId());
+                Account generalAccount = shiftRequest.getAccountId();
+                AccountApprover accountApprover = accountApproverService.findAccountAndApprover(generalAccount, account);
+                if(Objects.isNull(accountApprover))
+                {
+                    status = 3;
+                    return new Response(status);
+                }
+                // 申請の状態を変更
+                break;
+            // シフト時間変更申請
+            case 2:
+                ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findById(requestJudgmentInput.getRequestId());
+                // 申請の状態を変更
+
+                break;
+            // 打刻漏れ申請
+            case 3:
+                StampRequest stampRequest = stampRequestService.findById(requestJudgmentInput.getRequestId());
+                // 申請の状態を変更
+
+                break;
+            // 休暇申請
+            case 4:
+                VacationRequest vacationRequest = vacationRequestService.findById(requestJudgmentInput.getRequestId());
+                // 申請の状態を変更
+
+                break;
+            // 残業申請
+            case 5:
+                OverTimeRequest overTimeRequest = overTimeRequestService.findById(requestJudgmentInput.getRequestId());
+                // 申請の状態を変更
+
+                break;
+            // 遅刻、早退、残業申請
+            case 6:
+                AttendanceExceptionRequest attendanceExceptionRequest = attendanceExceptionRequestService.findById(requestJudgmentInput.getRequestId());
+                // 申請の状態を変更
+
+                break;
+            // 月次申請
+            case 7:
+                MonthlyRequest monthlyRequest = monthlyRequestService.findById(requestJudgmentInput.getRequestId());
+                // 申請の状態を変更
+                // 範囲内の月次申請済みの申請の状態を承認に戻す
+
+                break;
+
+            default:
+                break;
+        }
+
+        return new Response(status);
+    }
+
+    @PostMapping("/send/approvalcancel")
+    public Response approvalcancel(@RequestBody RequestJudgmentInput requestJudgmentInput, HttpSession session)
+    {
+       int status = 0;
+        String username = SecurityUtil.getCurrentUsername();
+        Account account = accountService.findAccountByUsername(username);
+        if(Objects.isNull(account))
+        {
+            status = 3;
+            return new Response(status);
+        }
+
+        // 申請を取得
+        // 申請者の承認者であることを確認
+        // 申請の状態が申請待ち状態であることを確認
+
+        int request = requestJudgmentInput.getRequestType();
+        switch (request)
+        {
+            // シフト申請
+            case 1:
+                ShiftRequest shiftRequest = shiftRequestService.findById(requestJudgmentInput.getRequestId());
+                Account generalAccount = shiftRequest.getAccountId();
+                AccountApprover accountApprover = accountApproverService.findAccountAndApprover(generalAccount, account);
+                if(Objects.isNull(accountApprover))
+                {
+                    status = 3;
+                    return new Response(status);
+                }
+                // シフトの削除
+                // シフトとシフトに関する申請テーブル
+                break;
+            // シフト時間変更申請
+            case 2:
+                ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findById(requestJudgmentInput.getRequestId());
+                // 同じ日の承認済みの時間変更申請で更新日時が最も最近のものに変更
+                // 上記がなければ同じ日のシフトを取得、これもない場合シフトを削除
+                // シフトとシフトに関する申請テーブル
+
+                break;
+            // 打刻漏れ申請
+            case 3:
+                StampRequest stampRequest = stampRequestService.findById(requestJudgmentInput.getRequestId());
+
+                // 勤怠テーブルに記録
+                // 遅刻時間、早退時間、外出時間、労働時間、休憩時間、残業時間、休日労働時間、深夜労働時間、休暇時間、欠勤時間
+                // 勤怠と勤怠に関する情報源テーブル
+                break;
+            // 休暇申請
+            case 4:
+                VacationRequest vacationRequest = vacationRequestService.findById(requestJudgmentInput.getRequestId());
+                // シフトの休暇時間
+                // シフトと休暇テーブル
+                // 休暇テーブル
+                // 有給休暇消費テーブル
+                break;
+            // 残業申請
+            case 5:
+                OverTimeRequest overTimeRequest = overTimeRequestService.findById(requestJudgmentInput.getRequestId());
+                // シフトの残業時間
+                // シフトと残業テーブル
+                break;
+            // 遅刻、早退、残業申請
+            case 6:
+                AttendanceExceptionRequest attendanceExceptionRequest = attendanceExceptionRequestService.findById(requestJudgmentInput.getRequestId());
+                // シフトの遅刻時間、早退時間、外出時間
+                // シフトと勤怠例外テーブル
+                break;
+            // 月次申請
+            case 7:
+                MonthlyRequest monthlyRequest = monthlyRequestService.findById(requestJudgmentInput.getRequestId());
+                // 月次申請の範囲の申請を承認に変更
+                break;
+
+            default:
+                break;
+        }
+
+        return new Response(status);
+
     }
 
 }

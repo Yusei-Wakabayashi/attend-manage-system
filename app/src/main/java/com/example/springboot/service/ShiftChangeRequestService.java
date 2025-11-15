@@ -67,7 +67,7 @@ public class ShiftChangeRequestService
         return shiftChangeRequests;
     }
 
-    public List<ShiftChangeRequest> getAccountIdAndBeginWorkBetweenAndRequestStatusWaitWeek(Account account, LocalDateTime begin)
+    public List<ShiftChangeRequest> findAccountIdAndBeginWorkBetweenAndRequestStatusWaitWeek(Account account, LocalDateTime begin)
     {
         LocalDateTime beginWork = begin.toLocalDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay();
         LocalDateTime endWork = begin.toLocalDate().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).atTime(LocalTime.MAX);
@@ -76,7 +76,7 @@ public class ShiftChangeRequestService
         return shiftChangeRequests;
     }
 
-    public List<ShiftChangeRequest> getAccountIdAndBeginWorkBetweenAndRequestStatusWaitWeek(Long id, LocalDateTime begin)
+    public List<ShiftChangeRequest> findAccountIdAndBeginWorkBetweenAndRequestStatusWaitWeek(Long id, LocalDateTime begin)
     {
         Account account = new Account();
         account.setId(id);
@@ -87,7 +87,7 @@ public class ShiftChangeRequestService
         return shiftChangeRequests;
     }
 
-    public List<ShiftChangeRequest> getAccountIdAndShiftIdInAndRequestStatusWait(Account account, List<Shift> shifts)
+    public List<ShiftChangeRequest> findAccountIdAndShiftIdInAndRequestStatusWait(Account account, List<Shift> shifts)
     {
         int status = 1;
         List<ShiftChangeRequest> shiftChangeRequests = shiftChangeRequestRepository.findByAccountIdAndShiftIdInAndRequestStatus(account, shifts, status);
@@ -138,10 +138,19 @@ public class ShiftChangeRequestService
         return shiftChangeRequests;
     }
 
-    public String save(ShiftChangeRequest shiftChangeRequest)
+    public Shift shiftChangeRequestToShift(ShiftChangeRequest shiftChangeRequest)
     {
-        shiftChangeRequestRepository.save(shiftChangeRequest);
-        return "ok";
+        Shift shift = shiftChangeRequest.getShiftId();
+        shift.setBeginWork(shiftChangeRequest.getBeginWork());
+        shift.setEndWork(shiftChangeRequest.getEndWork());
+        shift.setBeginBreak(shiftChangeRequest.getBeginBreak());
+        shift.setEndBreak(shiftChangeRequest.getEndBreak());
+        return shift;
+    } 
+
+    public ShiftChangeRequest save(ShiftChangeRequest shiftChangeRequest)
+    {
+        return shiftChangeRequestRepository.save(shiftChangeRequest);
     }
 
     @Transactional

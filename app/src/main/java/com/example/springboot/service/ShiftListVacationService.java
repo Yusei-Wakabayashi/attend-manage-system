@@ -14,9 +14,26 @@ public class ShiftListVacationService
 {
     @Autowired
     private ShiftListVacationRepository shiftListVacationRepository;
+
+    public List<ShiftListVacation> findByShiftId(Shift shift)
+    {
+        List<ShiftListVacation> shiftListVacations = shiftListVacationRepository.findByShiftId(shift);
+        return shiftListVacations;
+    }
+
     public List<ShiftListVacation> findByShiftIdIn(List<Shift> shifts)
     {
         List<ShiftListVacation> shiftListVacations = shiftListVacationRepository.findByShiftIdIn(shifts);
         return shiftListVacations;
+    }
+
+    public ShiftListVacation save(ShiftListVacation shiftListVacation)
+    {
+        return shiftListVacationRepository.save(shiftListVacation);
+    }
+
+    public void deleteByShiftListVacationId(ShiftListVacation shiftListVacation)
+    {
+        shiftListVacationRepository.delete(shiftListVacation);
     }
 }

@@ -4,13 +4,13 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.security.MessageDigest;
 import java.sql.Time;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.example.springboot.model.Department;
@@ -21,7 +21,6 @@ import com.example.springboot.model.Account;
 import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Attend;
 import com.example.springboot.model.AttendanceExceptionType;
-import com.example.springboot.model.Salt;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.Style;
 import com.example.springboot.model.StylePlace;
@@ -34,7 +33,6 @@ import com.example.springboot.service.LegalTimeService;
 import com.example.springboot.service.NewsListService;
 import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.RoleService;
-import com.example.springboot.service.SaltService;
 import com.example.springboot.service.ShiftChangeRequestService;
 import com.example.springboot.service.ShiftRequestService;
 import com.example.springboot.service.ShiftService;
@@ -46,7 +44,7 @@ import com.example.springboot.service.StyleService;
 public class DataLoader implements CommandLineRunner
 {
     @Autowired
-    SaltService saltService;
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     RoleService roleService;
@@ -105,7 +103,6 @@ public class DataLoader implements CommandLineRunner
         styleService.resetAllTables();
         newsListService.resetAllTables();
         accountService.resetAllTables();
-        saltService.resetAllTables();
         roleService.resetAllTables();
         departmentService.resetAllTables();
         stylePlaceService.resetAllTables();
@@ -131,24 +128,6 @@ public class DataLoader implements CommandLineRunner
         }
 
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
-        String saltPath = "csv/SaltList.csv";
-        InputStream saltInputStream = getClass().getClassLoader().getResourceAsStream(saltPath);
-        if (saltInputStream == null)
-        {
-            throw new FileNotFoundException("ファイルが見つかりません: " + saltPath);
-        }
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(saltInputStream)))
-        {
-            String saltLine;
-            while ((saltLine = br.readLine()) != null)
-            {
-                if (saltLine.startsWith("id,")) continue; // ヘッダー
-                Salt salt = new Salt();
-                String[] saltList = saltLine.split(",");
-                salt.setText(String.valueOf(saltList[1]));
-                saltService.save(salt);
-            }
-        }
 
         String departmentPath = "csv/DepartmentList.csv";
         InputStream departmentInputStream = getClass().getClassLoader().getResourceAsStream(departmentPath);
@@ -197,7 +176,6 @@ public class DataLoader implements CommandLineRunner
         }
         try (BufferedReader br = new BufferedReader(new InputStreamReader(accountInputStream)))
         {
-            MessageDigest md = MessageDigest.getInstance("SHA256");
             String accountLine;
             while ((accountLine = br.readLine()) != null)
             {
@@ -205,14 +183,15 @@ public class DataLoader implements CommandLineRunner
                 Account account = new Account();
                 String[] accountList = accountLine.split(",");
                 account.setUsername(accountList[1]);
-                account.setSaltId(saltService.getSaltById(Long.valueOf(accountList[2])));
-                account.setPassword(md.digest(accountList[3].getBytes()));
-                account.setName(accountList[4]);
-                account.setGender(accountList[5]);
-                account.setAge(Integer.valueOf(accountList[6]));
-                account.setRoleId(roleService.getRoleById(Long.valueOf(accountList[7])));
-                account.setDepartmentId(departmentService.getDepartmentById(Long.valueOf(accountList[8])));
-                account.setJoinDate(LocalDateTime.parse(accountList[9]));
+                // アカウントの生パスワードからソルトを作成、保存
+                // DBにはハッシュ化されたパスワードを保存
+                account.setPassword(passwordEncoder.encode(accountList[2]));
+                account.setName(accountList[3]);
+                account.setGender(accountList[4]);
+                account.setAge(Integer.valueOf(accountList[5]));
+                account.setRoleId(roleService.findRoleById(Long.valueOf(accountList[6])));
+                account.setDepartmentId(departmentService.findDepartmentById(Long.valueOf(accountList[7])));
+                account.setJoinDate(LocalDateTime.parse(accountList[8]));
                 accountService.save(account);
             }
         }
@@ -249,7 +228,7 @@ public class DataLoader implements CommandLineRunner
                 if (styleLine.startsWith("id,")) continue;
                 Style style = new Style();
                 String[] styleList = styleLine.split(",");
-                style.setAccountId(accountService.getAccountByAccountId(Long.valueOf(styleList[1])));
+                style.setAccountId(accountService.findAccountByAccountId(Long.valueOf(styleList[1])));
                 styleService.save(style);
             }
         }
@@ -268,8 +247,8 @@ public class DataLoader implements CommandLineRunner
                 if (approvalSettingLine.startsWith("id,")) continue;
                 ApprovalSetting approvalSetting = new ApprovalSetting();
                 String[] approvalSettingList = approvalSettingLine.split(",");
-                approvalSetting.setRoleId(roleService.getRoleById(Long.valueOf(approvalSettingList[1])));
-                approvalSetting.setApprovalId(roleService.getRoleById(Long.valueOf(approvalSettingList[2])));
+                approvalSetting.setRoleId(roleService.findRoleById(Long.valueOf(approvalSettingList[1])));
+                approvalSetting.setApprovalId(roleService.findRoleById(Long.valueOf(approvalSettingList[2])));
                 approvalSettingService.save(approvalSetting);
             }
         }
@@ -319,7 +298,7 @@ public class DataLoader implements CommandLineRunner
                     if (shiftLine.startsWith("id,")) continue;
                     Shift shift = new Shift();
                     String[] shiftList = shiftLine.split(",");
-                    shift.setAccountId(accountService.getAccountByAccountId(1L));
+                    shift.setAccountId(accountService.findAccountByAccountId(1L));
                     shift.setBeginWork(LocalDateTime.parse(shiftList[1], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
                     shift.setEndWork(LocalDateTime.parse(shiftList[2], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
                     shift.setBeginBreak(LocalDateTime.parse(shiftList[3], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
@@ -364,7 +343,7 @@ public class DataLoader implements CommandLineRunner
                     if (attendLine.startsWith("id,")) continue;
                     Attend attend = new Attend();
                     String[] attendList = attendLine.split(",");
-                    attend.setAccountId(accountService.getAccountByAccountId(1L));
+                    attend.setAccountId(accountService.findAccountByAccountId(1L));
                     attend.setBeginWork(LocalDateTime.parse(attendList[1], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
                     attend.setEndWork(LocalDateTime.parse(attendList[2], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
                     attend.setBeginBreak(LocalDateTime.parse(attendList[3], DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));

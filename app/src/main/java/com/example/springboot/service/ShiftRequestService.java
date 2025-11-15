@@ -1,5 +1,6 @@
 package com.example.springboot.service;
 
+import java.sql.Time;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.springboot.model.Account;
+import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftRequest;
 import com.example.springboot.repository.ShiftRequestRepository;
 
@@ -23,7 +25,7 @@ public class ShiftRequestService
     @Autowired
     private ShiftRequestRepository shiftRequestRepository;
 
-    public List<ShiftRequest> getAllShiftRequest()
+    public List<ShiftRequest> findAllShiftRequest()
     {
         return shiftRequestRepository.findAll();
     }
@@ -34,12 +36,12 @@ public class ShiftRequestService
             .orElseThrow(() -> new RuntimeException("シフト申請が見つかりません"));
     }
 
-    public List<ShiftRequest> getAccountIdAndBeginWorkBetween(Account accountId, LocalDateTime beginWork, LocalDateTime endWork)
+    public List<ShiftRequest> findAccountIdAndBeginWorkBetween(Account accountId, LocalDateTime beginWork, LocalDateTime endWork)
     {
         return shiftRequestRepository.findByAccountIdAndBeginWorkBetween(accountId, beginWork, endWork);
     }
 
-    public List<ShiftRequest> getAccountIdAndBeginWorkBetweenDay(Account accountId, LocalDateTime begin)
+    public List<ShiftRequest> findAccountIdAndBeginWorkBetweenDay(Account accountId, LocalDateTime begin)
     {
         // 始業時間から1日の開始と終了を作成
         LocalDateTime beginWork = LocalDateTime.of(begin.toLocalDate(), LocalTime.MIN);
@@ -47,7 +49,7 @@ public class ShiftRequestService
         return shiftRequestRepository.findByAccountIdAndBeginWorkBetween(accountId, beginWork, endWork);
     }
 
-    public List<ShiftRequest> getAccountIdAndBeginWorkBetweenAndRequestStatusWaitWeek(Long id, LocalDateTime begin)
+    public List<ShiftRequest> findAccountIdAndBeginWorkBetweenAndRequestStatusWaitWeek(Long id, LocalDateTime begin)
     {
         Account account = new Account();
         account.setId(id);
@@ -59,7 +61,7 @@ public class ShiftRequestService
         return shiftRequests;
     }
 
-    public List<ShiftRequest> getAccountIdAndBeginWorkBetweenAndRequestStatusWaitWeek(Account account, LocalDateTime begin)
+    public List<ShiftRequest> findAccountIdAndBeginWorkBetweenAndRequestStatusWaitWeek(Account account, LocalDateTime begin)
     {
         LocalDateTime beginWork = begin.toLocalDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay();
         LocalDateTime endWork = begin.toLocalDate().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).atTime(LocalTime.MAX);
@@ -127,10 +129,25 @@ public class ShiftRequestService
         return shiftRequests;
     }
 
-    public String save(ShiftRequest shiftRequest)
+    // modelに関するものは入力値で考える
+    public Shift shiftRequestToShift(ShiftRequest shiftRequest)
     {
-        shiftRequestRepository.save(shiftRequest);
-        return "ok";
+        Shift shift = new Shift();
+        shift.setAccountId(shiftRequest.getAccountId());
+        shift.setBeginWork(shiftRequest.getBeginWork());
+        shift.setEndWork(shiftRequest.getEndWork());
+        shift.setBeginBreak(shiftRequest.getBeginBreak());
+        shift.setEndBreak(shiftRequest.getEndBreak());
+        shift.setLateness(Time.valueOf("00:00:00"));
+        shift.setLeaveEarly(Time.valueOf("00:00:00"));
+        shift.setOuting(Time.valueOf("00:00:00"));
+        shift.setOverWork(Time.valueOf("00:00:00"));
+        return shift;
+    }
+
+    public ShiftRequest save(ShiftRequest shiftRequest)
+    {
+        return shiftRequestRepository.save(shiftRequest);
     }
 
     @Transactional

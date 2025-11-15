@@ -1,5 +1,5 @@
 # ベースイメージ(JDK)
-FROM openjdk:17-jdk-slim
+FROM openjdk:17.0.1-jdk-slim
 
 # 作業ディレクトリ作成
 WORKDIR /app

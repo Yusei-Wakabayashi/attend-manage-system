@@ -14,7 +14,7 @@ public class DepartmentService
     @Autowired
     DepartmentRepository departmentRepository;
 
-    public Department getDepartmentById(Long id)
+    public Department findDepartmentById(Long id)
     {
         return departmentRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("部署が見つかりません"));

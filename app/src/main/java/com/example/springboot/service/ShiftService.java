@@ -150,10 +150,9 @@ public class ShiftService
         return shiftList;
     }
 
-    public String save(Shift shift)
+    public Shift save(Shift shift)
     {
-        shiftRepository.save(shift);
-        return "ok";
+        return shiftRepository.save(shift);
     }
 
     @Transactional
