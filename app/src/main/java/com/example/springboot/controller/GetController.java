@@ -181,30 +181,27 @@ public class GetController
     public ArrayResponse<AllStyleListResponse> returnAllStyleList(HttpSession session)
     {
         // ログイン済みか確認
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
-        List<AllStyleListResponse> styleListResponse = new ArrayList<AllStyleListResponse>();
-        ArrayResponse<AllStyleListResponse> arrayResponse = new ArrayResponse<AllStyleListResponse>();
-        if(account.equals(null))
+        Account account = accountService.findCurrentAccount();
+        if(Objects.isNull(account))
         {
-            arrayResponse.setStatus(4);
-            arrayResponse.setList(styleListResponse);
-            arrayResponse.setKey("styleList");
-            return arrayResponse;
+            return new ArrayResponse<>(4,Collections.emptyList(),"styleList");
         }
-        styleListResponse = stylePlaceService.findStyleList();
-        arrayResponse.setStatus(1);
-        arrayResponse.setList(styleListResponse);
-        arrayResponse.setKey("styleList");
-        return arrayResponse;
+        List<AllStyleListResponse> styleListResponse = stylePlaceService.findStyleList();
+        return new ArrayResponse<>(1, styleListResponse, "styleList");
     }
 
     @GetMapping("/reach/accountinfo")
     public AccountInfoResponse returnAccountInfo(HttpSession session)
     {
         AccountInfoResponse accountInfo = new AccountInfoResponse();
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
+        Account account = accountService.findCurrentAccount();
+        System.out.println(account);
+        if(Objects.isNull(account))
+        {
+            AccountInfoResponse accountInfoResponse = new AccountInfoResponse();
+            accountInfoResponse.setStatus(3);
+            return accountInfoResponse;
+        }
         // 役職情報の取得
         Role role = roleService.findRoleById(account.getRoleId().getId());
         // 部署情報の取得

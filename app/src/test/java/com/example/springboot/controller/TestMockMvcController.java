@@ -328,11 +328,10 @@ public class TestMockMvcController
         styleTypeHome.setId(homeStylePlaceId);
         styleTypeWork.setName(workStylePlaceName);
         styleTypeHome.setName(homeStylePlaceName);
-
         styleListResponse.add(styleTypeWork);
         styleListResponse.add(styleTypeHome);
 
-        when(accountService.findAccountByUsername(generalAccountName)).thenReturn(generalAccount);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
         when(stylePlaceService.findStyleList()).thenReturn(styleListResponse);
         mockMvc.perform
         (
@@ -407,7 +406,7 @@ public class TestMockMvcController
 
         List<ApprovalSetting> approvalSettings = new ArrayList<ApprovalSetting>();
 
-        when(accountService.findAccountByUsername(any())).thenReturn(account);
+        when(accountService.findCurrentAccount()).thenReturn(account);
         when(roleService.findRoleById(any())).thenReturn(role);
         when(departmentService.findDepartmentById(any())).thenReturn(department);
         when(approvalSettingService.findApprovalSettingsByApprover(any())).thenReturn(approvalSettings);
@@ -458,7 +457,7 @@ public class TestMockMvcController
         approvalSetting.setApprovalId(role);
         approvalSettings.add(approvalSetting);
 
-        when(accountService.findAccountByUsername(any())).thenReturn(account);
+        when(accountService.findCurrentAccount()).thenReturn(account);
         when(roleService.findRoleById(any())).thenReturn(role);
         when(departmentService.findDepartmentById(any())).thenReturn(department);
         when(approvalSettingService.findApprovalSettingsByApprover(any())).thenReturn(approvalSettings);

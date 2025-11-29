@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
+import com.example.springboot.model.ApprovalSetting;
+import com.example.springboot.model.Role;
 import com.example.springboot.repository.AccountApproverRepository;
 
 @Service
@@ -20,21 +22,36 @@ public class AccountApproverService
 
     @Autowired
     AccountService accountService;
+    
+    @Autowired
+    ApprovalSettingService approvalSettingService;
 
     @Transactional
     public int updateApprover(Account account, Long newAccountId)
     {
+        // 現在の設定取得
         AccountApprover accountApprover = findAccountApproverByAccount(account);
+        // 新しい承認者取得
         Account newAdmin = accountService.findAccountByAccountId(newAccountId);
-        if(Objects.isNull(newAdmin))
+        if (Objects.isNull(newAdmin))
         {
             return 3;
         }
+        // 承認者の役職取得
+        Role newAdminRole = newAdmin.getRoleId();
+        // アカウントと承認者の役職関係が適切か確認
+        ApprovalSetting approverSetting = approvalSettingService.findApprovalSettingByAccountAndApprover(account.getRoleId(), newAdminRole);
+        if (Objects.isNull(approverSetting))
+        {
+            return 3;
+        }
+        // 新しい承認者として設定し保存
         accountApprover.setApproverId(newAdmin);
         AccountApprover resultAccountApprover = save(accountApprover);
-        if(Objects.isNull(resultAccountApprover) || Objects.isNull(resultAccountApprover))
+
+        if (Objects.isNull(resultAccountApprover))
         {
-            return 4;
+            return 3;
         }
         return 1;
     }

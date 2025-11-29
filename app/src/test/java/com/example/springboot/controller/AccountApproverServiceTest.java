@@ -16,9 +16,12 @@ import org.springframework.test.context.ContextConfiguration;
 import com.example.springboot.Config;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
+import com.example.springboot.model.ApprovalSetting;
+import com.example.springboot.model.Role;
 import com.example.springboot.repository.AccountApproverRepository;
 import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
+import com.example.springboot.service.ApprovalSettingService;
 
 @ContextConfiguration(classes = Config.class)
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +38,9 @@ public class AccountApproverServiceTest
     @Mock
     AccountApproverRepository accountApproverRepository;
 
+    @Mock
+    ApprovalSettingService approvalSettingService;
+
     @Test
     void updateApproverSuccess()
     {
@@ -42,18 +48,29 @@ public class AccountApproverServiceTest
         Account account = new Account();
         String accountUsername = "testuser";
         Long accountId = 49L;
+        Role generalRole = new Role();
+        Long generalRoleId = 48L;
+        generalRole.setId(generalRoleId);
         account.setId(accountId);
         account.setUsername(accountUsername);
+        account.setRoleId(generalRole);
 
         Account newAdmin = new Account();
         Long newAdminId = 43L;
+        Role adminRole = new Role();
+        Long adminRoleId = 40L;
+        adminRole.setId(adminRoleId);
         newAdmin.setId(newAdminId);
+        newAdmin.setRoleId(adminRole);
 
         AccountApprover approver = new AccountApprover();
         approver.setAccountId(account);
 
+        ApprovalSetting approvalSetting = new ApprovalSetting();
+
         // accountServiceの動作を定義
         when(accountService.findAccountByAccountId(newAdminId)).thenReturn(newAdmin);
+        when(approvalSettingService.findApprovalSettingByAccountAndApprover(any(Role.class),any(Role.class))).thenReturn(approvalSetting);
 
         // 同じサービス内メソッドを上書き
         doReturn(approver).when(accountApproverService).findAccountApproverByAccount(any(Account.class));

@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.springboot.dto.ArrayResponse;
 import com.example.springboot.dto.response.AttendListResponse;
+import com.example.springboot.dto.response.RequestListResponse;
 import com.example.springboot.dto.YearMonthParam;
 import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.response.ShiftListResponse;
@@ -151,5 +153,17 @@ public class DummyController
         }
 
         return new ArrayResponse<>(1, attendlist, "attendlist");
+    }
+
+    @GetMapping("/reach/requestlist")
+    public ArrayResponse<RequestListResponse> returnRequests()
+    {
+        RequestListResponse approvalRequestListResponse = new RequestListResponse();
+        RequestListResponse rejectRequestListResponse = new RequestListResponse();
+        RequestListResponse approvalCancelRequestListResponse = new RequestListResponse();
+        RequestListResponse withdrowRequestListResponse = new RequestListResponse();
+        RequestListResponse monthlyRequestListResponse = new RequestListResponse();
+        List<RequestListResponse> requestResponses = List.of(approvalRequestListResponse, rejectRequestListResponse, approvalCancelRequestListResponse, withdrowRequestListResponse, monthlyRequestListResponse);
+        return new ArrayResponse<RequestListResponse>(1, requestResponses, "requestList");
     }
 }

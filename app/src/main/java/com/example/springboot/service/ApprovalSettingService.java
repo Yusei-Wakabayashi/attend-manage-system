@@ -27,6 +27,13 @@ public class ApprovalSettingService
         List<ApprovalSetting> approvalSettings = approvalSettingRepository.findByApprovalId(roleId);
         return approvalSettings;
     }
+
+    public ApprovalSetting findApprovalSettingByAccountAndApprover(Role roleId, Role approverRoleId)
+    {
+        return approvalSettingRepository.findByRoleIdAndApprovalId(roleId, approverRoleId)
+            .orElseThrow(() -> new RuntimeException("設定が見つかりません"));
+    }
+
     public String save(ApprovalSetting approvalSetting)
     {
         approvalSettingRepository.save(approvalSetting);

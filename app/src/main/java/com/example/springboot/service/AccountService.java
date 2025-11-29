@@ -8,6 +8,7 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.ApprovalSetting;
@@ -33,7 +34,6 @@ public class AccountService
             return null;
         }
         Account account = findAccountByUsername(username);
-        System.out.println(account);
 
         return account;
     }
@@ -45,6 +45,12 @@ public class AccountService
         List<Account> accounts = findAccountByApprovalSetting(approvalSettings);
         return findApproverList(accounts);
     }
+    
+    // accountInfoを返す
+    // public AccountInfoResponse findAccountInfo(Account account)
+    // {
+
+    // }
 
     public Account findAccountByAccountId(Long accountId)
     {
