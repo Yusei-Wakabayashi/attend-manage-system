@@ -164,7 +164,10 @@ onMounted(() => {
       <div class="w-full overflow-x-auto">
         <div class="min-w-[450px] sm:w-full bg-white">
           <table class="w-full text-left">
-            <thead class="bg-gray-300 text-base sm:text-lg" v-if="filteredData.length > 0">
+            <thead
+              class="bg-gray-300 text-base sm:text-lg"
+              v-if="filteredData.length > 0"
+            >
               <tr>
                 <th class="px-1 py-1 border sm:px-2 sm:py-2">No.</th>
                 <th class="px-1 py-1 border sm:px-2 sm:py-2">履歴の種類</th>
@@ -178,18 +181,28 @@ onMounted(() => {
                 :key="index"
                 class="hover:bg-green-100 text-sm sm:text-base"
               >
-                <td class="px-1 py-1 border sm:px-2 sm:py-2">{{ index + 1 }}</td>
+                <td class="px-1 py-1 border sm:px-2 sm:py-2">
+                  {{ index + 1 }}
+                </td>
                 <td class="px-1 py-1 border sm:px-2 sm:py-2">
                   {{ typeLabel(item.requestType) }}
                 </td>
-                <td class="px-1 py-1 border sm:px-2 sm:py-2">{{ item.requestDate }}</td>
                 <td class="px-1 py-1 border sm:px-2 sm:py-2">
-                  <span
-                    class="px-0.5 py-0.5 sm:px-1 sm:py-1  text-white rounded"
-                    :class="statusClass(item.requestStatus)"
-                  >
-                    {{ statusLabel(item.requestStatus) }}
-                  </span>
+                  {{ item.requestDate }}
+                </td>
+                <td class="px-1 py-1 border sm:px-2 sm:py-2">
+                  <div class="flex justify-between items-center">
+                    <span
+                      class="px-0.5 py-0.5 sm:px-1 sm:py-1 text-white rounded"
+                      :class="statusClass(item.requestStatus)"
+                    >
+                      {{ statusLabel(item.requestStatus) }}
+                    </span>
+
+                    <span class="text-blue-600 cursor-pointer hover:underline">
+                      詳細
+                    </span>
+                  </div>
                 </td>
               </tr>
             </tbody>
