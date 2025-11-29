@@ -36,6 +36,7 @@ import com.example.springboot.Config;
 import com.example.springboot.dto.AllStyleListResponse;
 import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.change.StringToLocalDateTime;
+import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.dto.response.AttendListResponse;
 import com.example.springboot.dto.response.NewsListResponse;
@@ -404,12 +405,10 @@ public class TestMockMvcController
         account.setRoleId(role);
         account.setDepartmentId(department);
 
-        List<ApprovalSetting> approvalSettings = new ArrayList<ApprovalSetting>();
+        AccountInfoResponse accountInfoResponse = new AccountInfoResponse(1, generalAccountName, generalDepartmentName, generalRoleName, generalAccountAdmin);
 
         when(accountService.findCurrentAccount()).thenReturn(account);
-        when(roleService.findRoleById(any())).thenReturn(role);
-        when(departmentService.findDepartmentById(any())).thenReturn(department);
-        when(approvalSettingService.findApprovalSettingsByApprover(any())).thenReturn(approvalSettings);
+        when(accountService.getCurrentAccountInfo(any(Account.class))).thenReturn(accountInfoResponse);
         mockMvc.perform
         (
             get("/api/reach/accountinfo")
@@ -457,10 +456,10 @@ public class TestMockMvcController
         approvalSetting.setApprovalId(role);
         approvalSettings.add(approvalSetting);
 
+        AccountInfoResponse accountInfoResponse = new AccountInfoResponse(1, adminAccountName, adminDepartmentName, adminRoleName, adminAccountAdmin);
+
         when(accountService.findCurrentAccount()).thenReturn(account);
-        when(roleService.findRoleById(any())).thenReturn(role);
-        when(departmentService.findDepartmentById(any())).thenReturn(department);
-        when(approvalSettingService.findApprovalSettingsByApprover(any())).thenReturn(approvalSettings);
+        when(accountService.getCurrentAccountInfo(any(Account.class))).thenReturn(accountInfoResponse);
         mockMvc.perform
         (
             get("/api/reach/accountinfo")
