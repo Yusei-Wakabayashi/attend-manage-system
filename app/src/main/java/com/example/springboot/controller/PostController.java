@@ -170,7 +170,7 @@ public class PostController
     @PostMapping("/send/login")
     public Response login(@RequestBody LoginInput data)
     {
-        String username = data.getUsername();
+        String username = data.getId();
         String rawPassword = data.getPassword();
         Account account = accountService.findAccountByUsername(username);
         if(Objects.isNull(account))

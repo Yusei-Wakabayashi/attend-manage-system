@@ -12,6 +12,7 @@ import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.ApprovalSetting;
+import com.example.springboot.model.Department;
 import com.example.springboot.model.Role;
 import com.example.springboot.repository.AccountRepository;
 import com.example.springboot.util.SecurityUtil;
@@ -24,6 +25,12 @@ public class AccountService
 
     @Autowired
     private ApprovalSettingService approvalSettingService;
+
+    @Autowired
+    private RoleService roleService;
+
+    @Autowired
+    private DepartmentService departmentService;
 
     // ユーザー名とアカウントの取得
     public Account findCurrentAccount()
@@ -47,9 +54,28 @@ public class AccountService
     }
     
     // accountInfoを返す
-    // public AccountInfoResponse findAccountInfo(Account account)
+    // public AccountInfoResponse getCurrentAccountInfo()
     // {
+    //     AccountInfoResponse accountInfo = new AccountInfoResponse();
+    //     Account account = findCurrentAccount();
+    //     if (account == null)
+    //     {
+    //         accountInfo.setStatus(4);
+    //         return accountInfo;
+    //     }
 
+    //     Role role = roleService.findRoleById(account.getRoleId().getId());
+    //     Department department = departmentService.findDepartmentById(account.getDepartmentId().getId());
+
+    //     List<ApprovalSetting> approvalSettings = approvalSettingService.findApprovalSettingsByApprover(role);
+    //     boolean admin = approvalSettings.isEmpty();
+
+    //     accountInfo.setStatus(1);
+    //     accountInfo.setName(account.getName());
+    //     accountInfo.setDepartmentName(department.getName());
+    //     accountInfo.setRoleName(role.getName());
+    //     accountInfo.setAdmin(admin);
+    //     return accountInfo;
     // }
 
     public Account findAccountByAccountId(Long accountId)
