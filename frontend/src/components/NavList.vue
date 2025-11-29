@@ -27,9 +27,9 @@ const getAccount = async () => {
     );
 
     account.value = response.data;
-    // ✅ Piniaにも保存
+    //Piniaにも保存
     userStore.setUser(response.data);
-    console.log("ログインアカウント:", account.value);
+    //console.log("ログインアカウント:", account.value);
   } catch (error) {
     console.error("ログインアカウント取得エラー:", error);
   }

@@ -52,13 +52,13 @@ const login = async () => {
     >
       <div class="flex items-center justify-center space-x-4 pb-4">
         <!-- 左画像 -->
-        <img src="../img/bikkuri.png" alt="左画像" class="w-10 h-10" />
+        <img src="../../public/bikkuri.png" alt="左画像" class="w-10 h-10" />
 
         <h2 class="text-center font-medium md:text-lg lg:text-xl">ログイン</h2>
 
 
         <!-- 右画像 -->
-        <img src="../img/karaage.png" alt="右画像" class="w-10 h-10" />
+        <img src="../../public/karaage.png" alt="右画像" class="w-10 h-10" />
       </div>
 
       <!-- 切り替えボタン -->
