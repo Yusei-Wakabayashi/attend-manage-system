@@ -193,39 +193,15 @@ public class GetController
     @GetMapping("/reach/accountinfo")
     public AccountInfoResponse returnAccountInfo(HttpSession session)
     {
-        AccountInfoResponse accountInfo = new AccountInfoResponse();
         Account account = accountService.findCurrentAccount();
-        System.out.println(account);
         if(Objects.isNull(account))
         {
-            AccountInfoResponse accountInfoResponse = new AccountInfoResponse();
-            accountInfoResponse.setStatus(3);
-            return accountInfoResponse;
+            return new AccountInfoResponse(4, "", "", "", false);
         }
-        // 役職情報の取得
-        Role role = roleService.findRoleById(account.getRoleId().getId());
-        // 部署情報の取得
-        Department department = departmentService.findDepartmentById(account.getDepartmentId().getId());
-        // 役職idが承認者として設定されているか確認
-        Boolean admin;
-        List<ApprovalSetting> approvalSettings = approvalSettingService.findApprovalSettingsByApprover(role);
-        if(approvalSettings.isEmpty())
-        {
-            // 配列が空なら承認者でない
-            admin = false;
-        }
-        else
-        {
-            // それ以外は設定されているので承認者
-            admin = true;
-        }
-        accountInfo.setStatus(1);
-        accountInfo.setName(account.getName());
-        accountInfo.setDepartmentName(department.getName());
-        accountInfo.setRoleName(role.getName());
-        accountInfo.setAdmin(admin);
+        AccountInfoResponse accountInfo = accountService.getCurrentAccountInfo(account);
         return accountInfo;
     }
+
     @GetMapping("/reach/shiftlist")
     public ArrayResponse<ShiftListResponse> returnShiftList(HttpSession session, @ModelAttribute YearMonthParam request)
     {

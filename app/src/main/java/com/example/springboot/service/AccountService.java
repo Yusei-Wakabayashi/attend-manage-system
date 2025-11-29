@@ -54,29 +54,23 @@ public class AccountService
     }
     
     // accountInfoを返す
-    // public AccountInfoResponse getCurrentAccountInfo()
-    // {
-    //     AccountInfoResponse accountInfo = new AccountInfoResponse();
-    //     Account account = findCurrentAccount();
-    //     if (account == null)
-    //     {
-    //         accountInfo.setStatus(4);
-    //         return accountInfo;
-    //     }
+    public AccountInfoResponse getCurrentAccountInfo(Account account)
+    {
+        AccountInfoResponse accountInfo = new AccountInfoResponse();
+        Role role = roleService.findRoleById(account.getRoleId().getId());
+        Department department = departmentService.findDepartmentById(account.getDepartmentId().getId());
 
-    //     Role role = roleService.findRoleById(account.getRoleId().getId());
-    //     Department department = departmentService.findDepartmentById(account.getDepartmentId().getId());
+        List<ApprovalSetting> approvalSettings = approvalSettingService.findApprovalSettingsByApprover(role);
+        // 承認者として設定されていなければ空のためfalse、空でなければ承認者のためtrue
+        boolean admin = approvalSettings.isEmpty() ? false : true;
 
-    //     List<ApprovalSetting> approvalSettings = approvalSettingService.findApprovalSettingsByApprover(role);
-    //     boolean admin = approvalSettings.isEmpty();
-
-    //     accountInfo.setStatus(1);
-    //     accountInfo.setName(account.getName());
-    //     accountInfo.setDepartmentName(department.getName());
-    //     accountInfo.setRoleName(role.getName());
-    //     accountInfo.setAdmin(admin);
-    //     return accountInfo;
-    // }
+        accountInfo.setStatus(1);
+        accountInfo.setName(account.getName());
+        accountInfo.setDepartmentName(department.getName());
+        accountInfo.setRoleName(role.getName());
+        accountInfo.setAdmin(admin);
+        return accountInfo;
+    }
 
     public Account findAccountByAccountId(Long accountId)
     {
