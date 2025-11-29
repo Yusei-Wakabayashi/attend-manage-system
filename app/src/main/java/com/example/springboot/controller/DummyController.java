@@ -158,11 +158,11 @@ public class DummyController
     @GetMapping("/reach/requestlist")
     public ArrayResponse<RequestListResponse> returnRequests()
     {
-        RequestListResponse approvalRequestListResponse = new RequestListResponse();
-        RequestListResponse rejectRequestListResponse = new RequestListResponse();
-        RequestListResponse approvalCancelRequestListResponse = new RequestListResponse();
-        RequestListResponse withdrowRequestListResponse = new RequestListResponse();
-        RequestListResponse monthlyRequestListResponse = new RequestListResponse();
+        RequestListResponse approvalRequestListResponse = new RequestListResponse(2,2,"2025/12/12T11:22:03",2);
+        RequestListResponse rejectRequestListResponse = new RequestListResponse(4,3,"2025/12/12T11:22:03",3);
+        RequestListResponse approvalCancelRequestListResponse = new RequestListResponse(6,4,"2025/12/12T11:22:03",4);
+        RequestListResponse withdrowRequestListResponse = new RequestListResponse(3,5,"2025/12/12T11:22:03",5);
+        RequestListResponse monthlyRequestListResponse = new RequestListResponse(5,6,"2025/12/12T11:22:03",6);
         List<RequestListResponse> requestResponses = List.of(approvalRequestListResponse, rejectRequestListResponse, approvalCancelRequestListResponse, withdrowRequestListResponse, monthlyRequestListResponse);
         return new ArrayResponse<RequestListResponse>(1, requestResponses, "requestList");
     }
