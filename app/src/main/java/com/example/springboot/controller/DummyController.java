@@ -164,7 +164,7 @@ public class DummyController
         RequestListResponse approvalCancelRequestListResponse = new RequestListResponse(6,4,"2025/12/12T11:22:03",4);
         RequestListResponse withdrowRequestListResponse = new RequestListResponse(3,5,"2025/12/12T11:22:03",5);
         RequestListResponse monthlyRequestListResponse = new RequestListResponse(5,6,"2025/12/12T11:22:03",6);
-        List<RequestListResponse> requestResponses = List.of(approvalRequestListResponse, rejectRequestListResponse, approvalCancelRequestListResponse, withdrowRequestListResponse, monthlyRequestListResponse);
+        List<RequestListResponse> requestResponses = List.of(approvalRequestListResponse, rejectRequestListResponse, approvalCancelRequestListResponse, withdrowRequestListResponse, monthlyRequestListResponse, waitRequestRequestListResponse);
         return new ArrayResponse<RequestListResponse>(1, requestResponses, "requestList");
     }
 }
