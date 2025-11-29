@@ -3,6 +3,7 @@ package com.example.springboot.controller;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -165,15 +166,14 @@ public class GetController
     @GetMapping("/reach/approverlist")
     public ArrayResponse<ApproverListResponse> returnApproverList(HttpSession session)
     {
-        // 認証情報にあるリクエストを送ってきたユーザー名を取得
-        String username = SecurityUtil.getCurrentUsername();
-        // ユーザー名からアカウントオブジェクトを取得
-        Account account = accountService.findAccountByUsername(username);
-        // 承認者として適切な役職の取得
-        List<ApprovalSetting> approvalSettings = approvalSettingService.findApprovalSettings(account.getRoleId());
-        // 役職を基に承認者の取得
-        List<Account> accounts = accountService.findAccountByApprovalSetting(approvalSettings);
-        List<ApproverListResponse> approverListResponses = accountService.findApproverList(accounts);
+        // アカウントオブジェクトを取得
+        Account account = accountService.findCurrentAccount();
+        if(Objects.isNull(account))
+        {
+            // アカウントオブジェクトがなかったときからの配列を返す
+            return new ArrayResponse<>(4, Collections.emptyList(), "approverlist");
+        }
+        List<ApproverListResponse> approverListResponses = accountService.findApproverListFor(account);
         return new ArrayResponse<>(1,approverListResponses, "approverlist");
     }
 

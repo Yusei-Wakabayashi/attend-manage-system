@@ -241,9 +241,9 @@ public class TestMockMvcController
     @Test
     void getapproverlistSuccess() throws Exception
     {
-        Long generalRoleId = 1L;
+        // userの情報
         String generalAccountName = "testuser";
-        Long adminRoleId = 2L;
+        // whenで返す情報に必要
         Long adminAccountId = 5L;
         String adminAccountName = "adminuser";
         String adminDepartmentName = "soumu";
@@ -252,32 +252,13 @@ public class TestMockMvcController
         // whenの処理が実行された際返すaccountの作成
         Account generalAccount = new Account();
         generalAccount.setUsername(generalAccountName);
-        // 一般役職と管理役職
-        Role generalRole = new Role();
-        generalRole.setId(generalRoleId);
-        generalAccount.setRoleId(generalRole);
-        Role adminRole = new Role();
-        adminRole.setId(adminRoleId);
-        // whenの処理が実行された際返すapprovalSettingの作成
-        List<ApprovalSetting> approvalSettings = new ArrayList<ApprovalSetting>();
-        ApprovalSetting approvalSetting = new ApprovalSetting();
-        approvalSetting.setRoleId(generalRole);
-        approvalSetting.setApprovalId(adminRole);
-        approvalSettings.add(approvalSetting);
-        // whenの処理が実行された際返すaccountsの作成
-        List<Account> accounts = new ArrayList<Account>();
-        Account adminAccount = new Account();
-        adminAccount.setRoleId(adminRole);
-        adminAccount.setUsername(adminAccountName);
-        accounts.add(adminAccount);
+
         ApproverListResponse approverListResponse = new ApproverListResponse(adminAccountId, adminAccountName, adminDepartmentName, adminRoleName);
         List<ApproverListResponse> approverListResponses = new ArrayList<ApproverListResponse>();
         approverListResponses.add(approverListResponse);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(approvalSettingService.findApprovalSettings(any(Role.class))).thenReturn(approvalSettings);
-        when(accountService.findAccountByApprovalSetting(anyList())).thenReturn(accounts);
-        when(accountService.findApproverList(anyList())).thenReturn(approverListResponses);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(accountService.findApproverListFor(any(Account.class))).thenReturn(approverListResponses);
         mockMvc.perform
         (
             get("/api/reach/approverlist")
@@ -312,8 +293,8 @@ public class TestMockMvcController
             sendNewAdminAccountId
         );
 
-        when(accountService.findAccountByUsername(generalAccountName)).thenReturn(generalAccount);
-        when(accountApproverService.updateApprover(anyString(), anyLong())).thenReturn(1);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(accountApproverService.updateApprover(any(Account.class), anyLong())).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/approverset")
@@ -363,7 +344,6 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.status").value(1))
         .andExpect(jsonPath("$.styleList[0].name").value(workStylePlaceName))
         .andExpect(jsonPath("$.styleList[1].name").value(homeStylePlaceName));
-
     }
 
     @Test
@@ -375,26 +355,8 @@ public class TestMockMvcController
         Account generalAccount = new Account();
         generalAccount.setId(generalAccountId);
         generalAccount.setUsername(generalAccountUsername);
-        // whenで返すスタイルのオブジェクト
-        Long generalStyleId = 1L;
-        Long generalStylePlaceId = 1L;
-        Style style = new Style();
-        StylePlace stylePlace = new StylePlace();
-        stylePlace.setId(generalStylePlaceId);
-        style.setStyleId(generalStyleId);
-        style.setAccountId(generalAccount);
-        style.setStylePlaceId(stylePlace);
-        // whenで返すスタイルプレイスのオブジェクト
-        Long generalNewStylePlaceId = 2L;
-        StylePlace newStylePlace = new StylePlace();
-        newStylePlace.setId(generalNewStylePlaceId);
-        // whenでセーブする際の条件に使う
-        Style newStyle = new Style();
-        newStyle.setStyleId(generalStyleId);
-        newStyle.setAccountId(generalAccount);
-        newStyle.setStylePlaceId(newStylePlace);
 
-        int sendStyle = 2;
+        int sendNewStyleId = 2;
 
         String json = String.format
         (
@@ -403,13 +365,11 @@ public class TestMockMvcController
                     "style": "%s"
                 }
             """,
-            sendStyle
+            sendNewStyleId
         );
 
-        when(accountService.findAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
-        when(styleService.findStyleByAccountId(generalAccount.getId())).thenReturn(style);
-        when(stylePlaceService.findStylePlaceById(generalNewStylePlaceId)).thenReturn(newStylePlace);
-        when(styleService.save(any())).thenReturn(newStyle);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(styleService.updateStyle(any(Account.class), anyLong())).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/style")
@@ -1685,10 +1645,10 @@ public class TestMockMvcController
     void vacationRequestSuccess() throws Exception
     {
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
-        String generalBeginOverWork = "2025/11/22T10:00:00";
-        String generalEndOverWork = "2025/11/22T11:00:00";
+        String generalBeginOverWork = "2026/11/22T10:00:00";
+        String generalEndOverWork = "2026/11/22T11:00:00";
         String generalRequestComment = "";
-        String generalRequestDate = "2025/08/02T00:00:11";
+        String generalRequestDate = "2026/08/02T00:00:11";
         int generalId = 1;
         int vacationType = 1;
         String json = String.format
@@ -1714,10 +1674,10 @@ public class TestMockMvcController
 
         Shift generalShift = new Shift();
         Long generalShiftId = 3L;
-        String generalBeginWork = "2025/11/22T09:00:00";
-        String generalEndWork = "2025/11/22T18:00:00";
-        String generalBeginBreak = "2025/11/22T12:00:00";
-        String generalEndBreak = "2025/11/22T13:00:00";
+        String generalBeginWork = "2026/11/22T09:00:00";
+        String generalEndWork = "2026/11/22T18:00:00";
+        String generalBeginBreak = "2026/11/22T12:00:00";
+        String generalEndBreak = "2026/11/22T13:00:00";
         generalShift.setShiftId(generalShiftId);
         generalShift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(generalBeginWork));
         generalShift.setEndWork(stringToLocalDateTime.stringToLocalDateTime(generalEndWork));
@@ -1727,8 +1687,8 @@ public class TestMockMvcController
         List<VacationRequest> vacationRequests = new ArrayList<VacationRequest>();
         VacationRequest generalVacationRequest = new VacationRequest();
         Long generalVacationRequestId = 5L;
-        String generalVacationRequestBegin = "2025/11/22T09:00:00";
-        String generalVacationRequestEnd = "2025/11/22T10:00:00";
+        String generalVacationRequestBegin = "2026/11/22T09:00:00";
+        String generalVacationRequestEnd = "2026/11/22T10:00:00";
         generalVacationRequest.setVacationId(generalVacationRequestId);
         generalVacationRequest.setAccountId(generalAccount);
         generalVacationRequest.setShiftId(generalShift);
@@ -1739,8 +1699,8 @@ public class TestMockMvcController
         List<ShiftListOverTime> shiftListOverTimes = new ArrayList<ShiftListOverTime>();
         ShiftListOverTime generalShiftListOverTime = new ShiftListOverTime();
         OverTimeRequest generalOverTimeRequest = new OverTimeRequest();
-        String generalOverTimeRequestBegin = "2025/11/22T14:00:00";
-        String generalOverTimeRequestEnd = "2025/11/22T15:00:00";
+        String generalOverTimeRequestBegin = "2026/11/22T14:00:00";
+        String generalOverTimeRequestEnd = "2026/11/22T15:00:00";
         generalOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(generalOverTimeRequestBegin));
         generalOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(generalOverTimeRequestEnd));
         generalShiftListOverTime.setOverTimeId(generalOverTimeRequest);
@@ -1748,8 +1708,8 @@ public class TestMockMvcController
 
         List<OverTimeRequest> overTimeRequests = new ArrayList<OverTimeRequest>();
         OverTimeRequest adminOverTimeRequest = new OverTimeRequest();
-        String adminOverTimeRequestBegin = "2025/11/22T18:00:00";
-        String adminOverTimeRequestEnd = "2025/11/22T20:00:00";
+        String adminOverTimeRequestBegin = "2026/11/22T18:00:00";
+        String adminOverTimeRequestEnd = "2026/11/22T20:00:00";
         adminOverTimeRequest.setAccountId(generalAccount);
         adminOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(adminOverTimeRequestBegin));
         adminOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(adminOverTimeRequestEnd));
@@ -1766,8 +1726,8 @@ public class TestMockMvcController
         VacationType generalVacationType = new VacationType();
         Long generalVacationTypeId = 1L;
         generalVacationType.setVacationTypeId(generalVacationTypeId);
-        String paydHolidayVacationRequestBegin = "2025/12/31T00:00:00";
-        String paydHolidayVacationRequestEnd = "2025/12/31T07:00:00";
+        String paydHolidayVacationRequestBegin = "2026/12/31T00:00:00";
+        String paydHolidayVacationRequestEnd = "2026/12/31T07:00:00";
         paydHolidayVacationRequest.setVacationTypeId(generalVacationType);
         paydHolidayVacationRequest.setBeginVacation(stringToLocalDateTime.stringToLocalDateTime(paydHolidayVacationRequestBegin));
         paydHolidayVacationRequest.setEndVacation(stringToLocalDateTime.stringToLocalDateTime(paydHolidayVacationRequestEnd));

@@ -13,12 +13,38 @@ import com.example.springboot.model.Account;
 import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Role;
 import com.example.springboot.repository.AccountRepository;
+import com.example.springboot.util.SecurityUtil;
 
 @Service
 public class AccountService
 {
     @Autowired
     private AccountRepository accountRepository;
+
+    @Autowired
+    private ApprovalSettingService approvalSettingService;
+
+    // ユーザー名とアカウントの取得
+    public Account findCurrentAccount()
+    {
+        String username = SecurityUtil.getCurrentUsername();
+        if (username == null)
+        {
+            return null;
+        }
+        Account account = findAccountByUsername(username);
+        System.out.println(account);
+
+        return account;
+    }
+
+    // アカウントから承認者一覧を取得、レスポンスの形に合わせて返す
+    public List<ApproverListResponse> findApproverListFor(Account account)
+    {
+        List<ApprovalSetting> approvalSettings = approvalSettingService.findApprovalSettings(account.getRoleId());
+        List<Account> accounts = findAccountByApprovalSetting(approvalSettings);
+        return findApproverList(accounts);
+    }
 
     public Account findAccountByAccountId(Long accountId)
     {

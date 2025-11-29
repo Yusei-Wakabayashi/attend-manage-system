@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Style;
+import com.example.springboot.model.StylePlace;
 import com.example.springboot.repository.StyleRepository;
 
 @Service
@@ -20,10 +21,17 @@ public class StyleService
     @Autowired
     StylePlaceService stylePlaceService;
 
+    @Autowired
+    AccountService accountService;
+
     @Transactional
-    public int updateStyle(Account account, Long newStyleId)
+    public int updateStyle(Account account , Long newStylePlaceId)
     {
-        if(Objects.isNull(account))
+        Style style = findStyleByAccountId(account);
+        StylePlace newStylePlace = stylePlaceService.findStylePlaceById(newStylePlaceId);
+        style.setStylePlaceId(newStylePlace);
+        Style resultStyle = save(style);
+        if(Objects.isNull(resultStyle) || Objects.isNull(resultStyle.getStyleId()))
         {
             return 3;
         }

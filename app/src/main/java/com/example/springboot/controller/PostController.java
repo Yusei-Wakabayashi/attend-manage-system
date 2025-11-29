@@ -1,7 +1,5 @@
 package com.example.springboot.controller;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -25,13 +23,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.springboot.dto.LoginPostData;
 import com.example.springboot.dto.change.DurationToString;
 import com.example.springboot.dto.change.StringToDuration;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.response.Response;
 import com.example.springboot.dto.input.LegalCheckShiftChangeInput;
 import com.example.springboot.dto.input.LegalCheckShiftInput;
+import com.example.springboot.dto.input.LoginInput;
 import com.example.springboot.dto.input.MonthlyInput;
 import com.example.springboot.dto.input.OtherTimeInput;
 import com.example.springboot.dto.input.OverTimeInput;
@@ -60,8 +58,6 @@ import com.example.springboot.model.ShiftListShiftRequest;
 import com.example.springboot.model.ShiftListVacation;
 import com.example.springboot.model.ShiftRequest;
 import com.example.springboot.model.StampRequest;
-import com.example.springboot.model.Style;
-import com.example.springboot.model.StylePlace;
 import com.example.springboot.model.Vacation;
 import com.example.springboot.model.VacationRequest;
 import com.example.springboot.service.AccountApproverService;
@@ -172,32 +168,34 @@ public class PostController
     
     @CrossOrigin
     @PostMapping("/send/login")
-    public Response login(@RequestBody LoginPostData data)
+    public Response login(@RequestBody LoginInput data)
     {
-        String username = SecurityUtil.getCurrentUsername();
+        String username = data.getUsername();
+        String rawPassword = data.getPassword();
         Account account = accountService.findAccountByUsername(username);
         if(Objects.isNull(account))
         {
             return new Response(4);
         }
 
-        boolean valid = passwordEncoder.matches(data.getPassword(), account.getPassword());
-        if(valid)
+        // PasswordEncoder でチェック
+        boolean valid = passwordEncoder.matches(rawPassword, account.getPassword());
+        if (!valid)
         {
-            UsernamePasswordAuthenticationToken authToken =
-                new UsernamePasswordAuthenticationToken
-                (
-                    account.getUsername(),
-                    null,
-                    List.of(new SimpleGrantedAuthority("ROLE_USER"))
-                );
-            SecurityContextHolder.getContext().setAuthentication(authToken);
-            return new Response(1);
+            return new Response(4); // 認証失敗
         }
-        else
-        {
-            return new Response(6);
-        }
+
+        // 認証成功 → SecurityContext に詰める
+        UsernamePasswordAuthenticationToken authToken =
+            new UsernamePasswordAuthenticationToken
+            (
+                account.getUsername(),
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+            );
+        SecurityContextHolder.getContext().setAuthentication(authToken);
+
+        return new Response(1);
     }
 
     @PostMapping("/send/logout")
@@ -215,28 +213,25 @@ public class PostController
     @PostMapping("/send/approverset")
     public Response approverSet(@RequestBody IdData idData)
     {
-        String username = SecurityUtil.getCurrentUsername();
-        int result = accountApproverService.updateApprover(username, idData.getId());
+        Account account = accountService.findCurrentAccount();
+        if(Objects.isNull(account))
+        {
+            return new Response(4);
+        }
+        int result = accountApproverService.updateApprover(account, idData.getId());
         return new Response(result);
     }
     
     @PostMapping("/send/style")
     public Response styleSet(@RequestBody IdData idData)
     {
-        int status = 0;
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
-        Style style = styleService.findStyleByAccountId(account.getId());
-        StylePlace newStylePlace = stylePlaceService.findStylePlaceById(idData.getId());
-        style.setStylePlaceId(newStylePlace);
-        Style resultStyle = styleService.save(style);
-        if (Objects.isNull(resultStyle) || Objects.isNull(resultStyle.getStyleId()))
+        Account account = accountService.findCurrentAccount();
+        if(Objects.isNull(account))
         {
-            status = 3;
-            return new Response(status);
+            return new Response(4);
         }
-        status = 1;
-        return new Response(status);
+        int result = styleService.updateStyle(account, idData.getId());
+        return new Response(result);
     }
 
     @PostMapping("/send/shift")

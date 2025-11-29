@@ -22,13 +22,8 @@ public class AccountApproverService
     AccountService accountService;
 
     @Transactional
-    public int updateApprover(String username, Long newAccountId)
+    public int updateApprover(Account account, Long newAccountId)
     {
-        Account account = accountService.findAccountByUsername(username);
-        if(Objects.isNull(account))
-        {
-            return 3;
-        }
         AccountApprover accountApprover = findAccountApproverByAccount(account);
         Account newAdmin = accountService.findAccountByAccountId(newAccountId);
         if(Objects.isNull(newAdmin))

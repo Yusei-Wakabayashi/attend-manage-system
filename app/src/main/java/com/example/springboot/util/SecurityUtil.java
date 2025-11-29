@@ -10,7 +10,7 @@ public class SecurityUtil
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated())
         {
-            throw new RuntimeException("未認証状態です");
+            return null;
         }
         return auth.getName();
     }

@@ -53,16 +53,14 @@ public class AccountApproverServiceTest
         approver.setAccountId(account);
 
         // accountServiceの動作を定義
-        when(accountService.findAccountByUsername(accountUsername)).thenReturn(account);
         when(accountService.findAccountByAccountId(newAdminId)).thenReturn(newAdmin);
 
-        // 同じサービス内メソッドは Spy なので上書き可能
-        doReturn(approver).when(accountApproverService).findAccountApproverByAccount(account);
-
+        // 同じサービス内メソッドを上書き
+        doReturn(approver).when(accountApproverService).findAccountApproverByAccount(any(Account.class));
         doReturn(approver).when(accountApproverService).save(any(AccountApprover.class));
 
         // 実行
-        int result = accountApproverService.updateApprover(accountUsername, newAdminId);
+        int result = accountApproverService.updateApprover(account, newAdminId);
 
         // 想定通りか確認
         assertEquals(1, result);
