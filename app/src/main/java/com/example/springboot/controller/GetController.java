@@ -34,7 +34,6 @@ import com.example.springboot.dto.response.RequestDetilStampResponse;
 import com.example.springboot.dto.response.RequestDetilVacationResponse;
 import com.example.springboot.dto.response.RequestListResponse;
 import com.example.springboot.dto.ArrayResponse;
-import com.example.springboot.dto.YearMonthParam;
 import com.example.springboot.dto.change.DurationToString;
 import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.input.RequestIdInput;
@@ -42,6 +41,7 @@ import com.example.springboot.dto.input.UserAttendInput;
 import com.example.springboot.dto.input.UserMonthWorkInfoInput;
 import com.example.springboot.dto.input.UserShiftInput;
 import com.example.springboot.dto.input.YearInput;
+import com.example.springboot.dto.input.YearMonthInput;
 import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.dto.response.StyleResponse;
@@ -161,7 +161,7 @@ public class GetController
     NewsListService newsListService;
 
     @GetMapping("/reach/approverlist")
-    public ArrayResponse<ApproverListResponse> returnApproverList(HttpSession session)
+    public ArrayResponse<ApproverListResponse> returnApproverList()
     {
         // アカウントオブジェクトを取得
         Account account = accountService.findCurrentAccount();
@@ -175,7 +175,7 @@ public class GetController
     }
 
     @GetMapping("/reach/allstylelist")
-    public ArrayResponse<AllStyleListResponse> returnAllStyleList(HttpSession session)
+    public ArrayResponse<AllStyleListResponse> returnAllStyleList()
     {
         // ログイン済みか確認
         Account account = accountService.findCurrentAccount();
@@ -188,7 +188,7 @@ public class GetController
     }
 
     @GetMapping("/reach/accountinfo")
-    public AccountInfoResponse returnAccountInfo(HttpSession session)
+    public AccountInfoResponse returnAccountInfo()
     {
         Account account = accountService.findCurrentAccount();
         if(Objects.isNull(account))
@@ -200,27 +200,20 @@ public class GetController
     }
 
     @GetMapping("/reach/shiftlist")
-    public ArrayResponse<ShiftListResponse> returnShiftList(HttpSession session, @ModelAttribute YearMonthParam request)
+    public ArrayResponse<ShiftListResponse> returnShiftList(@ModelAttribute YearMonthInput request)
     {
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
-        // accountidを基にshift_listテーブルを検索、shiftListResponseに格納
-        List<ShiftListResponse> shiftListResponse = new ArrayList<ShiftListResponse>();
-        ArrayResponse<ShiftListResponse> arrayResponse = new ArrayResponse<ShiftListResponse>();
-        // List<Shift> shiftList = shiftService.findByAccountId(account.getId());
-        List<Shift> shiftList = shiftService.findByAccountIdAndBeginWorkBetween(account.getId(), request.getYear(), request.getMonth());
-        for(Shift shift : shiftList)
+        Account account = accountService.findCurrentAccount();
+        if(Objects.isNull(account))
         {
-            shiftListResponse.add(shiftService.shiftToShiftListResponse(shift));
+            return new ArrayResponse<ShiftListResponse>(4, Collections.emptyList(),"shiftList");
         }
-        arrayResponse.setStatus(1);
-        arrayResponse.setList(shiftListResponse);
-        arrayResponse.setKey("shiftList");
-        return arrayResponse;
+        // accountidを基にshift_listテーブルを検索、shiftListResponseに格納
+        List<ShiftListResponse> shiftListResponse = shiftService.findByShiftListFor(account, request);
+        return new ArrayResponse<ShiftListResponse>(1, shiftListResponse, "shiftList");
     }
 
     @GetMapping("/reach/requestdetil/shift")
-    public RequestDetilShiftResponse returnShiftDetil(HttpSession session, RequestIdInput request)
+    public RequestDetilShiftResponse returnShiftDetil(@ModelAttribute RequestIdInput request)
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         int status = 0;
@@ -337,7 +330,7 @@ public class GetController
         return requestDetilStampResponse;
     }
     @GetMapping("/reach/attendlist")
-    public ArrayResponse<AttendListResponse> returnAttendList(HttpSession session, @ModelAttribute YearMonthParam request)
+    public ArrayResponse<AttendListResponse> returnAttendList(HttpSession session, @ModelAttribute YearMonthInput request)
     {
         String username = SecurityUtil.getCurrentUsername();
         Account account = accountService.findAccountByUsername(username);
@@ -591,7 +584,7 @@ public class GetController
         return new ArrayResponse<RequestListResponse>(status, requestListResponse, "requestList");
     }
     @GetMapping("/reach/monthworkinfo")
-    public MonthWorkInfoResponse returnMonthWorkInfo(HttpSession session, YearMonthParam yearMonthParam)
+    public MonthWorkInfoResponse returnMonthWorkInfo(HttpSession session, YearMonthInput request)
     {
         DurationToString durationToString = new DurationToString();
         String username = SecurityUtil.getCurrentUsername();
@@ -616,7 +609,7 @@ public class GetController
         Duration monthPaydHolidayTime = Duration.ZERO;
 
         // 休暇の分け以外は取得できる
-        List<Attend> attends = attendService.findByAccountIdAndBeginWorkBetween(account, yearMonthParam.getYear(), yearMonthParam.getMonth());
+        List<Attend> attends = attendService.findByAccountIdAndBeginWorkBetween(account, request.getYear(), request.getMonth());
         for(Attend attend : attends)
         {
             monthWorkTime = monthWorkTime.plus(Duration.between(LocalTime.MIDNIGHT, attend.getWorkTime().toLocalTime()));
@@ -630,7 +623,7 @@ public class GetController
             monthHolidayWorkTime = monthHolidayWorkTime.plus(Duration.between(LocalTime.MIDNIGHT, attend.getHolidayWork().toLocalTime()));
         }
         // 休暇はvacationlistからその月の有給の時間を取得、休暇時間から減算
-        List<Vacation> vacations = vacationService.findByAccountIdAndBeginVacationBetweenMonthAndPaydHoliday(account, yearMonthParam.getYear(), yearMonthParam.getMonth());
+        List<Vacation> vacations = vacationService.findByAccountIdAndBeginVacationBetweenMonthAndPaydHoliday(account, request.getYear(), request.getMonth());
         for(Vacation vacation : vacations)
         {
             monthPaydHolidayTime = monthPaydHolidayTime.plus(Duration.between(vacation.getBeginVacation(), vacation.getEndVacation()));

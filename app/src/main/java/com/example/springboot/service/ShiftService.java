@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.springboot.dto.change.LocalDateTimeToString;
+import com.example.springboot.dto.input.YearMonthInput;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Shift;
@@ -40,6 +42,17 @@ public class ShiftService
     {
         return shiftRepository.findByAccountIdAndShiftId(account, id)
             .orElseThrow(() -> new RuntimeException("シフトが見つかりません"));
+    }
+
+    public List<ShiftListResponse> findByShiftListFor(Account account, YearMonthInput request)
+    {
+        List<Shift> shifts = findByAccountIdAndBeginWorkBetween(account.getId(), request.getYear(), request.getMonth());
+        List<ShiftListResponse> shiftListResponse = new ArrayList<ShiftListResponse>();
+        for(Shift shift : shifts)
+        {
+            shiftListResponse.add(shiftToShiftListResponse(shift));
+        }
+        return shiftListResponse;
     }
 
     public Shift findByAccountIdAndShiftId(Long accountId, Long id)
