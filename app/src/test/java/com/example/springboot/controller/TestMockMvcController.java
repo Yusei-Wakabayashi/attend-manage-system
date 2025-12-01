@@ -36,6 +36,7 @@ import com.example.springboot.Config;
 import com.example.springboot.dto.AllStyleListResponse;
 import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.change.StringToLocalDateTime;
+import com.example.springboot.dto.input.YearMonthInput;
 import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.dto.response.AttendListResponse;
@@ -511,13 +512,12 @@ public class TestMockMvcController
             generalShiftOuting,
             generalShiftOverWork
         );
+        List<ShiftListResponse> generalShiftListResponses = List.of(generalShiftListResponse);
         List<Shift> generalShifts = new ArrayList<Shift>();
         generalShifts.add(generalShift);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        // when(shiftService.findByAccountId(anyLong())).thenReturn(generalShifts);
-        when(shiftService.findByAccountIdAndBeginWorkBetween(anyLong(), anyInt(), anyInt())).thenReturn(generalShifts);
-        when(shiftService.shiftToShiftListResponse(any(Shift.class))).thenReturn(generalShiftListResponse);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(shiftService.findByShiftListFor(any(Account.class), any(YearMonthInput.class))).thenReturn(generalShiftListResponses);
         mockMvc.perform
         (
             get("/api/reach/shiftlist")
