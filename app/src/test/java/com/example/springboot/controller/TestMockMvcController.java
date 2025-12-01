@@ -36,6 +36,7 @@ import com.example.springboot.Config;
 import com.example.springboot.dto.AllStyleListResponse;
 import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.change.StringToLocalDateTime;
+import com.example.springboot.dto.input.ShiftInput;
 import com.example.springboot.dto.input.YearMonthInput;
 import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
@@ -542,7 +543,6 @@ public class TestMockMvcController
     @Test
     void shiftRequestSuccess() throws Exception
     {
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         String generalBeginWork = "2026/09/02T09:00:00";
         String generalBeginBreak = "2026/09/02T12:00:00";
         String generalEndBreak = "2026/09/02T13:00:00";
@@ -564,50 +564,14 @@ public class TestMockMvcController
         generalBeginWork, generalBeginBreak, generalEndBreak, generalEndWork, generalRequestComment, generalRequestDate
         );
 
-        LegalTime legalTime = new LegalTime();
-        Long legalTimeId = 1L;
-        LocalDateTime legalTimeBegin = stringToLocalDateTime.stringToLocalDateTime("2025/08/08T21:00:00");
-        String legalTimeScheduleWorkTime = "08:00:00";
-        String legalTimeWeeklyWorkTime = "40:00:00";
-        String legalTimeMonthlyOverWork = "45:00:00";
-        String legalTimeYearOverWork = "360:00:00";
-        String legalTimeMaxOverWorkTime = "100:00:00";
-        String legalTimeMonthlyOverWorkAverage = "80:00:00";
-        String legalTimeLateNightWorkTimeBegin = "22:00:00";
-        String legalTimeLateNightWorkTimeEnd = "05:00:00";
-        String legalTimeScheduleBreakTime = "01:00:00";
-        int legalTimeWeeklyHoliday = 1;
-
-        legalTime.setLegalTimeId(legalTimeId);
-        legalTime.setBegin(legalTimeBegin);
-        legalTime.setScheduleWorkTime(legalTimeScheduleWorkTime);
-        legalTime.setWeeklyWorkTime(legalTimeWeeklyWorkTime);
-        legalTime.setMonthlyOverWorkTime(legalTimeMonthlyOverWork);
-        legalTime.setYearOverWorkTime(legalTimeYearOverWork);
-        legalTime.setMaxOverWorkTime(legalTimeMaxOverWorkTime);
-        legalTime.setMonthlyOverWorkAverage(legalTimeMonthlyOverWorkAverage);
-        legalTime.setLateNightWorkBegin(legalTimeLateNightWorkTimeBegin);
-        legalTime.setLateNightWorkEnd(legalTimeLateNightWorkTimeEnd);
-        legalTime.setScheduleBreakTime(legalTimeScheduleBreakTime);
-        legalTime.setWeeklyHoliday(legalTimeWeeklyHoliday);
-
         Account generalAccount = new Account();
         Long generalAccountId = 1L;
         String generalAccountName = "testuser";
         generalAccount.setId(generalAccountId);
         generalAccount.setName(generalAccountName);
 
-        List<Shift> shifts = new ArrayList<Shift>();
-        List<ShiftRequest> shiftRequests = new ArrayList<ShiftRequest>();
-
-        ShiftRequest shiftRequest = new ShiftRequest();
-        Long shiftRequestId = 2L;
-        shiftRequest.setShiftRequestId(shiftRequestId);
-
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(shiftService.findByAccountIdAndDayBeginWorkBetween(any(Account.class), any(LocalDateTime.class))).thenReturn(shifts);
-        when(shiftRequestService.findAccountIdAndBeginWorkBetweenDay(any(Account.class), any(LocalDateTime.class))).thenReturn(shiftRequests);
-        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn(shiftRequest);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(shiftRequestService.createShiftRequest(any(Account.class), any(ShiftInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/shift")

@@ -61,6 +61,8 @@ public class AttendService
         attendListResponse.setEndWork(localDateTimeToString.localDateTimeToString(attend.getEndWork()));
         attendListResponse.setBeginBreak(localDateTimeToString.localDateTimeToString(attend.getBeginBreak()));
         attendListResponse.setEndBreak(localDateTimeToString.localDateTimeToString(attend.getEndBreak()));
+        attendListResponse.setWorkTime(attend.getWorkTime());
+        attendListResponse.setBreakTime(attend.getBreakTime());
         attendListResponse.setLateness(attend.getLateness());
         attendListResponse.setLeaveEarly(attend.getLeaveEarly());
         attendListResponse.setOuting(attend.getOuting());

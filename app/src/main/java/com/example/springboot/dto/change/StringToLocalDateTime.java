@@ -3,6 +3,10 @@ package com.example.springboot.dto.change;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import org.springframework.stereotype.Component;
+
+// クラス変数を持たないただの変換ツールのためcomponent化
+@Component
 public class StringToLocalDateTime
 {
     public LocalDateTime stringToLocalDateTime(String str)

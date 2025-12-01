@@ -56,7 +56,7 @@ public class AccountServiceTest
     @Mock
     DepartmentService departmentService;
 
-    @AfterEach
+    @AfterEach // 終了後に実行
     void tearDown()
     {
         // テストごとにクリアしておく
@@ -210,6 +210,5 @@ public class AccountServiceTest
         assertEquals(adminDepartmentName, result.getDepartmentName());
         assertEquals(true, result.isAdmin());
     }
-
 
 }

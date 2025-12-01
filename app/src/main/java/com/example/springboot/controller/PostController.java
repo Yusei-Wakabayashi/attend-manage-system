@@ -237,78 +237,13 @@ public class PostController
     @PostMapping("/send/shift")
     public Response shiftSet(@RequestBody ShiftInput shiftInput)
     {
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
-        int status = 0;
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
+        Account account = accountService.findCurrentAccount();
         if(Objects.isNull(account))
         {
-            status = 4;
-            return new Response(status);
+            return new Response(4);
         }
-        // 始業時間、終業時間、休憩開始時間、休憩終了時間が現在取得時間より後になっていることを確認
-        LocalDateTime nowTime = LocalDateTime.now();
-        LocalDateTime beginWork = stringToLocalDateTime.stringToLocalDateTime(shiftInput.getBeginWork());
-        LocalDateTime endWork = stringToLocalDateTime.stringToLocalDateTime(shiftInput.getEndWork());
-        LocalDateTime beginBreak = stringToLocalDateTime.stringToLocalDateTime(shiftInput.getBeginBreak());
-        LocalDateTime endBreak = stringToLocalDateTime.stringToLocalDateTime(shiftInput.getEndBreak());
-
-        // 始業時間より終業時間が後になっていること、休憩開始時間より休憩終了時間が後になっていること、始業時間より休憩開始時間が後になっていること、休憩終了時間より終業時間が後になっていること
-        if(endWork.isAfter(beginWork) && endBreak.isAfter(beginBreak) && beginBreak.isAfter(beginWork) && endWork.isAfter(endBreak))
-        {
-            // 条件通りなら何もしない
-        }
-        else
-        {
-            // 条件に沿っていなかったらエラー
-            status = 3;
-            return new Response(status);
-        }
-        // 承認されたシフトで同じ日に重複していないことを確認
-        List<Shift> shifts = shiftService.findByAccountIdAndDayBeginWorkBetween(account, beginWork);
-        // シフト申請で同じ日に申請が出ていないことを確認
-        List<ShiftRequest> shiftRequests = shiftRequestService.findAccountIdAndBeginWorkBetweenDay(account, beginWork);
-        // 0より大きかったら申請できない
-        if(shiftRequests.size() > 0 || shifts.size() > 0)
-        {
-            status = 3;
-            return new Response(status);
-        }
-
-        // 始業時間が1年先までは許容する
-        LocalDateTime nextYear = nowTime.plusYears(1L);
-        // 現在時刻より後かつ1年後(nextYear)より前
-        if(beginWork.isAfter(nowTime) && beginWork.isBefore(nextYear))
-        {
-            // 条件に従っていれば何もしない
-        }
-        else
-        {
-            // 1年後に収まっていない始業時間ならエラー
-            status = 3;
-            return new Response(status);
-        }
-        // シフト申請に登録(サービス層で行うべきこと？)
-        ShiftRequest shiftRequest = new ShiftRequest();
-        shiftRequest.setAccountId(account);
-        shiftRequest.setBeginWork(beginWork);
-        shiftRequest.setBeginBreak(beginBreak);
-        shiftRequest.setEndBreak(endBreak);
-        shiftRequest.setEndWork(endWork);
-        shiftRequest.setRequestComment(shiftInput.getRequestComment());
-        shiftRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(shiftInput.getRequestDate()));
-        shiftRequest.setRequestStatus(1);
-        shiftRequest.setApprover(null);
-        shiftRequest.setApprovalTime(null);
-        shiftRequest.setApproverComment(null);
-        ShiftRequest resultShiftRequest = shiftRequestService.save(shiftRequest);
-        if(Objects.isNull(resultShiftRequest) || Objects.isNull(resultShiftRequest.getShiftRequestId()))
-        {
-            status = 3;
-            return new Response(status);
-        }
-        status = 1;
-        return new Response(status);
+        int result = shiftRequestService.createShiftRequest(account, shiftInput);
+        return new Response(result);
     }
 
     @PostMapping("/send/changetime")
