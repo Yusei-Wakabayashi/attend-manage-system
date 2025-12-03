@@ -51,8 +51,12 @@ public class ShiftChangeRequestServiceTest
         String generalRequestComment = "";
         String generalRequestDate = "2025/08/02T00:00:11";
 
+        Shift shift = new Shift();
         Long shiftId = 1L;
+        shift.setShiftId(shiftId);
+        shift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(generalBeginWork));
         ShiftChangeInput shiftChangeInput = new ShiftChangeInput();
+    
         shiftChangeInput.setShiftId(shiftId);
         shiftChangeInput.setBeginWork(generalBeginWork);
         shiftChangeInput.setEndWork(generalEndWork);
@@ -66,10 +70,6 @@ public class ShiftChangeRequestServiceTest
         String generalAccountName = "testuser";
         generalAccount.setId(generalAccountId);
         generalAccount.setName(generalAccountName);
-
-        Shift shift = new Shift();
-        shift.setShiftId(shiftId);
-        shift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(generalBeginWork));
 
         LocalDateTime generalBeginWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T09:00:00");
         LocalDateTime generalEndWorkTimeShift = stringToLocalDateTime.stringToLocalDateTime("2025/09/17T18:00:00");

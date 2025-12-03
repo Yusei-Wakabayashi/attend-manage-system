@@ -38,6 +38,7 @@ import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.input.ShiftChangeInput;
 import com.example.springboot.dto.input.ShiftInput;
+import com.example.springboot.dto.input.StampInput;
 import com.example.springboot.dto.input.YearMonthInput;
 import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
@@ -1124,7 +1125,6 @@ public class TestMockMvcController
     @Test
     void stampRequestSuccess() throws Exception
     {
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         String generalBeginWork = "2025/09/02T09:00:00";
         String generalBeginBreak = "2025/09/02T12:00:00";
         String generalEndBreak = "2025/09/02T13:00:00";
@@ -1154,22 +1154,8 @@ public class TestMockMvcController
         generalAccount.setId(generalAccountId);
         generalAccount.setName(generalAccountName);
 
-        Shift generalShift = new Shift();
-        generalShift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(generalBeginWork));
-        generalShift.setEndWork(stringToLocalDateTime.stringToLocalDateTime(generalEndWork));
-        generalShift.setBeginBreak(stringToLocalDateTime.stringToLocalDateTime(generalBeginBreak));
-        generalShift.setEndBreak(stringToLocalDateTime.stringToLocalDateTime(generalEndBreak));
-
-        List<StampRequest> stampRequests = new ArrayList<StampRequest>();
-
-        StampRequest stampRequest = new StampRequest();
-        Long stampRequestId = 3L;
-        stampRequest.setStampId(stampRequestId);
-
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(generalShift);
-        when(stampRequestService.findByShiftIdAndRequestStatusWait(any(Shift.class))).thenReturn(stampRequests);
-        when(stampRequestService.save(any(StampRequest.class))).thenReturn(stampRequest);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(stampRequestService.createStampRequest(any(Account.class), any(StampInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/stamp")

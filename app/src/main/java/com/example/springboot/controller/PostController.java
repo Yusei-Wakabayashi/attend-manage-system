@@ -262,101 +262,14 @@ public class PostController
     @PostMapping("/send/stamp")
     public Response stampSet(@RequestBody StampInput stampInput, HttpSession session)
     {
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
-        int status = 0;
+        Account account = accountService.findCurrentAccount();
         // accountの情報があるか
         if(Objects.isNull(account))
         {
-            status = 4;
-            return new Response(status);
+            return new Response(4);
         }
-        // アカウントの情報とシフトの情報を基に検索
-        Shift shift = shiftService.findByAccountIdAndShiftId(account, stampInput.getShiftId());
-        if(Objects.isNull(shift))
-        {
-            status = 4;
-            return new Response(status);
-        }
-        // 打刻漏れ申請で同じシフトで既に承認済みのものがないか確認
-        List<StampRequest> stampRequests = stampRequestService.findByShiftIdAndRequestStatusWait(shift);
-        if(stampRequests.size() > 0)
-        {
-            status = 3;
-            return new Response(status);
-        }
-        LocalDateTime nowTime = LocalDateTime.now();
-        // シフトの終業時刻が現在時刻より前であること
-        if(shift.getEndWork().isBefore(nowTime))
-        {
-            // 条件通りなら何もしない
-        }
-        else
-        {
-            status = 3;
-            return new Response(status);
-        }
-
-        // 申請するシフトの年月で月次申請が申請されていればエラー
-        int searchYear = shift.getBeginWork().getYear();
-        int searchMonth = shift.getBeginWork().getMonthValue();
-        List<MonthlyRequest> monthlyRequests = monthlyRequestService.findByAccountIdAndYearAndMonth(account, searchYear, searchMonth);
-        if(monthlyRequests.size() > 0)
-        {
-            status = 3;
-            return new Response(status);
-        }
-
-        LocalDateTime beginWork = stringToLocalDateTime.stringToLocalDateTime(stampInput.getBeginWork());
-        LocalDateTime endWork = stringToLocalDateTime.stringToLocalDateTime(stampInput.getEndWork());
-        LocalDateTime beginBreak = stringToLocalDateTime.stringToLocalDateTime(stampInput.getBeginBreak());
-        LocalDateTime endBreak = stringToLocalDateTime.stringToLocalDateTime(stampInput.getEndBreak());
-        // 始業時間より終業時間が後になっていること、休憩開始時間より休憩終了時間が後になっていること、始業時間より休憩開始時間が後になっていること、休憩終了時間より終業時間が後になっていること
-        if(endWork.isAfter(beginWork) && endBreak.isAfter(beginBreak) && beginBreak.isAfter(beginWork) && endWork.isAfter(endBreak))
-        {
-            // 条件通りなら何もしない
-        }
-        else
-        {
-            // 条件に沿っていなかったらエラー
-            status = 3;
-            return new Response(status);
-        }
-
-        // 始業と終業、休憩の開始と終了がシフトの時間と一致していること
-        if(shift.getBeginWork().compareTo(beginWork) == 0 && shift.getEndWork().compareTo(endWork) == 0 && shift.getBeginBreak().compareTo(beginBreak) == 0 && shift.getEndBreak().compareTo(endBreak) == 0)
-        {
-            // 一致していたら何もしない
-        }
-        else
-        {
-            status = 3;
-            return new Response(status);
-        }
-        int requestStatus = 1;
-        // 打刻漏れ申請登録(サービス層で行うべき？)
-        StampRequest stampRequest = new StampRequest();
-        stampRequest.setAccountId(account);
-        stampRequest.setBeginWork(beginWork);
-        stampRequest.setEndWork(endWork);
-        stampRequest.setBeginBreak(beginBreak);
-        stampRequest.setEndBreak(endBreak);
-        stampRequest.setRequestComment(stampInput.getRequestComment());
-        stampRequest.setRequestDate(Objects.isNull(stampInput.getRequestDate()) ? null : stringToLocalDateTime.stringToLocalDateTime(stampInput.getRequestDate()));
-        stampRequest.setRequestStatus(requestStatus);
-        stampRequest.setApprover(null);
-        stampRequest.setApprovalTime(null);
-        stampRequest.setApproverComment(null);
-        stampRequest.setShiftId(shift);
-        StampRequest resultStampRequest = stampRequestService.save(stampRequest);
-        if(Objects.isNull(resultStampRequest) || Objects.isNull(resultStampRequest))
-        {
-            status = 3;
-            return new Response(status);
-        }
-        status = 1;
-        return new Response(status);
+        int result = stampRequestService.createStampRequest(account, stampInput);
+        return new Response(result);
     }
 
     @PostMapping("/send/vacation")
