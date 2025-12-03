@@ -3,6 +3,9 @@ package com.example.springboot.dto.change;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class LocalDateTimeToString
 {
     public String localDateTimeToString(LocalDateTime localDateTime)

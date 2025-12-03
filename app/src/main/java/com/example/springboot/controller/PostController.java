@@ -247,84 +247,16 @@ public class PostController
     }
 
     @PostMapping("/send/changetime")
-    public Response shiftChangeSet(@RequestBody ShiftChangeInput shiftChangeInput, HttpSession session)
+    public Response shiftChangeSet(@RequestBody ShiftChangeInput shiftChangeInput)
     {
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
-        int status = 0;
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
+        Account account = accountService.findCurrentAccount();
         // accountの情報があるか
         if(Objects.isNull(account))
         {
-            status = 4;
-            return new Response(status);
+            return new Response(4);
         }
-        // アカウントの情報とシフトの情報を基に検索
-        Shift shift = shiftService.findByAccountIdAndShiftId(account, shiftChangeInput.getShiftId());
-        if(Objects.isNull(shift))
-        {
-            status = 4;
-            return new Response(status);
-        }
-        LocalDateTime nowTime = LocalDateTime.now();
-        LocalDateTime beginWork = stringToLocalDateTime.stringToLocalDateTime(shiftChangeInput.getBeginWork());
-        LocalDateTime endWork = stringToLocalDateTime.stringToLocalDateTime(shiftChangeInput.getEndWork());
-        LocalDateTime beginBreak = stringToLocalDateTime.stringToLocalDateTime(shiftChangeInput.getBeginBreak());
-        LocalDateTime endBreak = stringToLocalDateTime.stringToLocalDateTime(shiftChangeInput.getEndBreak());
-        // シフト時間変更申請で同じシフトに承認待ちの申請がないことを確認
-        List<ShiftChangeRequest> shiftChangeRequestWaits = shiftChangeRequestService.findByAccountIdAndShiftIdAndRequestStatusWait(account, shift.getShiftId());
-        if(shiftChangeRequestWaits.size() > 0)
-        {
-            status = 3;
-            return new Response(status);
-        }        
-        // 始業時間より終業時間が後になっていること、休憩開始時間より休憩終了時間が後になっていること、始業時間より休憩開始時間が後になっていること、休憩終了時間より終業時間が後になっていること
-        if(endWork.isAfter(beginWork) && endBreak.isAfter(beginBreak) && beginBreak.isAfter(beginWork) && endWork.isAfter(endBreak))
-        {
-            // 条件通りなら何もしない
-        }
-        else
-        {
-            // 条件に沿っていなかったらエラー
-            status = 3;
-            return new Response(status);
-        }
-
-        // 始業時間が1年先までは許容する
-        LocalDateTime nextYear = nowTime.plusYears(1L);
-        // 現在時刻より後かつ1年後(nextYear)より前
-        if(beginWork.isAfter(nowTime) && beginWork.isBefore(nextYear))
-        {
-            // 条件に従っていれば何もしない
-        }
-        else
-        {
-            // 1年前後に収まっていない始業時間ならエラー
-            status = 3;
-            return new Response(status);
-        }
-        // シフト時間変更申請(サービス層で行うべき?)
-        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
-        shiftChangeRequest.setAccountId(account);
-        shiftChangeRequest.setBeginWork(beginWork);
-        shiftChangeRequest.setEndWork(endWork);
-        shiftChangeRequest.setBeginBreak(beginBreak);
-        shiftChangeRequest.setEndBreak(endBreak);
-        shiftChangeRequest.setRequestComment(shiftChangeInput.getRequestComment());
-        shiftChangeRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(shiftChangeInput.getRequestDate()));
-        shiftChangeRequest.setRequestStatus(1);
-        shiftChangeRequest.setApprover(null);
-        shiftChangeRequest.setApprovalTime(null);
-        shiftChangeRequest.setApproverComment(null);
-        shiftChangeRequest.setShiftId(shift);
-        ShiftChangeRequest resultShiftChangeRequest = shiftChangeRequestService.save(shiftChangeRequest);
-        if(Objects.isNull(resultShiftChangeRequest) || Objects.isNull(resultShiftChangeRequest.getShiftChangeId()))
-        {
-            status = 3;
-            return new Response(status);
-        }
-        status = 1;
-        return new Response(status);
+        int result = shiftChangeRequestService.createShiftChangeRequest(account, shiftChangeInput);
+        return new Response(result);
     }
 
     @PostMapping("/send/stamp")

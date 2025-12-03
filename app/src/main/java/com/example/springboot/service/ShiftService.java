@@ -26,8 +26,20 @@ import com.example.springboot.repository.ShiftRepository;
 @Service
 public class ShiftService
 {
+    private final ShiftRepository shiftRepository;
+    private final LocalDateTimeToString localDateTimeToString;
+
     @Autowired
-    private ShiftRepository shiftRepository;
+    public ShiftService
+    (
+        ShiftRepository shiftRepository,
+        LocalDateTimeToString localDateTimeToString
+    )
+    {
+        this.shiftRepository = shiftRepository;
+        this.localDateTimeToString = localDateTimeToString;
+    }
+
     public List<Shift> findByAccountId(Long id)
     {
         Account accountId = new Account();
@@ -126,7 +138,6 @@ public class ShiftService
     
     public ShiftListResponse shiftToShiftListResponse(Shift shift)
     {
-        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         ShiftListResponse shiftListResponse = new ShiftListResponse();
         shiftListResponse.setId(shift.getShiftId());
         shiftListResponse.setBeginWork(localDateTimeToString.localDateTimeToString(shift.getBeginWork()));
