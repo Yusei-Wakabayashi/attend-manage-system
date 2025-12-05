@@ -157,9 +157,6 @@ public class PostController
     private ShiftListVacationService shiftListVacationService;
 
     @Autowired
-    private VacationTypeService vacationTypeService;
-
-    @Autowired
     private AttendService attendService;
 
     @Autowired
@@ -286,181 +283,13 @@ public class PostController
     @PostMapping("/send/othertime")
     public Response otherTimeSet(@RequestBody OtherTimeInput otherTimeInput, HttpSession session)
     {
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
-        // アカウントの取得
-        int status = 0;
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
+        Account account = accountService.findCurrentAccount();
         if(Objects.isNull(account))
         {
-            status = 3;
-            return new Response(status);
+            return new Response(3);
         }
-        Shift shift = shiftService.findByAccountIdAndShiftId(account, otherTimeInput.getShiftId());
-        if(Objects.isNull(shift))
-        {
-            status = 3;
-            return new Response(status);
-        }
-        // 開始の後に終了が存在すること
-        LocalDateTime startTime = stringToLocalDateTime.stringToLocalDateTime(otherTimeInput.getBeginOtherTime());
-        LocalDateTime endTime = stringToLocalDateTime.stringToLocalDateTime(otherTimeInput.getEndOtherTime());
-        if(endTime.isAfter(startTime))
-        {
-            // 条件通りなら何もしない
-        }
-        else
-        {
-            status = 3;
-            return new Response(status);
-        }
-        // shiftidを基に反映されている残業申請の一覧を取得
-        List<ShiftListOverTime> shiftListOverTimes = shiftListOverTimeService.findByShiftId(shift);
-        // shiftidを基にシフトに関する申請の取得
-        ShiftListShiftRequest shiftListShiftRequest = shiftListShiftRequestService.findByShiftId(shift);
-        switch (otherTimeInput.getOtherType().intValue())
-        {
-            // 外出申請の場合
-            // シフト内か確認
-            // 重複NG(承認待ち、承認済み問わず)
-            // すでに申請されている申請をシフトidとステータス(申請済み、承認済み)で検索
-            // shiftIdと申請したい時間帯で検索時間帯の中にその他の外出申請の開始または、終了があればエラー
-            case 1:
-                // 重なる時間を許容したいのでequalで等しい場合にもtrueになるように
-                if ((startTime.isAfter(shift.getBeginWork()) || startTime.isEqual(shift.getBeginWork())) &&
-                (endTime.isBefore(shift.getEndWork()) || endTime.isEqual(shift.getEndWork())))
-                {
-                    // 条件通りなら何もしない
-                }
-                else
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // 重複する外出申請の取得
-                List<AttendanceExceptionRequest> attendanceExceptionRequests = attendanceExceptionRequestService.findByAccountIdAndShiftIdAndOutingAndBeginTimeBetweenOrEndTimeBetweenAndRequestStatusWaitOrRequestStatusApproved(account, shift, startTime, endTime);
-                if(attendanceExceptionRequests.size() >0)
-                {
-                    // 0より大きければ重複する内容があったことになるのでエラー
-                    status = 3;
-                    return new Response(status);
-                }
-                break;
-            // 遅刻申請の場合
-            // 始業時間は元となるシフト申請の始業時間
-            // 始業時間と一致すること
-            // 始業前の残業が存在する場合申請NG
-            // 休暇と被る場合も申請NG
-            case 2:
-                // 始業前の残業が存在しないか確認
-                for(ShiftListOverTime shiftListOverTime : shiftListOverTimes)
-                {
-                    // 遅刻の開始の前に残業の終了が存在すればエラー
-                    if(shiftListOverTime.getOverTimeId().getEndWork().isBefore(startTime))
-                    {
-                        status = 3;
-                        return new Response(status);
-                    }
-                }
-                LocalDateTime beginTime;
-                // シフト時間変更申請がなければシフト申請で
-                if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
-                {
-                    ShiftRequest shiftRequest = shiftRequestService.findById(shiftListShiftRequest.getShiftRequestId().getShiftRequestId());
-                    beginTime = shiftRequest.getBeginWork();
-                }
-                // シフト申請がなければシフト時間変更申請で
-                else if(Objects.isNull(shiftListShiftRequest.getShiftRequestId()))
-                {
-                    ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findById(shiftListShiftRequest.getShiftChangeRequestId().getShiftChangeId());
-                    beginTime = shiftChangeRequest.getBeginWork();
-                }
-                else
-                {
-                    // どちらでもなければエラー
-                    status = 3;
-                    return new Response(status);
-                }
-                // 元となる申請の取得をしたら条件と合致するかシフトの就業まで(終業時間調度は許容)に終了するか
-                if(startTime.isEqual(beginTime) && (startTime.isBefore(shift.getEndWork()) || startTime.isEqual(shift.getEndWork())))
-                {
-                    // 一致すれば何もしない
-                }
-                else
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                break;
-            // 早退申請の場合
-            // 終業時間は元となるシフト申請の終業時間
-            // 終業時間と一致すること
-            // 始業より後に早退が存在すること
-            // 終業後の残業が存在する場合申請NG
-            // 休暇と被る場合も申請NG
-            case 3:
-                // 始業前の残業が存在しないか確認
-                for(ShiftListOverTime shiftListOverTime : shiftListOverTimes)
-                {
-                    // 早退の終了後に残業が存在すればエラー
-                    if(shiftListOverTime.getOverTimeId().getBeginWork().isAfter(endTime))
-                    {
-                        status = 3;
-                        return new Response(status);
-                    }
-                }
-
-                LocalDateTime closeTime;
-                // シフト時間変更申請がなければシフト申請で
-                if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
-                {
-                    ShiftRequest shiftRequest = shiftRequestService.findById(shiftListShiftRequest.getShiftRequestId().getShiftRequestId());
-                    closeTime = shiftRequest.getEndWork();
-                }
-                // シフト申請がなければシフト時間変更申請で
-                else if(Objects.isNull(shiftListShiftRequest.getShiftRequestId()))
-                {
-                    ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findById(shiftListShiftRequest.getShiftChangeRequestId().getShiftChangeId());
-                    closeTime = shiftChangeRequest.getEndWork();
-                }
-                else
-                {
-                    // どちらでもなければエラー
-                    status = 3;
-                    return new Response(status);
-                }
-                // 元となる申請の取得をしたら条件と合致するかシフトの開始(シフト開始直後は許容)の後始まるか
-                if(endTime.isEqual(closeTime) && (startTime.isAfter(shift.getBeginWork()) || startTime.isEqual(shift.getBeginWork())))
-                {
-                    // 一致すれば何もしない
-                }
-                else
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                break;
-            default:
-                break;
-        }
-        // 勤怠例外申請登録(サービス層で行うべき？)
-        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
-        attendanceExceptionRequest.setAccountId(account);
-        attendanceExceptionRequest.setBeginTime(startTime);
-        attendanceExceptionRequest.setEndTime(endTime);
-        attendanceExceptionRequest.setAttendanceExceptionTypeId(attendanceExceptionTypeService.findByAttendanceExceptionTypeId(otherTimeInput.getOtherType()));
-        attendanceExceptionRequest.setRequestComment(otherTimeInput.getRequestComment());
-        attendanceExceptionRequest.setRequestDate(otherTimeInput.getRequestDate() == null ? null : stringToLocalDateTime.stringToLocalDateTime(otherTimeInput.getRequestDate()));
-        attendanceExceptionRequest.setRequestStatus(1);
-        attendanceExceptionRequest.setShiftId(shift);
-        AttendanceExceptionRequest resultAttendanceExceptionRequest = attendanceExceptionRequestService.save(attendanceExceptionRequest);
-        if(Objects.isNull(resultAttendanceExceptionRequest) || Objects.isNull(resultAttendanceExceptionRequest.getAttendanceExceptionId()))
-        {
-            status = 3;
-            return new Response(status);
-        }
-        status = 1;
-        return new Response(status);
+        int result = attendanceExceptionRequestService.createAttendanceExceptionRequest(account, otherTimeInput);
+        return new Response(result);
     }
 
     @PostMapping("/send/overtime")

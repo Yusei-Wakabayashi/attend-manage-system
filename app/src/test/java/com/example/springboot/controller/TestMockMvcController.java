@@ -36,6 +36,7 @@ import com.example.springboot.Config;
 import com.example.springboot.dto.AllStyleListResponse;
 import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.change.StringToLocalDateTime;
+import com.example.springboot.dto.input.OtherTimeInput;
 import com.example.springboot.dto.input.ShiftChangeInput;
 import com.example.springboot.dto.input.ShiftInput;
 import com.example.springboot.dto.input.StampInput;
@@ -2278,46 +2279,15 @@ public class TestMockMvcController
             """,
             requestShiftId, requestOtherType, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
         );
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+
         Account generalAccount = new Account();
         Long generalAccountId = 3L;
         String generalAccountUsername = "testuser";
         generalAccount.setId(generalAccountId);
         generalAccount.setUsername(generalAccountUsername);
 
-        Shift generalShift = new Shift();
-        Long generalShiftId = 5L;
-        String generalShiftBeginWork = "2025/12/23T09:00:00";
-        String generalShiftEndWork = "2025/12/23T18:00:00";
-        generalShift.setShiftId(generalShiftId);
-        generalShift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(generalShiftBeginWork));
-        generalShift.setEndWork(stringToLocalDateTime.stringToLocalDateTime(generalShiftEndWork));
-
-        List<ShiftListOverTime> shiftListOverTimes = new ArrayList<ShiftListOverTime>();
-        ShiftListOverTime shiftListOverTime = new ShiftListOverTime();
-        shiftListOverTimes.add(shiftListOverTime);
-
-        ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
-        ShiftRequest shiftRequest = new ShiftRequest();
-        Long shiftRequestId = 51L;
-        String shiftRequestBegin = "2025/12/23T09:00:00";
-        String shiftRequestEnd = "2025/12/23T18:00:00";
-        shiftRequest.setShiftRequestId(shiftRequestId);
-        shiftRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(shiftRequestBegin));
-        shiftRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(shiftRequestEnd));
-        shiftListShiftRequest.setShiftRequestId(shiftRequest);
-
-        List<AttendanceExceptionRequest> attendanceExceptionRequests = new ArrayList<AttendanceExceptionRequest>();
-        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
-        Long attendanceExceptionRequestId = 34L;
-        attendanceExceptionRequest.setAttendanceExceptionId(attendanceExceptionRequestId);
-
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(generalShift);
-        when(shiftListOverTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOverTimes);
-        when(shiftListShiftRequestService.findByShiftId(any(Shift.class))).thenReturn(shiftListShiftRequest);
-        when(attendanceExceptionRequestService.findByAccountIdAndShiftIdAndOutingAndBeginTimeBetweenOrEndTimeBetweenAndRequestStatusWaitOrRequestStatusApproved(any(Account.class), any(Shift.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(attendanceExceptionRequests);
-        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(attendanceExceptionRequestService.createAttendanceExceptionRequest(any(Account.class), any(OtherTimeInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/othertime")
@@ -2334,7 +2304,7 @@ public class TestMockMvcController
     void otherTimeRequestLatenessSuccess() throws Exception
     {
         int requestShiftId = 1;
-        int requestOtherType = 1;
+        int requestOtherType = 2;
         String requestBeginOtherTime = "2025/12/23T09:00:00";
         String requestEndOtherTime = "2025/12/23T10:00:00";
         String requestComment = "";
@@ -2353,52 +2323,15 @@ public class TestMockMvcController
             """,
             requestShiftId, requestOtherType, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
         );
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+
         Account generalAccount = new Account();
         Long generalAccountId = 3L;
         String generalAccountUsername = "testuser";
         generalAccount.setId(generalAccountId);
         generalAccount.setUsername(generalAccountUsername);
 
-        Shift generalShift = new Shift();
-        Long generalShiftId = 5L;
-        String generalShiftBeginWork = "2025/12/23T09:00:00";
-        String generalShiftEndWork = "2025/12/23T18:00:00";
-        generalShift.setShiftId(generalShiftId);
-        generalShift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(generalShiftBeginWork));
-        generalShift.setEndWork(stringToLocalDateTime.stringToLocalDateTime(generalShiftEndWork));
-
-        List<ShiftListOverTime> shiftListOverTimes = new ArrayList<ShiftListOverTime>();
-        ShiftListOverTime shiftListOverTime = new ShiftListOverTime();
-        Long shiftListOverTimeId = 3L;
-        shiftListOverTime.setShiftListOverTimeId(shiftListOverTimeId);
-        shiftListOverTimes.add(shiftListOverTime);
-
-        OverTimeRequest overTimeRequest = new OverTimeRequest();
-        String shiftListOverTimeBeginOverTime = "2025/12/23T18:00:00";
-        String shiftListOverTimeEndOverTime = "2025/12/23T19:00:00";
-        overTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(shiftListOverTimeBeginOverTime));
-        overTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(shiftListOverTimeEndOverTime));
-
-        ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
-        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
-        Long shiftChangeRequestId = 51L;
-        String shiftChangeRequestBegin = "2025/12/23T09:00:00";
-        String shiftChangeRequestEnd = "2025/12/23T18:00:00";
-        shiftChangeRequest.setShiftChangeId(shiftChangeRequestId);
-        shiftChangeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(shiftChangeRequestBegin));
-        shiftChangeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(shiftChangeRequestEnd));
-        shiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
-
-        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
-        Long attendanceExceptionRequestId = 34L;
-        attendanceExceptionRequest.setAttendanceExceptionId(attendanceExceptionRequestId);
-
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(generalShift);
-        when(shiftListOverTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOverTimes);
-        when(shiftListShiftRequestService.findByShiftId(any(Shift.class))).thenReturn(shiftListShiftRequest);
-        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(attendanceExceptionRequestService.createAttendanceExceptionRequest(any(Account.class), any(OtherTimeInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/othertime")
@@ -2415,7 +2348,7 @@ public class TestMockMvcController
     void otherTimeRequestLeaveEarlySuccess() throws Exception
     {
         int requestShiftId = 1;
-        int requestOtherType = 1;
+        int requestOtherType = 3;
         String requestBeginOtherTime = "2025/12/23T17:00:00";
         String requestEndOtherTime = "2025/12/23T18:00:00";
         String requestComment = "";
@@ -2433,52 +2366,15 @@ public class TestMockMvcController
             """,
             requestShiftId, requestOtherType, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
         );
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
+
         Account generalAccount = new Account();
         Long generalAccountId = 3L;
         String generalAccountUsername = "testuser";
         generalAccount.setId(generalAccountId);
         generalAccount.setUsername(generalAccountUsername);
 
-        Shift generalShift = new Shift();
-        Long generalShiftId = 5L;
-        String generalShiftBeginWork = "2025/12/23T09:00:00";
-        String generalShiftEndWork = "2025/12/23T18:00:00";
-        generalShift.setShiftId(generalShiftId);
-        generalShift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(generalShiftBeginWork));
-        generalShift.setEndWork(stringToLocalDateTime.stringToLocalDateTime(generalShiftEndWork));
-
-        List<ShiftListOverTime> shiftListOverTimes = new ArrayList<ShiftListOverTime>();
-        ShiftListOverTime shiftListOverTime = new ShiftListOverTime();
-        Long shiftListOverTimeId = 3L;
-        shiftListOverTime.setShiftListOverTimeId(shiftListOverTimeId);
-        shiftListOverTimes.add(shiftListOverTime);
-
-        OverTimeRequest overTimeRequest = new OverTimeRequest();
-        String shiftListOverTimeBeginOverTime = "2025/12/23T08:00:00";
-        String shiftListOverTimeEndOverTime = "2025/12/23T09:00:00";
-        overTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(shiftListOverTimeBeginOverTime));
-        overTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(shiftListOverTimeEndOverTime));
-
-        ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
-        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
-        Long shiftChangeRequestId = 51L;
-        String shiftChangeRequestBegin = "2025/12/23T09:00:00";
-        String shiftChangeRequestEnd = "2025/12/23T18:00:00";
-        shiftChangeRequest.setShiftChangeId(shiftChangeRequestId);
-        shiftChangeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(shiftChangeRequestBegin));
-        shiftChangeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(shiftChangeRequestEnd));
-        shiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
-
-        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
-        Long attendanceExceptionRequestId = 43L;
-        attendanceExceptionRequest.setAttendanceExceptionId(attendanceExceptionRequestId);
-
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(generalShift);
-        when(shiftListOverTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOverTimes);
-        when(shiftListShiftRequestService.findByShiftId(any(Shift.class))).thenReturn(shiftListShiftRequest);
-        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(attendanceExceptionRequestService.createAttendanceExceptionRequest(any(Account.class), any(OtherTimeInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/othertime")
