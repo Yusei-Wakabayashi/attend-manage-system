@@ -2,6 +2,9 @@ package com.example.springboot.dto.change;
 
 import java.time.Duration;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class StringToDuration
 {
     public Duration stringToDuration(String str)

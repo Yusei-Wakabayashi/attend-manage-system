@@ -10,7 +10,7 @@ import lombok.Setter;
 public class VacationInput
 {
     private Long shiftId;
-    private int vacationType;
+    private Long vacationType;
     private String beginVacation;
     private String endVacation;
     private String requestComment;

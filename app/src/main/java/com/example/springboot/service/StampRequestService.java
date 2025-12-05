@@ -42,6 +42,7 @@ public class StampRequestService
         this.monthlyRequestService = monthlyRequestService;
     }
 
+    @Transactional
     public int createStampRequest(Account account, StampInput stampInput)
     {
         // アカウントの情報とシフトの情報を基に検索

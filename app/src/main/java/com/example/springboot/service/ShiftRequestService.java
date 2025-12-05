@@ -54,6 +54,7 @@ public class ShiftRequestService
             .orElseThrow(() -> new RuntimeException("シフト申請が見つかりません"));
     }
 
+    @Transactional
     public int createShiftRequest(Account account, ShiftInput shiftInput)
     {
         // 始業時間、終業時間、休憩開始時間、休憩終了時間が現在取得時間より後になっていることを確認

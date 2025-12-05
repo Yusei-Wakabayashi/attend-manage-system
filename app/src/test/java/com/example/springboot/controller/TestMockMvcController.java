@@ -39,6 +39,7 @@ import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.input.ShiftChangeInput;
 import com.example.springboot.dto.input.ShiftInput;
 import com.example.springboot.dto.input.StampInput;
+import com.example.springboot.dto.input.VacationInput;
 import com.example.springboot.dto.input.YearMonthInput;
 import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
@@ -101,6 +102,8 @@ import com.example.springboot.service.StyleService;
 import com.example.springboot.service.VacationRequestService;
 import com.example.springboot.service.VacationService;
 import com.example.springboot.service.VacationTypeService;
+
+import lombok.val;
 
 @ContextConfiguration(classes = Config.class)
 @WebMvcTest({PostController.class,GetController.class})
@@ -1537,7 +1540,6 @@ public class TestMockMvcController
     @Test
     void vacationRequestSuccess() throws Exception
     {
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         String generalBeginOverWork = "2026/11/22T10:00:00";
         String generalEndOverWork = "2026/11/22T11:00:00";
         String generalRequestComment = "";
@@ -1565,80 +1567,8 @@ public class TestMockMvcController
         generalAccount.setId(generalAccountId);
         generalAccount.setUsername(generalAccountUsername);
 
-        Shift generalShift = new Shift();
-        Long generalShiftId = 3L;
-        String generalBeginWork = "2026/11/22T09:00:00";
-        String generalEndWork = "2026/11/22T18:00:00";
-        String generalBeginBreak = "2026/11/22T12:00:00";
-        String generalEndBreak = "2026/11/22T13:00:00";
-        generalShift.setShiftId(generalShiftId);
-        generalShift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(generalBeginWork));
-        generalShift.setEndWork(stringToLocalDateTime.stringToLocalDateTime(generalEndWork));
-        generalShift.setBeginBreak(stringToLocalDateTime.stringToLocalDateTime(generalBeginBreak));
-        generalShift.setEndBreak(stringToLocalDateTime.stringToLocalDateTime(generalEndBreak));
-
-        List<VacationRequest> vacationRequests = new ArrayList<VacationRequest>();
-        VacationRequest generalVacationRequest = new VacationRequest();
-        Long generalVacationRequestId = 5L;
-        String generalVacationRequestBegin = "2026/11/22T09:00:00";
-        String generalVacationRequestEnd = "2026/11/22T10:00:00";
-        generalVacationRequest.setVacationId(generalVacationRequestId);
-        generalVacationRequest.setAccountId(generalAccount);
-        generalVacationRequest.setShiftId(generalShift);
-        generalVacationRequest.setBeginVacation(stringToLocalDateTime.stringToLocalDateTime(generalVacationRequestBegin));
-        generalVacationRequest.setEndVacation(stringToLocalDateTime.stringToLocalDateTime(generalVacationRequestEnd));
-        vacationRequests.add(generalVacationRequest);
-
-        List<ShiftListOverTime> shiftListOverTimes = new ArrayList<ShiftListOverTime>();
-        ShiftListOverTime generalShiftListOverTime = new ShiftListOverTime();
-        OverTimeRequest generalOverTimeRequest = new OverTimeRequest();
-        String generalOverTimeRequestBegin = "2026/11/22T14:00:00";
-        String generalOverTimeRequestEnd = "2026/11/22T15:00:00";
-        generalOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(generalOverTimeRequestBegin));
-        generalOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(generalOverTimeRequestEnd));
-        generalShiftListOverTime.setOverTimeId(generalOverTimeRequest);
-        shiftListOverTimes.add(generalShiftListOverTime);
-
-        List<OverTimeRequest> overTimeRequests = new ArrayList<OverTimeRequest>();
-        OverTimeRequest adminOverTimeRequest = new OverTimeRequest();
-        String adminOverTimeRequestBegin = "2026/11/22T18:00:00";
-        String adminOverTimeRequestEnd = "2026/11/22T20:00:00";
-        adminOverTimeRequest.setAccountId(generalAccount);
-        adminOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(adminOverTimeRequestBegin));
-        adminOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(adminOverTimeRequestEnd));
-        overTimeRequests.add(adminOverTimeRequest);
-
-        List<PaydHoliday> paydHolidays = new ArrayList<PaydHoliday>();
-        PaydHoliday generalPaydHoliday = new PaydHoliday();
-        String generalPaydHolidayTime = "08:00:00";
-        generalPaydHoliday.setTime(generalPaydHolidayTime);
-        paydHolidays.add(generalPaydHoliday);
-
-        List<VacationRequest> paydHolidayVacationRequests = new ArrayList<VacationRequest>();
-        VacationRequest paydHolidayVacationRequest = new VacationRequest();
-        VacationType generalVacationType = new VacationType();
-        Long generalVacationTypeId = 1L;
-        generalVacationType.setVacationTypeId(generalVacationTypeId);
-        String paydHolidayVacationRequestBegin = "2026/12/31T00:00:00";
-        String paydHolidayVacationRequestEnd = "2026/12/31T07:00:00";
-        paydHolidayVacationRequest.setVacationTypeId(generalVacationType);
-        paydHolidayVacationRequest.setBeginVacation(stringToLocalDateTime.stringToLocalDateTime(paydHolidayVacationRequestBegin));
-        paydHolidayVacationRequest.setEndVacation(stringToLocalDateTime.stringToLocalDateTime(paydHolidayVacationRequestEnd));
-        paydHolidayVacationRequests.add(paydHolidayVacationRequest);
-
-        VacationRequest vacationRequest = new VacationRequest();
-        Long vacationRequestId = 3L;
-        vacationRequest.setVacationId(vacationRequestId);
-
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(generalShift);
-        when(vacationRequestService.findByAccountIdAndShiftId(any(Account.class), any(Shift.class))).thenReturn(vacationRequests);
-        when(shiftListOverTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOverTimes);
-        when(overTimeRequestService.findByAccountIdAndShiftIdAndRequestStatusWait(any(Account.class), any(Shift.class))).thenReturn(overTimeRequests);
-        when(paydHolidayService.findByAccountIdAndLimitAfter(any(Account.class))).thenReturn(paydHolidays);
-        when(vacationRequestService.findByAccountIdAndRequestStatusWaitAndVacationTypePaydHoiday(any(Account.class))).thenReturn(paydHolidayVacationRequests);
-        when(vacationTypeService.findById(anyLong())).thenReturn(generalVacationType);
-        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn(vacationRequest);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(vacationRequestService.createVacationRequest(any(Account.class), any(VacationInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/vacation")

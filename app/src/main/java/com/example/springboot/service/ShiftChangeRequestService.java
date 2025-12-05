@@ -43,6 +43,7 @@ public class ShiftChangeRequestService
         this.shiftService = shiftService;
     }
 
+    @Transactional
     public int createShiftChangeRequest(Account account, ShiftChangeInput shiftChangeInput)
     {
         // アカウントの情報とシフトの情報を基に検索

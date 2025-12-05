@@ -49,7 +49,6 @@ import com.example.springboot.model.LegalTime;
 import com.example.springboot.model.MonthlyRequest;
 import com.example.springboot.model.NewsList;
 import com.example.springboot.model.OverTimeRequest;
-import com.example.springboot.model.PaydHoliday;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
 import com.example.springboot.model.ShiftListOtherTime;
@@ -275,179 +274,13 @@ public class PostController
     @PostMapping("/send/vacation")
     public Response vacationSet(@RequestBody VacationInput vacationInput, HttpSession session)
     {
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
-        StringToDuration stringToDuration = new StringToDuration();
-        int status = 0;
-        // アカウントの取得
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
-        // 休暇の時刻が形式に沿っているか
-        LocalDateTime beginVacation = stringToLocalDateTime.stringToLocalDateTime(vacationInput.getBeginVacation());
-        LocalDateTime endVacation = stringToLocalDateTime.stringToLocalDateTime(vacationInput.getEndVacation());
-
-        // 休暇開始の後に休暇終了の形になっているか
-        if(endVacation.isAfter(beginVacation))
+        Account account = accountService.findCurrentAccount();
+        if(Objects.isNull(account))
         {
-            // 形式通りなら何もしない
+            return new Response(4);
         }
-        else
-        {
-            // それ以外ならエラー
-            status = 3;
-            return new Response(status);
-        }
-        // 現在時刻より後なら正常
-        LocalDateTime nowTime = LocalDateTime.now();
-        if(beginVacation.isAfter(nowTime))
-        {
-            // 正常
-        }
-        else
-        {
-            status = 4;
-            return new Response(status);
-        }
-        // シフトの時間内に収まっているのか
-        Shift shift = shiftService.findByAccountIdAndShiftId(account, vacationInput.getShiftId());
-        // 始業時間より休暇の開始または終了が前ならエラー、終業時間より休暇の開始または終了が後ならエラー
-        if(beginVacation.isBefore(shift.getBeginWork()) || endVacation.isBefore(shift.getBeginWork()) || beginVacation.isAfter(shift.getEndWork()) || endVacation.isAfter(shift.getEndWork()))
-        {
-            status = 3;
-            return new Response(status);
-        }
-        // すでに申請されている休暇と重複していないか
-        List<VacationRequest> vacationRequests = vacationRequestService.findByAccountIdAndShiftId(account, shift);
-        for(VacationRequest vacationRequest : vacationRequests)
-        {
-            // 申請済みの休暇の休暇開始と休暇終了の間に、今回申請する休暇開始、休暇終了のどちらかが存在していればエラー
-            if((vacationRequest.getBeginVacation().isBefore(beginVacation) && vacationRequest.getEndVacation().isAfter(beginVacation)) || (vacationRequest.getBeginVacation().isBefore(endVacation) && vacationRequest.getEndVacation().isAfter(endVacation)))
-            {
-                status = 3;
-                return new Response(status);
-            }
-        }
-        // 残業の前後(始業前の残業直後、終業後の残業直前)でないこと
-        List<ShiftListOverTime> shiftListOverTimes = shiftListOverTimeService.findByShiftId(shift);
-        for(ShiftListOverTime shiftListOverTime : shiftListOverTimes)
-        {
-            LocalDateTime beginOverTime = shiftListOverTime.getOverTimeId().getBeginWork();
-            LocalDateTime endOverTime = shiftListOverTime.getOverTimeId().getEndWork();
-            // 残業の終了の後に休暇の開始(同じ時刻ならfalse)、残業の開始の前に休暇の終了(同じ時刻ならfalse)
-            if(beginVacation.isAfter(endOverTime) || endVacation.isBefore(beginOverTime))
-            {
-                // 正常動作
-            }
-            else
-            {
-                // 残業終了の前に休暇の開始、または休暇の終了の後に終業後の残業開始が存在していればエラー
-                status = 3;
-                return new Response(status);     
-            }
-        }
-
-        // 残業申請の承認待ちでも行う
-        List<OverTimeRequest> overTimeRequests = overTimeRequestService.findByAccountIdAndShiftIdAndRequestStatusWait(account, shift);
-        for(OverTimeRequest overTimeRequest : overTimeRequests)
-        {
-            LocalDateTime requestBeginOverTime = overTimeRequest.getBeginWork();
-            LocalDateTime requestEndOverTime = overTimeRequest.getEndWork();
-            // 残業の終了の後に休暇の開始(同じ時刻ならfalse)、残業の開始の前に休暇の終了(同じ時刻ならfalse)
-            if(beginVacation.isAfter(requestEndOverTime) || endVacation.isBefore(requestBeginOverTime))
-            {
-                // 正常動作
-            }
-            else
-            {
-                // 残業終了の前に休暇の開始、または休暇の終了の後に終業後の残業開始が存在していればエラー
-                status = 3;
-                return new Response(status);            
-            }
-        }
-        // 有給の場合承認待ちの有給申請の時間も含め足りるかを計算
-        switch (vacationInput.getVacationType())
-        {
-            // 有給の場合
-            case 1:
-                // 使用可能な有給を取得
-                List<PaydHoliday> paydHolidays = paydHolidayService.findByAccountIdAndLimitAfter(account);
-                Duration availableHoliday = Duration.ZERO;
-                for(PaydHoliday paydHoliday : paydHolidays)
-                {
-                    availableHoliday = availableHoliday.plus(stringToDuration.stringToDuration(paydHoliday.getTime()));
-                }
-                // 申請によって予約済みの有給を取得
-                List<VacationRequest> vacationRequestPaydHolidays = vacationRequestService.findByAccountIdAndRequestStatusWaitAndVacationTypePaydHoiday(account);
-                Duration usedHoliday = Duration.ZERO;
-                for(VacationRequest vacationRequest : vacationRequestPaydHolidays)
-                {
-                    usedHoliday = usedHoliday.plus(Duration.between(vacationRequest.getBeginVacation(), vacationRequest.getEndVacation()));
-                }
-                // 使用可能な有給から予約済みの有給を減算
-                availableHoliday = availableHoliday.minus(usedHoliday);
-                // 申請された有給と使用可能な有給を比較し等しいか、大きければtrue
-                Duration requestHoliday = Duration.between(beginVacation, endVacation);
-                if(availableHoliday.compareTo(requestHoliday) >= 0)
-                {
-                    // 正常
-                }
-                else
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                break;
-            
-            // 代休の場合
-            case 2:
-                break;
-
-            // 欠勤の場合
-            case 3:
-                break;
-
-            // 忌引きの場合
-            case 4:
-                break;
-            
-            // 特別休暇の場合
-            case 5:
-                break;
-            
-            // 子供休暇
-            case 6:
-                break;
-            // 介護休暇
-            case 7:
-                break;
-            // 保存休暇
-            case 8:
-                break;
-
-            default:
-
-                break;
-        }
-        // 休暇申請登録(サービス層で行うべき?)
-        VacationRequest vacationRequest = new VacationRequest();
-        vacationRequest.setAccountId(account);
-        vacationRequest.setVacationTypeId(vacationTypeService.findById(Long.valueOf(vacationInput.getVacationType())));
-        vacationRequest.setBeginVacation(beginVacation);
-        vacationRequest.setEndVacation(endVacation);
-        vacationRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(vacationInput.getRequestDate()));
-        vacationRequest.setRequestComment(vacationInput.getRequestComment());
-        vacationRequest.setRequestStatus(1);
-        vacationRequest.setApprover(null);
-        vacationRequest.setApprovalTime(null);
-        vacationRequest.setApproverComment(null);
-        vacationRequest.setShiftId(shift);
-        VacationRequest resultVacationRequest = vacationRequestService.save(vacationRequest);
-        if(Objects.isNull(resultVacationRequest) || Objects.isNull(resultVacationRequest.getVacationId()))
-        {
-            status = 3;
-            return new Response(status);
-        }
-        status = 1;
-        return new Response(status);
+        int result = vacationRequestService.createVacationRequest(account, vacationInput);
+        return new Response(result);
     }
 
     @PostMapping("/send/othertime")
