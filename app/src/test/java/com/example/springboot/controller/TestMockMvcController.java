@@ -37,6 +37,7 @@ import com.example.springboot.dto.AllStyleListResponse;
 import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.input.OtherTimeInput;
+import com.example.springboot.dto.input.OverTimeInput;
 import com.example.springboot.dto.input.ShiftChangeInput;
 import com.example.springboot.dto.input.ShiftInput;
 import com.example.springboot.dto.input.StampInput;
@@ -2409,81 +2410,14 @@ public class TestMockMvcController
             requestShiftId, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
         );
 
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         Account generalAccount = new Account();
         Long generalAccountId = 3L;
         String generalAccountUsername = "testuser";
         generalAccount.setId(generalAccountId);
         generalAccount.setUsername(generalAccountUsername);
 
-        Shift shift = new Shift();
-        Long shiftId = 35L;
-        String shiftBegin = "2025/12/23T09:00:00";
-        String shiftEnd = "2025/12/23T18:00:00";
-        shift.setShiftId(shiftId);
-        shift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(shiftBegin));
-        shift.setEndWork(stringToLocalDateTime.stringToLocalDateTime(shiftEnd));
-
-        List<OverTimeRequest> overTimeRequests = new ArrayList<OverTimeRequest>();
-
-        List<Shift> shifts = new ArrayList<Shift>();
-
-        List<ShiftListOtherTime> shiftListOtherTimes = new ArrayList<ShiftListOtherTime>();
-
-        List<OverTimeRequest> overTimeRequestMonth = new ArrayList<OverTimeRequest>();
-        // 45時間ちょうどでエラーを起こさないかチェックするため10時間の残業を用意する
-        OverTimeRequest firstOverTimeRequest = new OverTimeRequest();
-        String firstOverTimeRequestBegin = "2025/12/10T00:00:00";
-        String firstOverTimeRequestEnd = "2025/12/10T10:00:00";
-        firstOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(firstOverTimeRequestBegin));
-        firstOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(firstOverTimeRequestEnd));
-
-        OverTimeRequest secondOverTimeRequest = new OverTimeRequest();
-        String secondOverTimeRequestBegin = "2025/12/11T00:00:00";
-        String secondOverTimeRequestEnd = "2025/12/11T10:00:00";
-        secondOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(secondOverTimeRequestBegin));
-        secondOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(secondOverTimeRequestEnd));
-
-        OverTimeRequest thirdOverTimeRequest = new OverTimeRequest();
-        String thirdOverTimeRequestBegin = "2025/12/12T00:00:00";
-        String thirdOverTimeRequestEnd = "2025/12/12T10:00:00";
-        thirdOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(thirdOverTimeRequestBegin));
-        thirdOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(thirdOverTimeRequestEnd));
-
-        OverTimeRequest fourthOverTimeRequest = new OverTimeRequest();
-        String fourthOverTimeRequestBegin = "2025/12/13T00:00:00";
-        String fourthOverTimeRequestEnd = "2025/12/13T10:00:00";
-        fourthOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(fourthOverTimeRequestBegin));
-        fourthOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(fourthOverTimeRequestEnd));
-
-        OverTimeRequest fifthOverTimeRequest = new OverTimeRequest();
-        String fifthOverTimeRequestBegin = "2025/12/14T06:00:00";
-        String fifthOverTimeRequestEnd = "2025/12/14T09:00:00";
-        fifthOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(fifthOverTimeRequestBegin));
-        fifthOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(fifthOverTimeRequestEnd));
-
-        overTimeRequestMonth.add(firstOverTimeRequest);
-        overTimeRequestMonth.add(secondOverTimeRequest);
-        overTimeRequestMonth.add(thirdOverTimeRequest);
-        overTimeRequestMonth.add(fourthOverTimeRequest);
-        overTimeRequestMonth.add(fifthOverTimeRequest);
-
-        OverTimeRequest newOverTimeRequest = new OverTimeRequest();
-        Long newOverTimeRequestId = 43L;
-        newOverTimeRequest.setOverTimeId(newOverTimeRequestId);
-
-        LegalTime legalTime = new LegalTime();
-        String monthlyOverTime = "45:00:00";
-        legalTime.setMonthlyOverWorkTime(monthlyOverTime);
-        
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(shift);
-        when(overTimeRequestService.findByAccounIdAndRequestStatusWaitOrApprovedAndBeginWorkOrEndWorkBetween(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(overTimeRequests);
-        when(shiftService.shiftOverLapping(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(shifts);
-        when(shiftListOtherTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOtherTimes);
-        when(overTimeRequestService.findByAccountIdAndRequestStatusWaitOrApprovedAndBeginWorkBetweenMonth(any(Account.class), anyInt(), anyInt())).thenReturn(overTimeRequestMonth);
-        when(legalTimeService.findFirstByOrderByBeginDesc()).thenReturn(legalTime);
-        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn(newOverTimeRequest);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(overTimeRequestService.createOverTimeRequest(any(Account.class), any(OverTimeInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/overtime")
@@ -2517,81 +2451,14 @@ public class TestMockMvcController
             requestShiftId, requestBeginOtherTime, requestEndOtherTime, requestComment, requestDate
         );
 
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         Account generalAccount = new Account();
         Long generalAccountId = 3L;
         String generalAccountUsername = "testuser";
         generalAccount.setId(generalAccountId);
         generalAccount.setUsername(generalAccountUsername);
 
-        Shift shift = new Shift();
-        Long shiftId = 35L;
-        String shiftBegin = "2025/12/23T09:00:00";
-        String shiftEnd = "2025/12/23T18:00:00";
-        shift.setShiftId(shiftId);
-        shift.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(shiftBegin));
-        shift.setEndWork(stringToLocalDateTime.stringToLocalDateTime(shiftEnd));
-
-        List<OverTimeRequest> overTimeRequests = new ArrayList<OverTimeRequest>();
-
-        List<Shift> shifts = new ArrayList<Shift>();
-
-        List<ShiftListOtherTime> shiftListOtherTimes = new ArrayList<ShiftListOtherTime>();
-
-        List<OverTimeRequest> overTimeRequestMonth = new ArrayList<OverTimeRequest>();
-        // 45時間ちょうどでエラーを起こさないかチェックするため10時間の残業を用意する
-        OverTimeRequest firstOverTimeRequest = new OverTimeRequest();
-        String firstOverTimeRequestBegin = "2025/12/10T00:00:00";
-        String firstOverTimeRequestEnd = "2025/12/10T10:00:00";
-        firstOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(firstOverTimeRequestBegin));
-        firstOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(firstOverTimeRequestEnd));
-
-        OverTimeRequest secondOverTimeRequest = new OverTimeRequest();
-        String secondOverTimeRequestBegin = "2025/12/11T00:00:00";
-        String secondOverTimeRequestEnd = "2025/12/11T10:00:00";
-        secondOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(secondOverTimeRequestBegin));
-        secondOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(secondOverTimeRequestEnd));
-
-        OverTimeRequest thirdOverTimeRequest = new OverTimeRequest();
-        String thirdOverTimeRequestBegin = "2025/12/12T00:00:00";
-        String thirdOverTimeRequestEnd = "2025/12/12T10:00:00";
-        thirdOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(thirdOverTimeRequestBegin));
-        thirdOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(thirdOverTimeRequestEnd));
-
-        OverTimeRequest fourthOverTimeRequest = new OverTimeRequest();
-        String fourthOverTimeRequestBegin = "2025/12/13T00:00:00";
-        String fourthOverTimeRequestEnd = "2025/12/13T10:00:00";
-        fourthOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(fourthOverTimeRequestBegin));
-        fourthOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(fourthOverTimeRequestEnd));
-
-        OverTimeRequest fifthOverTimeRequest = new OverTimeRequest();
-        String fifthOverTimeRequestBegin = "2025/12/14T06:00:00";
-        String fifthOverTimeRequestEnd = "2025/12/14T09:00:00";
-        fifthOverTimeRequest.setBeginWork(stringToLocalDateTime.stringToLocalDateTime(fifthOverTimeRequestBegin));
-        fifthOverTimeRequest.setEndWork(stringToLocalDateTime.stringToLocalDateTime(fifthOverTimeRequestEnd));
-
-        overTimeRequestMonth.add(firstOverTimeRequest);
-        overTimeRequestMonth.add(secondOverTimeRequest);
-        overTimeRequestMonth.add(thirdOverTimeRequest);
-        overTimeRequestMonth.add(fourthOverTimeRequest);
-        overTimeRequestMonth.add(fifthOverTimeRequest);
-
-        LegalTime legalTime = new LegalTime();
-        String monthlyOverTime = "45:00:00";
-        legalTime.setMonthlyOverWorkTime(monthlyOverTime);
-
-        OverTimeRequest newOverTimeRequest = new OverTimeRequest();
-        Long newOverTimeRequestId = 34L;
-        newOverTimeRequest.setOverTimeId(newOverTimeRequestId);
-        
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(shift);
-        when(overTimeRequestService.findByAccounIdAndRequestStatusWaitOrApprovedAndBeginWorkOrEndWorkBetween(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(overTimeRequests);
-        when(shiftService.shiftOverLapping(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(shifts);
-        when(shiftListOtherTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOtherTimes);
-        when(overTimeRequestService.findByAccountIdAndRequestStatusWaitOrApprovedAndBeginWorkBetweenMonth(any(Account.class), anyInt(), anyInt())).thenReturn(overTimeRequestMonth);
-        when(legalTimeService.findFirstByOrderByBeginDesc()).thenReturn(legalTime);
-        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn(newOverTimeRequest);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(overTimeRequestService.createOverTimeRequest(any(Account.class), any(OverTimeInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/overtime")
