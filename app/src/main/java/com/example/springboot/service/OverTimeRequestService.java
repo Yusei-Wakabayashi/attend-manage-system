@@ -54,6 +54,7 @@ public class OverTimeRequestService
         this.legalTimeService = legalTimeService;
     }
 
+    @Transactional
     public int createOverTimeRequest(Account account, OverTimeInput overTimeInput)
     {
         Shift shift = shiftService.findByAccountIdAndShiftId(account, overTimeInput.getShiftId());
@@ -67,6 +68,16 @@ public class OverTimeRequestService
         if(endTimeOverWork.isAfter(startTimeOverWork))
         {
             // 条件通りなら何もしない
+        }
+        else
+        {
+            return 3;
+        }
+        // 始業時間が現在時刻より後であること
+        LocalDateTime nowTime = LocalDateTime.now();
+        if(shift.getBeginWork().isAfter(nowTime))
+        {
+            // 想定通りなら何もしない
         }
         else
         {
@@ -127,7 +138,6 @@ public class OverTimeRequestService
         {
             return 3;
         }
-        // 残業申請登録(サービス層で行うべき?)
         OverTimeRequest overTimeRequest = new OverTimeRequest();
         overTimeRequest.setAccountId(account);
         overTimeRequest.setBeginWork(startTimeOverWork);

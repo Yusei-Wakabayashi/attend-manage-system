@@ -7,6 +7,8 @@ import java.time.YearMonth;
 import java.util.List;
 import java.util.Objects;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -57,6 +59,7 @@ public class VacationRequestService
         this.vacationTypeService = vacationTypeService;
     }
 
+    @Transactional
     public int createVacationRequest(Account account, VacationInput vacationInput)
     {
         // 休暇の時刻が形式に沿っているか
@@ -198,7 +201,6 @@ public class VacationRequestService
                 // どれにも当てはまらなければエラー
                 return 3;
         }
-        // 休暇申請登録(サービス層で行うべき?)
         VacationRequest vacationRequest = new VacationRequest();
         vacationRequest.setAccountId(account);
         vacationRequest.setVacationTypeId(vacationTypeService.findById(Long.valueOf(vacationInput.getVacationType())));

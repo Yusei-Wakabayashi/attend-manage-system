@@ -8,6 +8,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -52,6 +54,7 @@ public class AttendanceExceptionRequestService
         this.attendanceExceptionTypeService = attendanceExceptionTypeService;
     }
 
+    @Transactional
     public int createAttendanceExceptionRequest(Account account, OtherTimeInput otherTimeInput)
     {
         Shift shift = shiftService.findByAccountIdAndShiftId(account, otherTimeInput.getShiftId());
@@ -69,6 +72,17 @@ public class AttendanceExceptionRequestService
         }
         else
         {
+            return 3;
+        }
+        // 始業時間が現在時刻より後であること
+        LocalDateTime nowTime = LocalDateTime.now();
+        if(shift.getBeginWork().isAfter(nowTime))
+        {
+            // 条件通りなら何もしない
+        }
+        else
+        {
+            // 現在時刻より後ならエラー
             return 3;
         }
         // shiftidを基に反映されている残業申請の一覧を取得
@@ -192,7 +206,6 @@ public class AttendanceExceptionRequestService
                 // どれにも当てはまらなければエラー
                 return 3;
         }
-        // 勤怠例外申請登録(サービス層で行うべき？)
         AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
         attendanceExceptionRequest.setAccountId(account);
         attendanceExceptionRequest.setBeginTime(startTime);

@@ -36,6 +36,7 @@ import com.example.springboot.Config;
 import com.example.springboot.dto.AllStyleListResponse;
 import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.change.StringToLocalDateTime;
+import com.example.springboot.dto.input.MonthlyInput;
 import com.example.springboot.dto.input.OtherTimeInput;
 import com.example.springboot.dto.input.OverTimeInput;
 import com.example.springboot.dto.input.ShiftChangeInput;
@@ -104,8 +105,6 @@ import com.example.springboot.service.StyleService;
 import com.example.springboot.service.VacationRequestService;
 import com.example.springboot.service.VacationService;
 import com.example.springboot.service.VacationTypeService;
-
-import lombok.val;
 
 @ContextConfiguration(classes = Config.class)
 @WebMvcTest({PostController.class,GetController.class})
@@ -2537,107 +2536,8 @@ public class TestMockMvcController
         generalAccount.setId(generalAccountId);
         generalAccount.setUsername(generalAccountUsername);
 
-        List<NewsList> newsLists = new ArrayList<NewsList>();
-
-        List<ShiftRequest> shiftRequests = new ArrayList<ShiftRequest>();
-
-        List<ShiftChangeRequest> shiftChangeRequests = new ArrayList<ShiftChangeRequest>();
-
-        List<StampRequest> stampRequests = new ArrayList<StampRequest>();
-
-        List<AttendanceExceptionRequest> attendanceExceptionRequests = new ArrayList<AttendanceExceptionRequest>();
-
-        List<OverTimeRequest> overTimeRequests = new ArrayList<OverTimeRequest>();
-
-        List<VacationRequest> vacationRequests = new ArrayList<VacationRequest>();
-
-        List<Shift> shifts = new ArrayList<Shift>();
-        Shift shift = new Shift();
-        shifts.add(shift);
-
-        List<ShiftListShiftRequest> shiftListShiftRequests = new ArrayList<ShiftListShiftRequest>();
-
-        ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
-        ShiftRequest shiftRequest = new ShiftRequest();
-        shiftListShiftRequest.setShiftRequestId(shiftRequest);
-
-        ShiftListShiftRequest generalShiftListShiftRequest = new ShiftListShiftRequest();
-        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
-        generalShiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
-
-        shiftListShiftRequests.add(shiftListShiftRequest);
-        shiftListShiftRequests.add(generalShiftListShiftRequest);
-
-        List<Attend> attends = new ArrayList<Attend>();
-        Attend attend = new Attend();
-        String attendWorkTime = "02:00:00";
-        String generalAttendTime = "00:00:00";
-        Long attendId = 3L;
-        attend.setAttendanceId(attendId);
-        attend.setWorkTime(Time.valueOf(attendWorkTime));
-        attend.setOverWork(Time.valueOf(generalAttendTime));
-        attend.setLateNightWork(Time.valueOf(generalAttendTime));
-        attend.setLateness(Time.valueOf(generalAttendTime));
-        attend.setLeaveEarly(Time.valueOf(generalAttendTime));
-        attend.setOuting(Time.valueOf(generalAttendTime));
-        attend.setAbsenceTime(Time.valueOf(generalAttendTime));
-        attend.setHolidayWork(Time.valueOf(generalAttendTime));
-        attend.setVacationTime(Time.valueOf(generalAttendTime));
-        attends.add(attend);
-
-        List<AttendanceListSource> attendanceListSources = new ArrayList<AttendanceListSource>();
-        AttendanceListSource attendanceListSource = new AttendanceListSource();
-        StampRequest stampRequest = new StampRequest();
-        attendanceListSource.setStampRequestId(stampRequest);
-        attendanceListSources.add(attendanceListSource);
-
-        List<ShiftListOtherTime> shiftListOtherTimes = new ArrayList<ShiftListOtherTime>();
-        ShiftListOtherTime shiftListOtherTime = new ShiftListOtherTime();
-        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
-        shiftListOtherTime.setAttendanceExceptionId(attendanceExceptionRequest);
-        shiftListOtherTimes.add(shiftListOtherTime);
-
-        List<ShiftListOverTime> shiftListOverTimes = new ArrayList<ShiftListOverTime>();
-        ShiftListOverTime shiftListOverTime = new ShiftListOverTime();
-        OverTimeRequest overTimeRequest = new OverTimeRequest();
-        shiftListOverTime.setOverTimeId(overTimeRequest);
-        shiftListOverTimes.add(shiftListOverTime);
-
-        List<ShiftListVacation> shiftListVacations = new ArrayList<ShiftListVacation>();
-        ShiftListVacation shiftListVacation = new ShiftListVacation();
-        VacationRequest vacationRequest = new VacationRequest();
-        shiftListVacation.setVacationId(vacationRequest);
-        shiftListVacations.add(shiftListVacation);
-
-        List<Vacation> vacations = new ArrayList<Vacation>();
-
-        MonthlyRequest monthlyRequest = new MonthlyRequest();
-        Long monthlyRequestId = 34L;
-        monthlyRequest.setMonthRequestId(monthlyRequestId);
-
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(newsListService.findByAccountIdAndDateBetweenMonthly(any(Account.class), anyInt(), anyInt())).thenReturn(newsLists);
-        when(shiftRequestService.findByAccountIdAndBeginWorkBetweenAndRequestStatusWait(any(Account.class), anyInt(), anyInt())).thenReturn(shiftRequests);
-        when(shiftChangeRequestService.findByAccountIdAndBeginWorkBetweenAndRequestStatusWait(any(Account.class), anyInt(), anyInt())).thenReturn(shiftChangeRequests);
-        when(stampRequestService.findByAccountIdAndBeginWorkBetweenAndRequestStatusWait(any(Account.class), anyInt(), anyInt())).thenReturn(stampRequests);
-        when(attendanceExceptionRequestService.findByAccountIdAndBeginTimeBetweenAndRequestStatusWait(any(Account.class), anyInt(), anyInt())).thenReturn(attendanceExceptionRequests);
-        when(overTimeRequestService.findByAccountIdAndBeginWorkAndRequstStatusWait(any(Account.class), anyInt(), anyInt())).thenReturn(overTimeRequests);
-        when(vacationRequestService.findByAccountIdAndBeginVacationBetweenAndRequestStatusWait(any(Account.class), anyInt(), anyInt())).thenReturn(vacationRequests);
-        when(shiftService.findByAccountIdAndBeginWorkBetween(any(Account.class), anyInt(), anyInt())).thenReturn(shifts);
-        when(shiftListOtherTimeService.findByShiftIdIn(anyList())).thenReturn(shiftListOtherTimes);
-        when(shiftListOverTimeService.findByShiftIdIn(anyList())).thenReturn(shiftListOverTimes);
-        when(shiftListShiftRequestService.findByShiftIdIn(anyList())).thenReturn(shiftListShiftRequests);
-        when(shiftListVacationService.findByShiftIdIn(anyList())).thenReturn(shiftListVacations);
-        when(attendService.findByAccountIdAndBeginWorkBetween(any(Account.class), anyInt(), anyInt())).thenReturn(attends);
-        when(attendanceListSourceService.findByAttendIdIn(anyList())).thenReturn(attendanceListSources);
-        when(vacationService.findByAccountIdAndBeginVacationBetweenMonthAndPaydHoliday(any(Account.class), anyInt(), anyInt())).thenReturn(vacations);
-        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn(shiftRequest);
-        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn(shiftChangeRequest);
-        when(stampRequestService.save(any(StampRequest.class))).thenReturn(stampRequest);
-        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn(vacationRequest);
-        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
-        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn(overTimeRequest);
-        when(monthlyRequestService.save(any(MonthlyRequest.class))).thenReturn(monthlyRequest);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(monthlyRequestService.createMonthlyRequest(any(Account.class), any(MonthlyInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/monthly")

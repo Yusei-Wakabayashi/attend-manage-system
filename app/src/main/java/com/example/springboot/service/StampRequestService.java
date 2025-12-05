@@ -102,7 +102,6 @@ public class StampRequestService
             return 3;
         }
         int requestStatus = 1;
-        // 打刻漏れ申請登録(サービス層で行うべき？)
         StampRequest stampRequest = new StampRequest();
         stampRequest.setAccountId(account);
         stampRequest.setBeginWork(beginWork);
