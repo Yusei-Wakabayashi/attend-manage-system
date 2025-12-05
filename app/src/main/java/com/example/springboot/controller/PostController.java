@@ -295,113 +295,15 @@ public class PostController
     @PostMapping("/send/overtime")
     public Response overTimeSet(@RequestBody OverTimeInput overTimeInput, HttpSession session)
     {
-        StringToDuration stringToDuration = new StringToDuration();
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
-        // アカウントの取得
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
+        Account account = accountService.findCurrentAccount();
         int status = 0;
         if(Objects.isNull(account))
         {
             status = 3;
             return new Response(status);
         }
-
-        Shift shift = shiftService.findByAccountIdAndShiftId(account, overTimeInput.getShiftId());
-        if(Objects.isNull(shift))
-        {
-            status = 3;
-            return new Response(status);
-        }
-        // 残業の開始の後に残業の終了があること
-        LocalDateTime startTimeOverWork = stringToLocalDateTime.stringToLocalDateTime(overTimeInput.getBeginOverTime());
-        LocalDateTime endTimeOverWork = stringToLocalDateTime.stringToLocalDateTime(overTimeInput.getEndOverTime());
-        if(endTimeOverWork.isAfter(startTimeOverWork))
-        {
-            // 条件通りなら何もしない
-        }
-        else
-        {
-            status = 3;
-            return new Response(status);
-        }
-        // 既に存在する残業と重複する場合申請NG
-        List<OverTimeRequest> overTimeRequests = overTimeRequestService.findByAccounIdAndRequestStatusWaitOrApprovedAndBeginWorkOrEndWorkBetween(account, startTimeOverWork, endTimeOverWork);
-        if(overTimeRequests.size() > 0)
-        {
-            // 1件でも存在すれば重複があったということなのでエラー
-            status = 3;
-            return new Response(status);
-        }
-        // シフトと時間が重なっていないこと
-        List<Shift> shifts = shiftService.shiftOverLapping(account, startTimeOverWork, endTimeOverWork);
-        if(shifts.size() > 0)
-        {
-            // 1件でも存在すれば重複があったということなのでエラー
-            status = 3;
-            return new Response(status);
-        }
-        // 遅刻早退との重複NG
-        List<ShiftListOtherTime> shiftListOtherTimes = shiftListOtherTimeService.findByShiftId(shift);
-        List<ShiftListOtherTime> shiftListOtherTimesLateness = new ArrayList<ShiftListOtherTime>();
-        List<ShiftListOtherTime> shiftListOtherTimesLeaveEarly = new ArrayList<ShiftListOtherTime>();
-        // 勤怠例外のうち遅刻と早退を取得
-        for(ShiftListOtherTime shiftListOtherTime : shiftListOtherTimes)
-        {
-            if(shiftListOtherTime.getAttendanceExceptionId().getAttendanceExceptionTypeId().getAttendanceExceptionTypeId() == 2L)
-            {
-                shiftListOtherTimesLateness.add(shiftListOtherTime);
-            }
-            else if(shiftListOtherTime.getAttendanceExceptionId().getAttendanceExceptionTypeId().getAttendanceExceptionTypeId() == 3L)
-            {
-                shiftListOtherTimesLeaveEarly.add(shiftListOtherTime);
-            }
-        }
-        // 申請する残業が始業前で遅刻が存在する場合
-        if(endTimeOverWork.isEqual(shift.getBeginWork()) && shiftListOtherTimesLateness.size() > 0)
-        {
-            status = 3;
-            return new Response(status);
-        }
-        // 申請する残業が終業後で早退が存在する場合
-        if(startTimeOverWork.isEqual(shift.getEndWork()) && shiftListOtherTimesLeaveEarly.size() > 0)
-        {
-            status = 3;
-            return new Response(status);
-        }
-        // 法定時間を超える申請(承認待ち、承認済み)はNG
-        // 申請する月でそのアカウントの残業申請(承認待ち、承認済み)を取得法定時間を超えないことを確認
-        List<OverTimeRequest> overTimeRequestMonthList = overTimeRequestService.findByAccountIdAndRequestStatusWaitOrApprovedAndBeginWorkBetweenMonth(account, startTimeOverWork.getYear(), startTimeOverWork.getMonthValue());
-        Duration monthOverWorkTime = Duration.between(startTimeOverWork, endTimeOverWork);
-        for(OverTimeRequest overTimeRequest : overTimeRequestMonthList)
-        {
-            Duration overTime = Duration.between(overTimeRequest.getBeginWork(), overTimeRequest.getEndWork());
-            monthOverWorkTime = monthOverWorkTime.plus(overTime);
-        }
-        LegalTime legalTime = legalTimeService.findFirstByOrderByBeginDesc();
-        // メソッド内の値より後(大きい)ならエラー
-        if(monthOverWorkTime.compareTo(stringToDuration.stringToDuration(legalTime.getMonthlyOverWorkTime())) > 0)
-        {
-            status = 3;
-            return new Response(status);
-        }
-        // 残業申請登録(サービス層で行うべき?)
-        OverTimeRequest overTimeRequest = new OverTimeRequest();
-        overTimeRequest.setAccountId(account);
-        overTimeRequest.setBeginWork(startTimeOverWork);
-        overTimeRequest.setEndWork(endTimeOverWork);
-        overTimeRequest.setRequestComment(overTimeInput.getRequestComment());
-        overTimeRequest.setRequestDate(overTimeInput.getRequestDate() == null ? null : stringToLocalDateTime.stringToLocalDateTime(overTimeInput.getRequestDate()));
-        overTimeRequest.setRequestStatus(1);
-        overTimeRequest.setShiftId(shift);
-        OverTimeRequest requestOverTimeRequest = overTimeRequestService.save(overTimeRequest);
-        if(Objects.isNull(requestOverTimeRequest) || Objects.isNull(requestOverTimeRequest.getOverTimeId()))
-        {
-            status = 3;
-            return new Response(status);
-        }
-        status = 1;
-        return new Response(status);
+        int result = overTimeRequestService.createOverTimeRequest(account, overTimeInput);
+        return new Response(result);
     }
 
     @PostMapping("/send/monthly")
