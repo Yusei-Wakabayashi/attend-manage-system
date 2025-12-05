@@ -2,12 +2,9 @@ package com.example.springboot.controller;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -70,6 +67,7 @@ import com.example.springboot.service.MonthlyRequestService;
 import com.example.springboot.service.NewsListService;
 import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.PaydHolidayService;
+import com.example.springboot.service.RequestService;
 import com.example.springboot.service.ShiftChangeRequestService;
 import com.example.springboot.service.ShiftListOtherTimeService;
 import com.example.springboot.service.ShiftListOverTimeService;
@@ -103,9 +101,6 @@ public class PostController
     private StyleService styleService;
 
     @Autowired
-    private StylePlaceService stylePlaceService;
-
-    @Autowired
     private ShiftRequestService shiftRequestService;
 
     @Autowired
@@ -133,9 +128,6 @@ public class PostController
     private ShiftListOverTimeService shiftListOverTimeService;
 
     @Autowired
-    private PaydHolidayService paydHolidayService;
-
-    @Autowired
     private OverTimeRequestService overTimeRequestService;
 
     @Autowired
@@ -145,13 +137,7 @@ public class PostController
     private AttendanceExceptionRequestService attendanceExceptionRequestService;
 
     @Autowired
-    private AttendanceExceptionTypeService attendanceExceptionTypeService;
-
-    @Autowired
     private ShiftListOtherTimeService shiftListOtherTimeService;
-
-    @Autowired
-    private NewsListService newsListService;
 
     @Autowired
     private ShiftListVacationService shiftListVacationService;
@@ -161,6 +147,9 @@ public class PostController
 
     @Autowired
     private AttendanceListSourceService attendanceListSourceService;
+
+    @Autowired
+    private RequestService requestService;
     
     @CrossOrigin
     @PostMapping("/send/login")
@@ -238,7 +227,7 @@ public class PostController
         {
             return new Response(4);
         }
-        int result = shiftRequestService.createShiftRequest(account, shiftInput);
+        int result = requestService.createShiftRequest(account, shiftInput);
         return new Response(result);
     }
 
@@ -251,7 +240,7 @@ public class PostController
         {
             return new Response(4);
         }
-        int result = shiftChangeRequestService.createShiftChangeRequest(account, shiftChangeInput);
+        int result = requestService.createShiftChangeRequest(account, shiftChangeInput);
         return new Response(result);
     }
 
@@ -264,7 +253,7 @@ public class PostController
         {
             return new Response(4);
         }
-        int result = stampRequestService.createStampRequest(account, stampInput);
+        int result = requestService.createStampRequest(account, stampInput);
         return new Response(result);
     }
 
@@ -276,7 +265,7 @@ public class PostController
         {
             return new Response(4);
         }
-        int result = vacationRequestService.createVacationRequest(account, vacationInput);
+        int result = requestService.createVacationRequest(account, vacationInput);
         return new Response(result);
     }
 
@@ -288,7 +277,7 @@ public class PostController
         {
             return new Response(3);
         }
-        int result = attendanceExceptionRequestService.createAttendanceExceptionRequest(account, otherTimeInput);
+        int result = requestService.createAttendanceExceptionRequest(account, otherTimeInput);
         return new Response(result);
     }
 
@@ -302,7 +291,7 @@ public class PostController
             status = 3;
             return new Response(status);
         }
-        int result = overTimeRequestService.createOverTimeRequest(account, overTimeInput);
+        int result = requestService.createOverTimeRequest(account, overTimeInput);
         return new Response(result);
     }
 
@@ -314,7 +303,7 @@ public class PostController
         {
             return new Response(3);
         }
-        int result = monthlyRequestService.createMonthlyRequest(account, monthlyInput);
+        int result = requestService.createMonthlyRequest(account, monthlyInput);
         return new Response(result);
     }
 
@@ -365,20 +354,25 @@ public class PostController
 
         for(ShiftListShiftRequest shiftListShiftRequest : shiftListShiftRequests)
         {
-            if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
+            if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()) && Objects.isNull(shiftListShiftRequest.getShiftRequestId()))
             {
-                // シフト時間変更申請がなければシフト申請を追加
-                weekShiftRequests.add(shiftListShiftRequest.getShiftRequestId());
+                // どちらもなければエラー
+                status = 3;
             }
-            else if(Optional.ofNullable(shiftListShiftRequest.getShiftChangeRequestId()).isPresent())
+            else if(Objects.isNull(shiftListShiftRequest.getShiftRequestId()))
             {
-                // シフト時間変更申請があればシフト時間変更申請を追加
-                shiftChangeRequests.add(shiftListShiftRequest.getShiftChangeRequestId());
+                // シフト申請がなければエラー
+                status = 3;
+            }
+            else if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
+            {
+                // シフト時間変更申請がなければシフト申請を利用
+                weekShiftRequests.add(shiftListShiftRequest.getShiftRequestId());
             }
             else
             {
-                // どちらでもなければエラー
-                status = 7;
+                // シフト時間変更申請がないということはないので利用
+                shiftChangeRequests.add(shiftListShiftRequest.getShiftChangeRequestId());
             }
         }
         // シフトでの計算だと遅刻や早退、残業などでずれた時間で計算することになる
@@ -494,20 +488,24 @@ public class PostController
 
         for(ShiftListShiftRequest shiftListShiftRequest : shiftListShiftRequests)
         {
-            // シフト申請がなければシフト時間変更申請を追加
-            if(Objects.isNull(shiftListShiftRequest.getShiftRequestId()))
+            // シフト申請、シフト時間変更申請どちらもなければエラー
+            if(Objects.isNull(shiftListShiftRequest.getShiftRequestId()) && Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
             {
-                shiftChangeRequests.add(shiftListShiftRequest.getShiftChangeRequestId());
+                status = 3;
             }
-            // シフト時間変更申請がなければシフト申請を追加
+            else if(Objects.isNull(shiftListShiftRequest.getShiftRequestId()))
+            {
+                status = 3;
+            }
             else if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
             {
+                // シフト時間変更申請がなければシフト申請を追加
                 weekShiftRequests.add(shiftListShiftRequest.getShiftRequestId());
             }
-            // どちらでもなければエラー
             else
             {
-                status = 7;
+                // シフト時間変更申請がないということはないので利用
+                shiftChangeRequests.add(shiftListShiftRequest.getShiftChangeRequestId());
             }
         }
         // シフトでの計算だと遅刻や早退、残業などでずれた時間で計算することになる
@@ -794,25 +792,31 @@ public class PostController
                 }
                 for(ShiftListShiftRequest shiftListShiftRequest : shiftListShiftRequests)
                 {
+                    // どちらも存在しなければエラー
+                    if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()) && Objects.isNull(shiftListShiftRequest.getShiftRequestId()))
+                    {
+                        status = 3;
+                        return new Response(status);
+                    }
+                    else if(Objects.isNull(shiftListShiftRequest.getShiftRequestId()))
+                    {
+                        // シフト申請がなければエラー
+                        status = 3;
+                        return new Response(status);
+                    }
                     // シフト時間変更申請がなければシフト申請を
-                    if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
+                    else if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
                     {
                         ShiftRequest shiftRequestMonthly = shiftListShiftRequest.getShiftRequestId();
                         shiftRequestMonthly.setRequestStatus(monthlyRequestStatus);
                         shiftRequestService.save(shiftRequestMonthly);
                     }
-                    // シフト申請がなければシフト時間変更申請を
-                    else if(Objects.isNull(shiftListShiftRequest.getShiftRequestId()))
+                    // どちらも存在すればエラー
+                    else
                     {
                         ShiftChangeRequest shiftChangeRequestMonthly = shiftListShiftRequest.getShiftChangeRequestId();
                         shiftChangeRequestMonthly.setRequestStatus(monthlyRequestStatus);
                         shiftChangeRequestService.save(shiftChangeRequestMonthly);
-                    }
-                    // どちらも存在すればエラー
-                    else
-                    {
-                        status = 3;
-                        return new Response(status);
                     }
                 }
                 for(ShiftListVacation shiftListVacation : shiftListVacations)
@@ -900,9 +904,12 @@ public class PostController
                 }
                 // シフトとシフトに関する申請テーブル登録
                 ShiftListShiftRequest shiftShiftListShiftRequest = new ShiftListShiftRequest();
+                // シフト設定
                 shiftShiftListShiftRequest.setShiftId(resultShiftRequestShift);
+                // シフト申請設定
                 shiftShiftListShiftRequest.setShiftRequestId(shiftRequest);
                 ShiftListShiftRequest resultShiftShiftListShiftRequest = shiftListShiftRequestService.save(shiftShiftListShiftRequest);
+                // 結果をチェック
                 if(Objects.isNull(resultShiftShiftListShiftRequest))
                 {
                     status = 3;
@@ -953,9 +960,10 @@ public class PostController
                 }
                 // シフトとシフトに関する申請テーブル
                 ShiftListShiftRequest shiftChangeShiftListShiftRequest = shiftListShiftRequestService.findByShiftId(resultShiftChangeRequestShift);
-                shiftChangeShiftListShiftRequest.setShiftRequestId(null);
+                // 時間変更申請を登録
                 shiftChangeShiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
                 ShiftListShiftRequest resultShiftChangeShiftListShiftRequest = shiftListShiftRequestService.save(shiftChangeShiftListShiftRequest);
+                // 結果をチェック
                 if(Objects.isNull(resultShiftChangeShiftListShiftRequest))
                 {
                     status = 3;
@@ -1074,6 +1082,9 @@ public class PostController
                     status = 3;
                     return new Response(status);
                 }
+                // 申請が反映状態にあるか確認
+                // 反映状態でなければよし
+                // 反映状態ならを反映を解除し
                 // 申請の状態を変更
                 break;
             // シフト時間変更申請
@@ -1165,8 +1176,7 @@ public class PostController
             case 3:
                 StampRequest stampRequest = stampRequestService.findById(requestJudgmentInput.getRequestId());
 
-                // 勤怠テーブルに記録
-                // 遅刻時間、早退時間、外出時間、労働時間、休憩時間、残業時間、休日労働時間、深夜労働時間、休暇時間、欠勤時間
+                // 勤怠と勤怠に関する情報源テーブルを基に勤怠テーブルから削除
                 // 勤怠と勤怠に関する情報源テーブル
                 break;
             // 休暇申請
@@ -1175,7 +1185,7 @@ public class PostController
                 // シフトの休暇時間
                 // シフトと休暇テーブル
                 // 休暇テーブル
-                // 有給休暇消費テーブル
+                // 有給休暇消費テーブルから対象を削除
                 break;
             // 残業申請
             case 5:

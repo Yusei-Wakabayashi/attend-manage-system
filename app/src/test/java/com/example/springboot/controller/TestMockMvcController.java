@@ -91,6 +91,7 @@ import com.example.springboot.service.NewsListService;
 import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.PaydHolidayService;
 import com.example.springboot.service.PaydHolidayUseService;
+import com.example.springboot.service.RequestService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.ShiftChangeRequestService;
 import com.example.springboot.service.ShiftListOtherTimeService;
@@ -201,6 +202,9 @@ public class TestMockMvcController
 
     @MockBean
     private AttendanceListSourceService attendanceListSourceService;
+
+    @MockBean
+    private RequestService requestService;
 
     @Test
     void loginSuccess() throws Exception
@@ -571,7 +575,7 @@ public class TestMockMvcController
         generalAccount.setName(generalAccountName);
 
         when(accountService.findCurrentAccount()).thenReturn(generalAccount);
-        when(shiftRequestService.createShiftRequest(any(Account.class), any(ShiftInput.class))).thenReturn(1);
+        when(requestService.createShiftRequest(any(Account.class), any(ShiftInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/shift")
@@ -821,7 +825,7 @@ public class TestMockMvcController
         generalAccount.setName(generalAccountName);
 
         when(accountService.findCurrentAccount()).thenReturn(generalAccount);
-        when(shiftChangeRequestService.createShiftChangeRequest(any(Account.class), any(ShiftChangeInput.class))).thenReturn(1);
+        when(requestService.createShiftChangeRequest(any(Account.class), any(ShiftChangeInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/changetime")
@@ -1159,7 +1163,7 @@ public class TestMockMvcController
         generalAccount.setName(generalAccountName);
 
         when(accountService.findCurrentAccount()).thenReturn(generalAccount);
-        when(stampRequestService.createStampRequest(any(Account.class), any(StampInput.class))).thenReturn(1);
+        when(requestService.createStampRequest(any(Account.class), any(StampInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/stamp")
@@ -1569,7 +1573,7 @@ public class TestMockMvcController
         generalAccount.setUsername(generalAccountUsername);
 
         when(accountService.findCurrentAccount()).thenReturn(generalAccount);
-        when(vacationRequestService.createVacationRequest(any(Account.class), any(VacationInput.class))).thenReturn(1);
+        when(requestService.createVacationRequest(any(Account.class), any(VacationInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/vacation")
@@ -2287,7 +2291,7 @@ public class TestMockMvcController
         generalAccount.setUsername(generalAccountUsername);
 
         when(accountService.findCurrentAccount()).thenReturn(generalAccount);
-        when(attendanceExceptionRequestService.createAttendanceExceptionRequest(any(Account.class), any(OtherTimeInput.class))).thenReturn(1);
+        when(requestService.createAttendanceExceptionRequest(any(Account.class), any(OtherTimeInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/othertime")
@@ -2331,7 +2335,7 @@ public class TestMockMvcController
         generalAccount.setUsername(generalAccountUsername);
 
         when(accountService.findCurrentAccount()).thenReturn(generalAccount);
-        when(attendanceExceptionRequestService.createAttendanceExceptionRequest(any(Account.class), any(OtherTimeInput.class))).thenReturn(1);
+        when(requestService.createAttendanceExceptionRequest(any(Account.class), any(OtherTimeInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/othertime")
@@ -2374,7 +2378,7 @@ public class TestMockMvcController
         generalAccount.setUsername(generalAccountUsername);
 
         when(accountService.findCurrentAccount()).thenReturn(generalAccount);
-        when(attendanceExceptionRequestService.createAttendanceExceptionRequest(any(Account.class), any(OtherTimeInput.class))).thenReturn(1);
+        when(requestService.createAttendanceExceptionRequest(any(Account.class), any(OtherTimeInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/othertime")
@@ -2416,7 +2420,7 @@ public class TestMockMvcController
         generalAccount.setUsername(generalAccountUsername);
 
         when(accountService.findCurrentAccount()).thenReturn(generalAccount);
-        when(overTimeRequestService.createOverTimeRequest(any(Account.class), any(OverTimeInput.class))).thenReturn(1);
+        when(requestService.createOverTimeRequest(any(Account.class), any(OverTimeInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/overtime")
@@ -2457,7 +2461,7 @@ public class TestMockMvcController
         generalAccount.setUsername(generalAccountUsername);
 
         when(accountService.findCurrentAccount()).thenReturn(generalAccount);
-        when(overTimeRequestService.createOverTimeRequest(any(Account.class), any(OverTimeInput.class))).thenReturn(1);
+        when(requestService.createOverTimeRequest(any(Account.class), any(OverTimeInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/overtime")
@@ -2537,7 +2541,7 @@ public class TestMockMvcController
         generalAccount.setUsername(generalAccountUsername);
 
         when(accountService.findCurrentAccount()).thenReturn(generalAccount);
-        when(monthlyRequestService.createMonthlyRequest(any(Account.class), any(MonthlyInput.class))).thenReturn(1);
+        when(requestService.createMonthlyRequest(any(Account.class), any(MonthlyInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/monthly")
