@@ -193,13 +193,14 @@ public class RequestServiceTest
         when(stringToLocalDateTime.stringToLocalDateTime(shiftInput.getRequestDate())).thenReturn(LocalDateTime.parse(LocalDateTime.parse(shiftInput.getRequestDate(),DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
         when(shiftService.findByAccountIdAndDayBeginWorkBetween(any(Account.class), any(LocalDateTime.class))).thenReturn(shifts);
 
-        doReturn(shiftRequests).when(shiftRequestService).findAccountIdAndBeginWorkBetweenDay(any(Account.class), any(LocalDateTime.class));
-        doReturn(shiftRequest).when(shiftRequestService).save(any(ShiftRequest.class));
+        when(shiftRequestService.findAccountIdAndBeginWorkBetweenDay(any(Account.class), any(LocalDateTime.class))).thenReturn(shiftRequests);
+        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn(shiftRequest);
         // 実行
         int result = requestService.createShiftRequest(generalAccount, shiftInput);
 
         assertEquals(1, result);
     }
+
     @Test
     void shiftChangeRequestSuccess()
     {
@@ -251,13 +252,14 @@ public class RequestServiceTest
         when(stringToLocalDateTime.stringToLocalDateTime(generalBeginBreak)).thenReturn(LocalDateTime.parse(LocalDateTime.parse(generalBeginBreak,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
         when(stringToLocalDateTime.stringToLocalDateTime(generalEndBreak)).thenReturn(LocalDateTime.parse(LocalDateTime.parse(generalEndBreak,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
         when(stringToLocalDateTime.stringToLocalDateTime(generalRequestDate)).thenReturn(LocalDateTime.parse(LocalDateTime.parse(generalRequestDate,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        when(shiftChangeRequestService.findByAccountIdAndShiftIdAndRequestStatusWait(any(Account.class), anyLong())).thenReturn(generalShiftChangeRequests);
+        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn(shiftChangeRequest);
 
-        doReturn(generalShiftChangeRequests).when(shiftChangeRequestService).findByAccountIdAndShiftIdAndRequestStatusWait(any(Account.class), anyLong());
-        doReturn(shiftChangeRequest).when(shiftChangeRequestService).save(any(ShiftChangeRequest.class));
         int result = requestService.createShiftChangeRequest(generalAccount, shiftChangeInput);
 
         assertEquals(1, result);
     }
+
     @Test
     void stampRequestSuccess()
     {
@@ -304,14 +306,14 @@ public class RequestServiceTest
         when(stringToLocalDateTime.stringToLocalDateTime(generalBeginBreak)).thenReturn(LocalDateTime.parse(LocalDateTime.parse(generalBeginBreak,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
         when(stringToLocalDateTime.stringToLocalDateTime(generalEndBreak)).thenReturn(LocalDateTime.parse(LocalDateTime.parse(generalEndBreak,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
         when(stringToLocalDateTime.stringToLocalDateTime(generalRequestDate)).thenReturn(LocalDateTime.parse(LocalDateTime.parse(generalRequestDate,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
-
-        doReturn(stampRequests).when(stampRequestService).findByShiftIdAndRequestStatusWait(any(Shift.class));
-        doReturn(stampRequest).when(stampRequestService).save(any(StampRequest.class));
+        when(stampRequestService.findByShiftIdAndRequestStatusWait(any(Shift.class))).thenReturn(stampRequests);
+        when(stampRequestService.save(any(StampRequest.class))).thenReturn(stampRequest);
 
         int result = requestService.createStampRequest(generalAccount, stampInput);
 
         assertEquals(1, result);
     }
+
     @Test
     void vacationRequestSuccess()
     {
@@ -408,13 +410,14 @@ public class RequestServiceTest
         when(paydHolidayService.findByAccountIdAndLimitAfter(any(Account.class))).thenReturn(paydHolidays);
         when(stringToDuration.stringToDuration(generalPaydHolidayTime)).thenReturn(Duration.ofHours(Long.parseLong(generalPaydHolidayTime.split(":")[0])).plusMinutes(Long.parseLong(generalPaydHolidayTime.split(":")[1])).plusSeconds(Long.parseLong(generalPaydHolidayTime.split(":")[2])));
         when(vacationTypeService.findById(anyLong())).thenReturn(generalVacationType);
+        when(vacationRequestService.findByAccountIdAndShiftId(any(Account.class), any(Shift.class))).thenReturn(vacationRequests);
+        when(vacationRequestService.findByAccountIdAndRequestStatusWaitAndVacationTypePaydHoiday(any(Account.class))).thenReturn(paydHolidayVacationRequests);
+        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn(vacationRequest);
 
-        doReturn(vacationRequests).when(vacationRequestService).findByAccountIdAndShiftId(any(Account.class), any(Shift.class));
-        doReturn(paydHolidayVacationRequests).when(vacationRequestService).findByAccountIdAndRequestStatusWaitAndVacationTypePaydHoiday(any(Account.class));
-        doReturn(vacationRequest).when(vacationRequestService).save(any(VacationRequest.class));
         int result = requestService.createVacationRequest(generalAccount, vacationInput);
         assertEquals(1, result);
     }
+
     @Test
     void attendanceExceptionRequestOutingSuccess()
     {
@@ -474,9 +477,8 @@ public class RequestServiceTest
         when(shiftListShiftRequestService.findByShiftId(any(Shift.class))).thenReturn(shiftListShiftRequest);
         when(attendanceExceptionTypeService.findByAttendanceExceptionTypeId(anyLong())).thenReturn(attendanceExceptionType);
         when(stringToLocalDateTime.stringToLocalDateTime(requestDate)).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestDate,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
-
-        doReturn(attendanceExceptionRequests).when(attendanceExceptionRequestService).findByAccountIdAndShiftIdAndOutingAndBeginTimeBetweenOrEndTimeBetweenAndRequestStatusWaitOrRequestStatusApproved(any(Account.class), any(Shift.class), any(LocalDateTime.class), any(LocalDateTime.class));
-        doReturn(attendanceExceptionRequest).when(attendanceExceptionRequestService).save(any(AttendanceExceptionRequest.class));
+        when(attendanceExceptionRequestService.findByAccountIdAndShiftIdAndOutingAndBeginTimeBetweenOrEndTimeBetweenAndRequestStatusWaitOrRequestStatusApproved(any(Account.class), any(Shift.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(attendanceExceptionRequests);
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
 
         int result = requestService.createAttendanceExceptionRequest(generalAccount, otherTimeInput);
         assertEquals(1, result);
@@ -515,6 +517,7 @@ public class RequestServiceTest
         overTimeRequest.setEndWork(LocalDateTime.parse(LocalDateTime.parse(shiftListOverTimeEndOverTime,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
 
         ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
+        ShiftRequest shiftRequest = new ShiftRequest();
         ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
         Long shiftChangeRequestId = 51L;
         String shiftChangeRequestBegin = "2025/12/23T09:00:00";
@@ -522,6 +525,7 @@ public class RequestServiceTest
         shiftChangeRequest.setShiftChangeId(shiftChangeRequestId);
         shiftChangeRequest.setBeginWork(LocalDateTime.parse(LocalDateTime.parse(shiftChangeRequestBegin,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
         shiftChangeRequest.setEndWork(LocalDateTime.parse(LocalDateTime.parse(shiftChangeRequestEnd,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shiftListShiftRequest.setShiftRequestId(shiftRequest);
         shiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
 
         AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
@@ -547,7 +551,7 @@ public class RequestServiceTest
         when(attendanceExceptionTypeService.findByAttendanceExceptionTypeId(anyLong())).thenReturn(attendanceExceptionType);
         when(stringToLocalDateTime.stringToLocalDateTime(requestDate)).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestDate,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
 
-        doReturn(attendanceExceptionRequest).when(attendanceExceptionRequestService).save(any(AttendanceExceptionRequest.class));
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
 
         int result = requestService.createAttendanceExceptionRequest(generalAccount, otherTimeInput);
         assertEquals(1, result);
@@ -586,6 +590,7 @@ public class RequestServiceTest
         overTimeRequest.setEndWork(LocalDateTime.parse(LocalDateTime.parse(shiftListOverTimeEndOverTime,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
 
         ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
+        ShiftRequest shiftRequest = new ShiftRequest();
         ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
         Long shiftChangeRequestId = 51L;
         String shiftChangeRequestBegin = "2025/12/23T09:00:00";
@@ -593,6 +598,7 @@ public class RequestServiceTest
         shiftChangeRequest.setShiftChangeId(shiftChangeRequestId);
         shiftChangeRequest.setBeginWork(LocalDateTime.parse(LocalDateTime.parse(shiftChangeRequestBegin,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
         shiftChangeRequest.setEndWork(LocalDateTime.parse(LocalDateTime.parse(shiftChangeRequestEnd,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shiftListShiftRequest.setShiftRequestId(shiftRequest);
         shiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
 
         AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
@@ -617,12 +623,12 @@ public class RequestServiceTest
         when(shiftListShiftRequestService.findByShiftId(any(Shift.class))).thenReturn(shiftListShiftRequest);
         when(attendanceExceptionTypeService.findByAttendanceExceptionTypeId(anyLong())).thenReturn(attendanceExceptionType);
         when(stringToLocalDateTime.stringToLocalDateTime(requestDate)).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestDate,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
-
-        doReturn(attendanceExceptionRequest).when(attendanceExceptionRequestService).save(any(AttendanceExceptionRequest.class));
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
 
         int result = requestService.createAttendanceExceptionRequest(generalAccount, otherTimeInput);
         assertEquals(1, result);
     }
+
     @Test
     void overTimeRequstBeforeSuccess()
     {
@@ -714,9 +720,9 @@ public class RequestServiceTest
         when(stringToDuration.stringToDuration(legalTime.getMonthlyOverWorkTime())).thenReturn(Duration.ofHours(Long.parseLong(monthlyOverTime.split(":")[0])).plusMinutes(Long.parseLong(monthlyOverTime.split(":")[1])).plusSeconds(Long.parseLong(monthlyOverTime.split(":")[2])));
         when(stringToLocalDateTime.stringToLocalDateTime(requestDate)).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestDate,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
 
-        doReturn(overTimeRequests).when(overTimeRequestService).findByAccounIdAndRequestStatusWaitOrApprovedAndBeginWorkOrEndWorkBetween(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class));
-        doReturn(overTimeRequestMonth).when(overTimeRequestService).findByAccountIdAndRequestStatusWaitOrApprovedAndBeginWorkBetweenMonth(any(Account.class), anyInt(), anyInt());
-        doReturn(newOverTimeRequest).when(overTimeRequestService).save(any(OverTimeRequest.class));
+        when(overTimeRequestService.findByAccounIdAndRequestStatusWaitOrApprovedAndBeginWorkOrEndWorkBetween(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(overTimeRequests);
+        when(overTimeRequestService.findByAccountIdAndRequestStatusWaitOrApprovedAndBeginWorkBetweenMonth(any(Account.class), anyInt(), anyInt())).thenReturn(overTimeRequestMonth);
+        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn(newOverTimeRequest);
 
         int result = requestService.createOverTimeRequest(generalAccount, overTimeInput);
         assertEquals(1, result);
@@ -812,13 +818,14 @@ public class RequestServiceTest
         when(stringToDuration.stringToDuration(legalTime.getMonthlyOverWorkTime())).thenReturn(Duration.ofHours(Long.parseLong(monthlyOverTime.split(":")[0])).plusMinutes(Long.parseLong(monthlyOverTime.split(":")[1])).plusSeconds(Long.parseLong(monthlyOverTime.split(":")[2])));
         when(stringToLocalDateTime.stringToLocalDateTime(requestDate)).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestDate,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
 
-        doReturn(overTimeRequests).when(overTimeRequestService).findByAccounIdAndRequestStatusWaitOrApprovedAndBeginWorkOrEndWorkBetween(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class));
-        doReturn(overTimeRequestMonth).when(overTimeRequestService).findByAccountIdAndRequestStatusWaitOrApprovedAndBeginWorkBetweenMonth(any(Account.class), anyInt(), anyInt());
-        doReturn(newOverTimeRequest).when(overTimeRequestService).save(any(OverTimeRequest.class));
+        when(overTimeRequestService.findByAccounIdAndRequestStatusWaitOrApprovedAndBeginWorkOrEndWorkBetween(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(overTimeRequests);
+        when(overTimeRequestService.findByAccountIdAndRequestStatusWaitOrApprovedAndBeginWorkBetweenMonth(any(Account.class), anyInt(), anyInt())).thenReturn(overTimeRequestMonth);
+        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn(newOverTimeRequest);
 
         int result = requestService.createOverTimeRequest(generalAccount, overTimeInput);
         assertEquals(1, result);
     }
+
     @Test
     void monthlyRequestSuccess()
     {
@@ -859,6 +866,7 @@ public class RequestServiceTest
 
         ShiftListShiftRequest generalShiftListShiftRequest = new ShiftListShiftRequest();
         ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
+        generalShiftListShiftRequest.setShiftRequestId(shiftRequest);
         generalShiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
 
         shiftListShiftRequests.add(shiftListShiftRequest);
@@ -980,9 +988,10 @@ public class RequestServiceTest
         when(durationToString.durationToString(monthLateNightWorkTime)).thenReturn(String.format("%03d:%02d:%02d", monthLateNightWorkTime.getSeconds() / 3600, (monthLateNightWorkTime.getSeconds() % 3600) / 60, monthLateNightWorkTime.getSeconds() % 60));
         when(stringToLocalDateTime.stringToLocalDateTime(requestDate)).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestDate,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
 
-        doReturn(monthlyRequest).when(monthlyRequestService).save(any(MonthlyRequest.class));
+        when(monthlyRequestService.save(any(MonthlyRequest.class))).thenReturn(monthlyRequest);
 
         int result = requestService.createMonthlyRequest(generalAccount, monthlyInput);
         assertEquals(1, result);
     }
+
 }

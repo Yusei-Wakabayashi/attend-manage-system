@@ -2107,10 +2107,11 @@ public class TestMockMvcController
         List<ShiftListShiftRequest> shiftListShiftRequests = new ArrayList<ShiftListShiftRequest>();
         ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
         shiftListShiftRequest.setShiftRequestId(shiftRequest);
-        ShiftListShiftRequest generaShiftListShiftRequest = new ShiftListShiftRequest();
-        generaShiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
+        ShiftListShiftRequest generalShiftListShiftRequest = new ShiftListShiftRequest();
+        generalShiftListShiftRequest.setShiftRequestId(shiftRequest);
+        generalShiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
         shiftListShiftRequests.add(shiftListShiftRequest);
-        shiftListShiftRequests.add(generaShiftListShiftRequest);
+        shiftListShiftRequests.add(generalShiftListShiftRequest);
 
         List<Vacation> vacations = new ArrayList<Vacation>();
 
@@ -2236,6 +2237,7 @@ public class TestMockMvcController
         ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
         shiftListShiftRequest.setShiftRequestId(shiftRequest);
         ShiftListShiftRequest generalShiftListShiftRequest = new ShiftListShiftRequest();
+        generalShiftListShiftRequest.setShiftRequestId(shiftRequest);
         generalShiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
         shiftListShiftRequests.add(shiftListShiftRequest);
         shiftListShiftRequests.add(generalShiftListShiftRequest);
@@ -2856,6 +2858,7 @@ public class TestMockMvcController
 
         ShiftListShiftRequest shiftListShiftChangeRequest = new ShiftListShiftRequest();
         ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
+        shiftListShiftChangeRequest.setShiftRequestId(shiftRequest);
         shiftListShiftChangeRequest.setShiftChangeRequestId(shiftChangeRequest);
         shiftListShiftRequests.add(shiftListShiftRequest);
         shiftListShiftRequests.add(shiftListShiftChangeRequest);
