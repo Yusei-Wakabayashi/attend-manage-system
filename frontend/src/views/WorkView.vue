@@ -4,55 +4,68 @@ import axios from "axios";
 import NavList from "../components/NavList.vue";
 import Popup from "../components/Popup.vue";
 
-const viewType = ref("shift");
-const showPopup = ref(false);
+const viewType = ref("shift");// "shift" または "attendance"
+const showPopup = ref(false);// ポップアップ表示制御
 
 // const togglePopup = (day) => {
 //   selectedDay.value = day;
 //   showPopup.value = !showPopup.value;
 // };
 
+// ポップアップ表示関数
 const openPopup = (day) => {
   selectedDay.value = day;
   showPopup.value = true;
 };
 
-const today = new Date();
-const currentYear = today.getFullYear();
-const currentMonth = today.getMonth();
-const currentDate = today.getDate();
+const today = new Date();// 今日の日付情報
+const currentYear = today.getFullYear();// 現在の年
+const currentMonth = today.getMonth();// 現在の月(0-11)
+const currentDate = today.getDate();// 現在の日(1-31)
+const year = ref(currentYear);// 表示中の年
+const month = ref(currentMonth);// 表示中の月(0-11)
 
-const year = ref(currentYear);
-const month = ref(currentMonth);
+// 今月表示判定
 const isCurrentMonth = computed(
   () => year.value === currentYear && month.value === currentMonth
 );
+// 次の月移動関数
 const prevMonth = () => {
   month.value === 0 ? (year.value--, (month.value = 11)) : month.value--;
 };
+// 前の月移動関数
 const nextMonth = () => {
   month.value === 11 ? (year.value++, (month.value = 0)) : month.value++;
 };
 
-const monthKey = computed(
-  () => `${year.value}-${String(month.value + 1).padStart(2, "0")}`
-);
+// const monthKey = computed(
+//   () => `${year.value}-${String(month.value + 1).padStart(2, "0")}`
+// );
+
+// カレンダー関連計算
 const firstDate = computed(() => new Date(year.value, month.value, 1));
+// 月の日数取得
 const daysInMonth = computed(() =>
   new Date(year.value, month.value + 1, 0).getDate()
 );
+// 月初の曜日取得(0:日曜〜6:土曜)
 const firstDayOfWeek = computed(() => firstDate.value.getDay());
+// 空白セル配列
 const emptyCells = computed(() => Array.from({ length: firstDayOfWeek.value }));
+// カレンダー日付配列
 const calendarDays = computed(() =>
   Array.from({ length: daysInMonth.value }, (_, i) => i + 1)
 );
+// 月ラベル表示
 const monthLabel = computed(() => `${year.value}年${month.value + 1}月`);
+// 時間文字列を分に変換
 const timeToMinutes = (time) => {
   if (!time) return 0;
   const [h, m] = time.split(":").map(Number);
   return h * 60 + m;
 };
 
+// 1日の労働時間計算
 const calcWorkMinutes = (data) => {
   const start = timeToMinutes(data.start);
   const end = timeToMinutes(data.end);
@@ -64,9 +77,13 @@ const calcWorkMinutes = (data) => {
 
   return work - rest; // 実労働時間（分）
 };
+
+// 出勤簿合計計算
 const attendanceDays = computed(() => {
   return Object.keys(attendanceData.value).length;
 });
+
+// 総労働時間計算
 const totalWorkMinutes = computed(() => {
   let total = 0;
 
@@ -77,11 +94,14 @@ const totalWorkMinutes = computed(() => {
   return total;
 });
 
+// 労働時間表示
 const totalWorkHours = computed(() => {
   const h = Math.floor(totalWorkMinutes.value / 60);
   const m = totalWorkMinutes.value % 60;
   return `${h}時間${m}分`;
 });
+
+// 残業時間計算
 const overTimeMinutes = computed(() => {
   let overtime = 0;
   const perDay = 8 * 60; // 8時間
@@ -96,18 +116,20 @@ const overTimeMinutes = computed(() => {
   return overtime;
 });
 
+// 残業時間表示
 const overTimeHours = computed(() => {
   const h = Math.floor(overTimeMinutes.value / 60);
   const m = overTimeMinutes.value % 60;
   return `${h}時間${m}分`;
 });
 
-const shiftData = ref({});
-const attendanceData = ref({});
-const shiftDataPopup = ref({});
+
+const shiftData = ref({});// シフトデータ格納
+const attendanceData = ref({});// 出勤簿データ格納
+const shiftDataPopup = ref({});// ポップアップ用シフトデータ
+const attendanceDataPopup = ref({});// ポップアップ用出勤簿データ
 const selectedDay = ref(null);
 
-///api/reach/attendlist
 // シフトデータ取得関数
 const getShiftData = async () => {
   try {
@@ -123,8 +145,8 @@ const getShiftData = async () => {
     const mapped = {};
 
     rawList.forEach((item) => {
-      const dateStr = item.beginWork.split("T")[0]; // "2025/11/15"
-      const day = Number(dateStr.split("/")[2]); // 15
+      const dateStr = item.beginWork.split("T")[0]; 
+      const day = Number(dateStr.split("/")[2]); 
 
       mapped[day] = {
         start: item.beginWork.slice(11, 16),
@@ -142,6 +164,7 @@ const getShiftData = async () => {
   }
 };
 
+// 出勤簿データ取得関数
 const getAttendanceData = async () => {
   try {
     const response = await axios.get(
@@ -151,12 +174,12 @@ const getAttendanceData = async () => {
       { withCredentials: true }
     );
 
-    shiftDataPopup.value = response.data;
-    const rawList = response.data.attendList; // ← APIのキー名に注意
+    attendanceDataPopup.value = response.data;
+    const rawList = response.data.attendList; 
     const mapped = {};
 
     rawList.forEach((item) => {
-      // 日付を安全に取得
+
       const dateStr = item.beginWork.split("T")[0];
       const day = Number(dateStr.split("/")[2]);
 
@@ -177,6 +200,7 @@ const getAttendanceData = async () => {
   }
 };
 
+// 日付ラベル取得関数
 const label = (day) => {
   if (viewType.value === "shift") {
     return shiftData.value?.[day] ?? null;
@@ -185,6 +209,7 @@ const label = (day) => {
   }
 };
 
+// 初回データ取得
 onMounted(() => {
   if (viewType.value === "shift") {
     getShiftData();
@@ -293,13 +318,13 @@ watch(viewType, () => {
 
           <template v-if="label(day)">
             <div class="text-green-600 whitespace-nowrap">
-              始: {{ label(day).start }}
+              出勤: {{ label(day).start }}
             </div>
             <div class="text-blue-600 whitespace-nowrap">
-              終: {{ label(day).end }}
+              退勤: {{ label(day).end }}
             </div>
             <div class="text-orange-600 whitespace-nowrap">
-              休: {{ label(day).breakStart }}~{{ label(day).breakEnd }}
+              休憩: {{ label(day).breakStart }}~{{ label(day).breakEnd }}
             </div>
           </template>
         </div>
@@ -319,6 +344,7 @@ watch(viewType, () => {
       <Popup
         v-if="showPopup"
         :shiftDataPopup="shiftDataPopup.shiftList"
+        :attendanceDataPopup="attendanceDataPopup.attendList"
         :selectedDay="selectedDay"
         @close="showPopup = false"
       />
