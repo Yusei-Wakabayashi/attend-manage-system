@@ -179,7 +179,7 @@ onMounted(() => {
               <tr
                 v-for="(item, index) in filteredData"
                 :key="index"
-                class="hover:bg-green-100 text-sm sm:text-base"
+                class="hover:bg-green-100 text-sm sm:text-base  odd:bg-white even:bg-gray-100"
               >
                 <td class="px-1 py-1 border sm:px-2 sm:py-2">
                   {{ index + 1 }}
