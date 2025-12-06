@@ -39,10 +39,29 @@ const buttonGroups = [
   {
     items: [
       { label: "勤務時間変更申請", color: "green", path: "/timechange" },
+      { label: "休暇申請", color: "green", path: "/vacation" },
+      { label: "残業申請", color: "green", path: "/overtime" },
+      {
+        label: "遅刻・早退・外出申請",
+        color: "green",
+        path: "/attendancerequest",
+      },
+      { label: "月次申請", color: "green", path: "/monthly" },
+    ],
+  },
+];
+
+const buttonGroupsAttendance = [
+  {
+    items: [
       { label: "打刻漏れ申請", color: "green", path: "/missingstamping" },
     ],
   },
 ];
+
+//シフト側
+
+//出勤簿側
 
 // ボタンの色クラス取得関数
 const getColorClass = (color) => {
@@ -55,14 +74,13 @@ const getColorClass = (color) => {
 
 const closeButtonClass = computed(() => {
   if (selectedShift.value) {
-    return "bottom-45 md:bottom-39";  // シフト用
+    return "bottom-32 md:bottom-18"; // シフト用
   } else if (selectedAttendance.value) {
-    return "bottom-32 md:bottom-20.5";    // 出勤簿（勤怠）用
+    return "bottom-32 md:bottom-18"; // 出勤簿（勤怠）用
   } else {
-    return "bottom-70 md:bottom-67";    // データなし
+    return "bottom-70 md:bottom-67"; // データなし
   }
 });
-
 </script>
 
 <template>
@@ -259,8 +277,30 @@ const closeButtonClass = computed(() => {
       </div>
 
       <!--各種申請ボタン-->
-      <div class="mt-3" v-for="(group, gIndex) in buttonGroups" :key="gIndex">
-        <div v-if="selectedData">
+      <!--シフト用ボタン（selectedShift がある時だけ表示)-->
+      <div v-if="selectedShift" class="mt-3">
+        <div v-for="(group, gIndex) in buttonGroups" :key="gIndex">
+          <router-link
+            v-for="(item, index) in group.items"
+            :key="index"
+            :to="item.path"
+          >
+            <button
+              :class="[
+                'w-full mt-1 py-1 rounded-md border-3 shadow-md font-bold text-white text-base cursor-pointer',
+                'md:py-2 md:text-lg',
+                getColorClass(item.color),
+              ]"
+            >
+              {{ item.label }}
+            </button>
+          </router-link>
+        </div>
+      </div>
+
+      <!--出勤簿用ボタン（selectedAttendance がある時だけ表示） -->
+      <div v-if="selectedAttendance" class="mt-3">
+        <div v-for="(group, gIndex) in buttonGroupsAttendance" :key="gIndex">
           <router-link
             v-for="(item, index) in group.items"
             :key="index"
