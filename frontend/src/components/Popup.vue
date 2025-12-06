@@ -52,6 +52,17 @@ const getColorClass = (color) => {
   };
   return map[color];
 };
+
+const closeButtonClass = computed(() => {
+  if (selectedShift.value) {
+    return "bottom-45 md:bottom-39";  // シフト用
+  } else if (selectedAttendance.value) {
+    return "bottom-32 md:bottom-20.5";    // 出勤簿（勤怠）用
+  } else {
+    return "bottom-70 md:bottom-67";    // データなし
+  }
+});
+
 </script>
 
 <template>
@@ -248,7 +259,7 @@ const getColorClass = (color) => {
       </div>
 
       <!--各種申請ボタン-->
-      <div v-for="(group, gIndex) in buttonGroups" :key="gIndex">
+      <div class="mt-3" v-for="(group, gIndex) in buttonGroups" :key="gIndex">
         <div v-if="selectedData">
           <router-link
             v-for="(item, index) in group.items"
@@ -271,9 +282,7 @@ const getColorClass = (color) => {
       <div
         :class="[
           'z-0 absolute left-0 right-0 flex justify-center mt-4 transition-all',
-          selectedData
-            ? 'bottom-32 md:bottom-18.5' //シフトある日
-            : 'bottom-70 md:bottom-67', //シフトない日（位置変更）
+          closeButtonClass,
         ]"
       >
         <button
