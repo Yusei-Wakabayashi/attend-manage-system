@@ -4,8 +4,8 @@ import axios from "axios";
 import NavList from "../components/NavList.vue";
 import Popup from "../components/Popup.vue";
 
-const viewType = ref("shift");// "shift" または "attendance"
-const showPopup = ref(false);// ポップアップ表示制御
+const viewType = ref("shift"); // "shift" または "attendance"
+const showPopup = ref(false); // ポップアップ表示制御
 
 // const togglePopup = (day) => {
 //   selectedDay.value = day;
@@ -18,12 +18,12 @@ const openPopup = (day) => {
   showPopup.value = true;
 };
 
-const today = new Date();// 今日の日付情報
-const currentYear = today.getFullYear();// 現在の年
-const currentMonth = today.getMonth();// 現在の月(0-11)
-const currentDate = today.getDate();// 現在の日(1-31)
-const year = ref(currentYear);// 表示中の年
-const month = ref(currentMonth);// 表示中の月(0-11)
+const today = new Date(); // 今日の日付情報
+const currentYear = today.getFullYear(); // 現在の年
+const currentMonth = today.getMonth(); // 現在の月(0-11)
+const currentDate = today.getDate(); // 現在の日(1-31)
+const year = ref(currentYear); // 表示中の年
+const month = ref(currentMonth); // 表示中の月(0-11)
 
 // 今月表示判定
 const isCurrentMonth = computed(
@@ -123,11 +123,10 @@ const overTimeHours = computed(() => {
   return `${h}時間${m}分`;
 });
 
-
-const shiftData = ref({});// シフトデータ格納
-const attendanceData = ref({});// 出勤簿データ格納
-const shiftDataPopup = ref({});// ポップアップ用シフトデータ
-const attendanceDataPopup = ref({});// ポップアップ用出勤簿データ
+const shiftData = ref({}); // シフトデータ格納
+const attendanceData = ref({}); // 出勤簿データ格納
+const shiftDataPopup = ref({}); // ポップアップ用シフトデータ
+const attendanceDataPopup = ref({}); // ポップアップ用出勤簿データ
 const selectedDay = ref(null);
 
 // シフトデータ取得関数
@@ -145,8 +144,8 @@ const getShiftData = async () => {
     const mapped = {};
 
     rawList.forEach((item) => {
-      const dateStr = item.beginWork.split("T")[0]; 
-      const day = Number(dateStr.split("/")[2]); 
+      const dateStr = item.beginWork.split("T")[0];
+      const day = Number(dateStr.split("/")[2]);
 
       mapped[day] = {
         start: item.beginWork.slice(11, 16),
@@ -175,11 +174,10 @@ const getAttendanceData = async () => {
     );
 
     attendanceDataPopup.value = response.data;
-    const rawList = response.data.attendList; 
+    const rawList = response.data.attendList;
     const mapped = {};
 
     rawList.forEach((item) => {
-
       const dateStr = item.beginWork.split("T")[0];
       const day = Number(dateStr.split("/")[2]);
 
@@ -258,22 +256,26 @@ watch(viewType, () => {
         <button
           @click="viewType = 'shift'"
           class="w-1/2 cursor-pointer font-semibold px-4 py-2"
-          :class="
+          :class="[
             viewType === 'shift'
               ? 'bg-green-500 text-white rounded'
-              : 'bg-white border rounded'
-          "
+              : 'bg-white border rounded',
+
+            viewType === 'attendance' ? 'hover:bg-green-200 hover:border-green-500' : '',
+          ]"
         >
           シフト
         </button>
         <button
           @click="viewType = 'attendance'"
           class="w-1/2 cursor-pointer font-semibold px-4 py-2"
-          :class="
+          :class="[
             viewType === 'attendance'
               ? 'bg-blue-500 text-white rounded'
-              : 'bg-white border rounded'
-          "
+              : 'bg-white border rounded',
+
+            viewType === 'shift' ? 'hover:bg-blue-200 hover:border-blue-500' : '',
+          ]"
         >
           出勤簿
         </button>
@@ -285,11 +287,14 @@ watch(viewType, () => {
         <div
           v-for="(label, i) in ['日', '月', '火', '水', '木', '金', '土']"
           :key="i"
-          class="text-center font-semibold bg-green-200 border-t border-b border-r border-gray-500"
-          :class="{
-            'text-red-500': i === 0,
-            'text-blue-500': i === 6,
-          }"
+          class="text-center font-semibold border-t border-b border-r border-gray-500"
+          :class="[
+            {
+              'text-red-500': i === 0,
+              'text-blue-500': i === 6,
+            },
+            viewType === 'shift' ? 'bg-green-200' : 'bg-blue-200',
+          ]"
         >
           {{ label }}
         </div>
@@ -306,11 +311,16 @@ watch(viewType, () => {
           v-for="day in calendarDays"
           :key="day"
           @click="openPopup(day)"
-          class="h-28 cursor-pointer border-r border-b border-gray-500 bg-white p-1 flex flex-col text-xs relative hover:bg-green-100 hover:border-green-500"
-          :class="{
-            'bg-yellow-100 border-yellow-500':
-              isCurrentMonth && day === currentDate,
-          }"
+          class="h-28 cursor-pointer border-r border-b border-gray-500 bg-white p-1 flex flex-col text-xs relative"
+          :class="[
+            {
+              'bg-yellow-100 border-yellow-500':
+                isCurrentMonth && day === currentDate,
+            },
+            viewType === 'shift'
+              ? 'hover:bg-green-100 hover:border-green-500'
+              : 'hover:bg-blue-100 hover:border-blue-500',
+          ]"
         >
           <div class="font-bold text-right text-gray-800 whitespace-nowrap">
             {{ day }}
@@ -333,7 +343,7 @@ watch(viewType, () => {
       <!-- 出勤簿 合計（固定表示） -->
       <div
         v-if="viewType === 'attendance'"
-        class="mt-4 p-4 bg-white rounded shadow border border-green-500"
+        class="mt-4 p-4 bg-white rounded shadow border border-blue-500"
       >
         <h2 class="text-xl lg:text-2xl font-semibold mb-2">{{ monthLabel }}</h2>
         <p class="text-gray-800">出勤日数: {{ attendanceDays }}日</p>

@@ -39,6 +39,7 @@ const buttonGroups = [
   {
     items: [
       { label: "勤務時間変更申請", color: "green", path: "/timechange" },
+      { label: "打刻漏れ申請", color: "green", path: "/missingstamping" },
       { label: "休暇申請", color: "green", path: "/vacation" },
       { label: "残業申請", color: "green", path: "/overtime" },
       {
@@ -47,14 +48,6 @@ const buttonGroups = [
         path: "/attendancerequest",
       },
       { label: "月次申請", color: "green", path: "/monthly" },
-    ],
-  },
-];
-
-const buttonGroupsAttendance = [
-  {
-    items: [
-      { label: "打刻漏れ申請", color: "green", path: "/missingstamping" },
     ],
   },
 ];
@@ -277,30 +270,8 @@ const closeButtonClass = computed(() => {
       </div>
 
       <!--各種申請ボタン-->
-      <!--シフト用ボタン（selectedShift がある時だけ表示)-->
       <div v-if="selectedShift" class="mt-3">
         <div v-for="(group, gIndex) in buttonGroups" :key="gIndex">
-          <router-link
-            v-for="(item, index) in group.items"
-            :key="index"
-            :to="item.path"
-          >
-            <button
-              :class="[
-                'w-full mt-1 py-1 rounded-md border-3 shadow-md font-bold text-white text-base cursor-pointer',
-                'md:py-2 md:text-lg',
-                getColorClass(item.color),
-              ]"
-            >
-              {{ item.label }}
-            </button>
-          </router-link>
-        </div>
-      </div>
-
-      <!--出勤簿用ボタン（selectedAttendance がある時だけ表示） -->
-      <div v-if="selectedAttendance" class="mt-3">
-        <div v-for="(group, gIndex) in buttonGroupsAttendance" :key="gIndex">
           <router-link
             v-for="(item, index) in group.items"
             :key="index"
