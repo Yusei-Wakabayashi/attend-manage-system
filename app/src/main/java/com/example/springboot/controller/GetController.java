@@ -25,13 +25,13 @@ import com.example.springboot.dto.response.MonthWorkInfoResponse;
 import com.example.springboot.dto.response.NewsListResponse;
 import com.example.springboot.dto.response.OtherTypeListResponse;
 import com.example.springboot.dto.response.PaydHolidayHistoryListResponse;
-import com.example.springboot.dto.response.RequestDetilMonthlyResponse;
-import com.example.springboot.dto.response.RequestDetilOtherTimeResponse;
-import com.example.springboot.dto.response.RequestDetilOverTimeResponse;
-import com.example.springboot.dto.response.RequestDetilShiftChangeResponse;
-import com.example.springboot.dto.response.RequestDetilShiftResponse;
-import com.example.springboot.dto.response.RequestDetilStampResponse;
-import com.example.springboot.dto.response.RequestDetilVacationResponse;
+import com.example.springboot.dto.response.RequestDetailMonthlyResponse;
+import com.example.springboot.dto.response.RequestDetailOtherTimeResponse;
+import com.example.springboot.dto.response.RequestDetailOverTimeResponse;
+import com.example.springboot.dto.response.RequestDetailShiftChangeResponse;
+import com.example.springboot.dto.response.RequestDetailShiftResponse;
+import com.example.springboot.dto.response.RequestDetailStampResponse;
+import com.example.springboot.dto.response.RequestDetailVacationResponse;
 import com.example.springboot.dto.response.RequestListResponse;
 import com.example.springboot.dto.ArrayResponse;
 import com.example.springboot.dto.change.DurationToString;
@@ -77,6 +77,7 @@ import com.example.springboot.service.NewsListService;
 import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.PaydHolidayService;
 import com.example.springboot.service.PaydHolidayUseService;
+import com.example.springboot.service.RequestService;
 import com.example.springboot.service.RoleService;
 import com.example.springboot.service.ShiftChangeRequestService;
 import com.example.springboot.service.ShiftRequestService;
@@ -160,6 +161,9 @@ public class GetController
     @Autowired
     NewsListService newsListService;
 
+    @Autowired
+    RequestService requestService;
+
     @GetMapping("/reach/approverlist")
     public ArrayResponse<ApproverListResponse> returnApproverList()
     {
@@ -212,122 +216,75 @@ public class GetController
         return new ArrayResponse<ShiftListResponse>(1, shiftListResponse, "shiftList");
     }
 
-    @GetMapping("/reach/requestdetil/shift")
-    public RequestDetilShiftResponse returnShiftDetil(@ModelAttribute RequestIdInput request)
+    @GetMapping("/reach/requestdetail/shift")
+    public RequestDetailShiftResponse returnShiftDetail(@ModelAttribute RequestIdInput request)
     {
-        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
-        int status = 0;
-        // securityutilから名前を取得
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
+        Account account = accountService.findCurrentAccount();
         // 認証情報がなければエラー
-        if(account.equals(null))
+        if(Objects.isNull(account))
         {
-            RequestDetilShiftResponse requestDetilShiftResponse = new RequestDetilShiftResponse();
-            status = 5;
-            requestDetilShiftResponse.setStatus(status);
-            return requestDetilShiftResponse;
+            RequestDetailShiftResponse requestDetailShiftResponse = new RequestDetailShiftResponse();
+            requestDetailShiftResponse.setStatus(5);
+            return requestDetailShiftResponse;
         }
-        // 名前から取得したアカウントとidで検索にかけ取得できれば返す取得できなければエラー
-        ShiftRequest shiftRequest = shiftRequestService.findByAccountIdAndShiftRequestId(account, request.getRequestId());
-        status = 1;
-        RequestDetilShiftResponse requestDetilShiftResponse = new RequestDetilShiftResponse
-        (
-            status,
-            localDateTimeToString.localDateTimeToString(shiftRequest.getBeginWork()),
-            localDateTimeToString.localDateTimeToString(shiftRequest.getEndWork()),
-            localDateTimeToString.localDateTimeToString(shiftRequest.getBeginBreak()),
-            localDateTimeToString.localDateTimeToString(shiftRequest.getEndBreak()),
-            shiftRequest.getRequestComment(),
-            localDateTimeToString.localDateTimeToString(shiftRequest.getRequestDate()),
-            shiftRequest.getRequestStatus(),
-            shiftRequest.getApprover().getId().intValue(),
-            shiftRequest.getApprover().getName(),
-            shiftRequest.getApproverComment(),
-            Objects.isNull(shiftRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(shiftRequest.getApprovalTime())
-        );
-        return requestDetilShiftResponse;
-    }
-    @GetMapping("/reach/requestdetil/changetime")
-    public RequestDetilShiftChangeResponse returnShiftChangeDetil(HttpSession session, RequestIdInput request)
-    {
-        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
-        int status = 0;
-        // securityutilから名前を取得
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
-        RequestDetilShiftChangeResponse requestDetilShiftChangeResponse = new RequestDetilShiftChangeResponse();
-        // 認証情報がなければエラー
-        if(account.equals(null))
-        {
-            status = 5;
-            requestDetilShiftChangeResponse.setStatus(status);
-            return requestDetilShiftChangeResponse;
-        }
-        // 名前から取得したアカウントとidで検索にかけ取得できれば返す取得できなければエラー
-        ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findByAccountIdAndShiftChangeRequestId(account, request.getRequestId());
-        if(shiftChangeRequest.equals(null))
-        {
-            status = 3;
-            return requestDetilShiftChangeResponse;
-        }
-        status = 1;
-        requestDetilShiftChangeResponse.setStatus(status);
-        requestDetilShiftChangeResponse.setShiftId(shiftChangeRequest.getShiftId().getShiftId().intValue());
-        requestDetilShiftChangeResponse.setBeginWork(localDateTimeToString.localDateTimeToString(shiftChangeRequest.getBeginWork()));
-        requestDetilShiftChangeResponse.setEndWork(localDateTimeToString.localDateTimeToString(shiftChangeRequest.getEndWork()));
-        requestDetilShiftChangeResponse.setBeginBreak(localDateTimeToString.localDateTimeToString(shiftChangeRequest.getBeginBreak()));
-        requestDetilShiftChangeResponse.setEndBreak(localDateTimeToString.localDateTimeToString(shiftChangeRequest.getEndBreak()));
-        requestDetilShiftChangeResponse.setRequestComment(shiftChangeRequest.getRequestComment());
-        requestDetilShiftChangeResponse.setRequestDate(localDateTimeToString.localDateTimeToString(shiftChangeRequest.getRequestDate()));
-        requestDetilShiftChangeResponse.setRequestStatus(shiftChangeRequest.getRequestStatus());
-        requestDetilShiftChangeResponse.setApproverId(shiftChangeRequest.getApprover().getId().intValue());
-        requestDetilShiftChangeResponse.setApproverName(shiftChangeRequest.getApprover().getName());
-        requestDetilShiftChangeResponse.setApproverComment(shiftChangeRequest.getApproverComment());
-        requestDetilShiftChangeResponse.setApprovalTime(Objects.isNull(shiftChangeRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(shiftChangeRequest.getApprovalTime()));
-
-        return requestDetilShiftChangeResponse;
+        RequestDetailShiftResponse requestDetailShiftResponse = requestService.getShiftDetail(account, request.getRequestId());
+        return requestDetailShiftResponse;
     }
 
-    @GetMapping("/reach/requestdetil/stamp")
-    public RequestDetilStampResponse returnStampDetil(HttpSession session, RequestIdInput request)
+    @GetMapping("/reach/requestdetail/changetime")
+    public RequestDetailShiftChangeResponse returnShiftChangeDetail(HttpSession session, RequestIdInput request)
+    {
+        Account account = accountService.findCurrentAccount();
+        // 認証情報がなければエラー
+        if(Objects.isNull(account))
+        {
+            RequestDetailShiftChangeResponse requestDetailShiftChangeResponse = new RequestDetailShiftChangeResponse();
+            requestDetailShiftChangeResponse.setStatus(5);
+            return requestDetailShiftChangeResponse;
+        }
+        RequestDetailShiftChangeResponse requestDetailShiftChangeResponse = requestService.getShiftChangeDetail(account, request.getRequestId());
+        return requestDetailShiftChangeResponse;
+    }
+
+    @GetMapping("/reach/requestdetail/stamp")
+    public RequestDetailStampResponse returnStampDetil(HttpSession session, RequestIdInput request)
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         int status = 0;
         // securityutilから名前を取得
         String username = SecurityUtil.getCurrentUsername();
         Account account = accountService.findAccountByUsername(username);
-        RequestDetilStampResponse requestDetilStampResponse = new RequestDetilStampResponse();
+        RequestDetailStampResponse requestDetailStampResponse = new RequestDetailStampResponse();
         // 認証情報がなければエラー
         if(Objects.isNull(account))
         {
             status = 5;
-            requestDetilStampResponse.setStatus(status);
-            return requestDetilStampResponse;
+            requestDetailStampResponse.setStatus(status);
+            return requestDetailStampResponse;
         }
         StampRequest stampRequest = stampRequestService.findByAccountIdAndStampId(account, request.getRequestId());
         // 名前から取得したアカウントとidで検索にかけ取得できれば返す取得できなければエラー
         if(stampRequest.equals(null))
         {
             status = 5;
-            requestDetilStampResponse.setStatus(status);
-            return requestDetilStampResponse;
+            requestDetailStampResponse.setStatus(status);
+            return requestDetailStampResponse;
         }
         status = 1;
-        requestDetilStampResponse.setStatus(status);
-        requestDetilStampResponse.setShiftId(stampRequest.getShiftId().getShiftId().intValue());
-        requestDetilStampResponse.setBeginWork(localDateTimeToString.localDateTimeToString(stampRequest.getBeginWork()));
-        requestDetilStampResponse.setEndWork(localDateTimeToString.localDateTimeToString(stampRequest.getEndWork()));
-        requestDetilStampResponse.setBeginBreak(localDateTimeToString.localDateTimeToString(stampRequest.getBeginBreak()));
-        requestDetilStampResponse.setEndBreak(localDateTimeToString.localDateTimeToString(stampRequest.getEndBreak()));
-        requestDetilStampResponse.setRequestComment(stampRequest.getRequestComment());
-        requestDetilStampResponse.setRequestDate(localDateTimeToString.localDateTimeToString(stampRequest.getRequestDate()));
-        requestDetilStampResponse.setRequestStatus(stampRequest.getRequestStatus());
-        requestDetilStampResponse.setApproverId(stampRequest.getApprover().getId().intValue());
-        requestDetilStampResponse.setApproverName(stampRequest.getApprover().getName());
-        requestDetilStampResponse.setApproverComment(stampRequest.getApproverComment());
-        requestDetilStampResponse.setApprovalTime(Objects.isNull(stampRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(stampRequest.getApprovalTime()));
-        return requestDetilStampResponse;
+        requestDetailStampResponse.setStatus(status);
+        requestDetailStampResponse.setShiftId(stampRequest.getShiftId().getShiftId().intValue());
+        requestDetailStampResponse.setBeginWork(localDateTimeToString.localDateTimeToString(stampRequest.getBeginWork()));
+        requestDetailStampResponse.setEndWork(localDateTimeToString.localDateTimeToString(stampRequest.getEndWork()));
+        requestDetailStampResponse.setBeginBreak(localDateTimeToString.localDateTimeToString(stampRequest.getBeginBreak()));
+        requestDetailStampResponse.setEndBreak(localDateTimeToString.localDateTimeToString(stampRequest.getEndBreak()));
+        requestDetailStampResponse.setRequestComment(stampRequest.getRequestComment());
+        requestDetailStampResponse.setRequestDate(localDateTimeToString.localDateTimeToString(stampRequest.getRequestDate()));
+        requestDetailStampResponse.setRequestStatus(stampRequest.getRequestStatus());
+        requestDetailStampResponse.setApproverId(stampRequest.getApprover().getId().intValue());
+        requestDetailStampResponse.setApproverName(stampRequest.getApprover().getName());
+        requestDetailStampResponse.setApproverComment(stampRequest.getApproverComment());
+        requestDetailStampResponse.setApprovalTime(Objects.isNull(stampRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(stampRequest.getApprovalTime()));
+        return requestDetailStampResponse;
     }
     @GetMapping("/reach/attendlist")
     public ArrayResponse<AttendListResponse> returnAttendList(HttpSession session, @ModelAttribute YearMonthInput request)
@@ -347,11 +304,11 @@ public class GetController
         return arrayResponse;
     }
 
-    @GetMapping("/reach/requestdetil/vacation")
-    public RequestDetilVacationResponse returnVacationDetil(HttpSession session, RequestIdInput request)
+    @GetMapping("/reach/requestdetail/vacation")
+    public RequestDetailVacationResponse returnVacationDetil(HttpSession session, RequestIdInput request)
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
-        RequestDetilVacationResponse requestDetilVacation = new RequestDetilVacationResponse();
+        RequestDetailVacationResponse requestDetailVacation = new RequestDetailVacationResponse();
         // securityutilから名前を取得
         String username = SecurityUtil.getCurrentUsername();
         Account account = accountService.findAccountByUsername(username);
@@ -359,37 +316,37 @@ public class GetController
         if(Objects.isNull(account))
         {
             status = 4;
-            requestDetilVacation.setStatus(status);
-            return requestDetilVacation;
+            requestDetailVacation.setStatus(status);
+            return requestDetailVacation;
         }
         VacationRequest vacationRequest = vacationRequestService.findByAccountIdAndVacationId(account, request.getRequestId());
         if(Objects.isNull(vacationRequest))
         {
             status = 4;
-            requestDetilVacation.setStatus(status);
-            return requestDetilVacation;
+            requestDetailVacation.setStatus(status);
+            return requestDetailVacation;
         }
         status = 1;
-        requestDetilVacation.setStatus(status);
-        requestDetilVacation.setShiftId(vacationRequest.getShiftId().getShiftId().intValue());
-        requestDetilVacation.setVacationType(vacationRequest.getVacationTypeId().getVacationTypeId().intValue());
-        requestDetilVacation.setBeginVacation(localDateTimeToString.localDateTimeToString(vacationRequest.getBeginVacation()));
-        requestDetilVacation.setEndVacation(localDateTimeToString.localDateTimeToString(vacationRequest.getEndVacation()));
-        requestDetilVacation.setRequestComment(vacationRequest.getRequestComment());
-        requestDetilVacation.setRequestDate(localDateTimeToString.localDateTimeToString(vacationRequest.getRequestDate()));
-        requestDetilVacation.setRequestStatus(vacationRequest.getRequestStatus());
-        requestDetilVacation.setApproverId(vacationRequest.getApprover().getId().intValue());
-        requestDetilVacation.setApproverName(vacationRequest.getApprover().getName());
-        requestDetilVacation.setApproverComment(vacationRequest.getApproverComment());
-        requestDetilVacation.setApprovalTime(Objects.isNull(vacationRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(vacationRequest.getApprovalTime()));
-        return requestDetilVacation;
+        requestDetailVacation.setStatus(status);
+        requestDetailVacation.setShiftId(vacationRequest.getShiftId().getShiftId().intValue());
+        requestDetailVacation.setVacationType(vacationRequest.getVacationTypeId().getVacationTypeId().intValue());
+        requestDetailVacation.setBeginVacation(localDateTimeToString.localDateTimeToString(vacationRequest.getBeginVacation()));
+        requestDetailVacation.setEndVacation(localDateTimeToString.localDateTimeToString(vacationRequest.getEndVacation()));
+        requestDetailVacation.setRequestComment(vacationRequest.getRequestComment());
+        requestDetailVacation.setRequestDate(localDateTimeToString.localDateTimeToString(vacationRequest.getRequestDate()));
+        requestDetailVacation.setRequestStatus(vacationRequest.getRequestStatus());
+        requestDetailVacation.setApproverId(vacationRequest.getApprover().getId().intValue());
+        requestDetailVacation.setApproverName(vacationRequest.getApprover().getName());
+        requestDetailVacation.setApproverComment(vacationRequest.getApproverComment());
+        requestDetailVacation.setApprovalTime(Objects.isNull(vacationRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(vacationRequest.getApprovalTime()));
+        return requestDetailVacation;
     }
 
-    @GetMapping("/reach/requestdetil/overtime")
-    public RequestDetilOverTimeResponse returnOverTimeDetil(HttpSession session, RequestIdInput request)
+    @GetMapping("/reach/requestdetail/overtime")
+    public RequestDetailOverTimeResponse returnOverTimeDetil(HttpSession session, RequestIdInput request)
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
-        RequestDetilOverTimeResponse requestDetilOverTimeResponse = new RequestDetilOverTimeResponse();
+        RequestDetailOverTimeResponse requestDetailOverTimeResponse = new RequestDetailOverTimeResponse();
         // securityutilから名前を取得
         String username = SecurityUtil.getCurrentUsername();
         Account account = accountService.findAccountByUsername(username);
@@ -397,36 +354,36 @@ public class GetController
         if(Objects.isNull(account))
         {
             status = 4;
-            requestDetilOverTimeResponse.setStatus(status);
-            return requestDetilOverTimeResponse;
+            requestDetailOverTimeResponse.setStatus(status);
+            return requestDetailOverTimeResponse;
         }
         OverTimeRequest overTimeRequest = overTimeRequestService.findByAccountIdAndOverTimeRequestId(account, request.getRequestId());
         if(Objects.isNull(overTimeRequest))
         {
             status = 4;
-            requestDetilOverTimeResponse.setStatus(status);
-            return requestDetilOverTimeResponse;
+            requestDetailOverTimeResponse.setStatus(status);
+            return requestDetailOverTimeResponse;
         }
         status = 1;
-        requestDetilOverTimeResponse.setStatus(status);
-        requestDetilOverTimeResponse.setShiftId(overTimeRequest.getShiftId().getShiftId().intValue());
-        requestDetilOverTimeResponse.setBeginOverWork(localDateTimeToString.localDateTimeToString(overTimeRequest.getBeginWork()));
-        requestDetilOverTimeResponse.setEndOverWork(localDateTimeToString.localDateTimeToString(overTimeRequest.getEndWork()));
-        requestDetilOverTimeResponse.setRequestComment(overTimeRequest.getRequestComment());
-        requestDetilOverTimeResponse.setRequestDate(localDateTimeToString.localDateTimeToString(overTimeRequest.getRequestDate()));
-        requestDetilOverTimeResponse.setRequestStatus(overTimeRequest.getRequestStatus());
-        requestDetilOverTimeResponse.setApproverId(Objects.isNull(overTimeRequest.getApprover()) ? null : overTimeRequest.getApprover().getId().intValue());
-        requestDetilOverTimeResponse.setApproverName(Objects.isNull(overTimeRequest.getApprover()) ? "" : overTimeRequest.getApprover().getName());
-        requestDetilOverTimeResponse.setApproverComment(overTimeRequest.getApproverComment());
-        requestDetilOverTimeResponse.setApprovalTime(Objects.isNull(overTimeRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(overTimeRequest.getApprovalTime()));
-        return requestDetilOverTimeResponse;
+        requestDetailOverTimeResponse.setStatus(status);
+        requestDetailOverTimeResponse.setShiftId(overTimeRequest.getShiftId().getShiftId().intValue());
+        requestDetailOverTimeResponse.setBeginOverWork(localDateTimeToString.localDateTimeToString(overTimeRequest.getBeginWork()));
+        requestDetailOverTimeResponse.setEndOverWork(localDateTimeToString.localDateTimeToString(overTimeRequest.getEndWork()));
+        requestDetailOverTimeResponse.setRequestComment(overTimeRequest.getRequestComment());
+        requestDetailOverTimeResponse.setRequestDate(localDateTimeToString.localDateTimeToString(overTimeRequest.getRequestDate()));
+        requestDetailOverTimeResponse.setRequestStatus(overTimeRequest.getRequestStatus());
+        requestDetailOverTimeResponse.setApproverId(Objects.isNull(overTimeRequest.getApprover()) ? null : overTimeRequest.getApprover().getId().intValue());
+        requestDetailOverTimeResponse.setApproverName(Objects.isNull(overTimeRequest.getApprover()) ? "" : overTimeRequest.getApprover().getName());
+        requestDetailOverTimeResponse.setApproverComment(overTimeRequest.getApproverComment());
+        requestDetailOverTimeResponse.setApprovalTime(Objects.isNull(overTimeRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(overTimeRequest.getApprovalTime()));
+        return requestDetailOverTimeResponse;
     }
 
-    @GetMapping("/reach/requestdetil/othertime")
-    public RequestDetilOtherTimeResponse returnOtherTimeDetil(HttpSession session, RequestIdInput request)
+    @GetMapping("/reach/requestdetail/othertime")
+    public RequestDetailOtherTimeResponse returnOtherTimeDetil(HttpSession session, RequestIdInput request)
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
-        RequestDetilOtherTimeResponse requestDetilOtherTimeResponse = new RequestDetilOtherTimeResponse();
+        RequestDetailOtherTimeResponse requestDetailOtherTimeResponse = new RequestDetailOtherTimeResponse();
         // securityutilから名前を取得
         String username = SecurityUtil.getCurrentUsername();
         Account account = accountService.findAccountByUsername(username);
@@ -434,37 +391,37 @@ public class GetController
         if(Objects.isNull(account))
         {
             status = 4;
-            requestDetilOtherTimeResponse.setStatus(status);
-            return requestDetilOtherTimeResponse;
+            requestDetailOtherTimeResponse.setStatus(status);
+            return requestDetailOtherTimeResponse;
         }
         AttendanceExceptionRequest attendanceExceptionRequest = attendanceExceptionRequestService.findByAccountIdAndAttendanceExceptionId(account, request.getRequestId());
         if(Objects.isNull(attendanceExceptionRequest))
         {
             status = 4;
-            requestDetilOtherTimeResponse.setStatus(status);
-            return requestDetilOtherTimeResponse;
+            requestDetailOtherTimeResponse.setStatus(status);
+            return requestDetailOtherTimeResponse;
         }
         status = 1;
-        requestDetilOtherTimeResponse.setStatus(status);
-        requestDetilOtherTimeResponse.setShiftId(attendanceExceptionRequest.getShiftId().getShiftId().intValue());
-        requestDetilOtherTimeResponse.setTypeId(attendanceExceptionRequest.getAttendanceExceptionTypeId().getAttendanceExceptionTypeId().intValue());
-        requestDetilOtherTimeResponse.setBeginOtherTime(localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getBeginTime()));
-        requestDetilOtherTimeResponse.setEndOtherTime(localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getEndTime()));
-        requestDetilOtherTimeResponse.setRequestComment(attendanceExceptionRequest.getRequestComment());
-        requestDetilOtherTimeResponse.setRequestDate(localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getRequestDate()));
-        requestDetilOtherTimeResponse.setRequestStatus(attendanceExceptionRequest.getRequestStatus());
-        requestDetilOtherTimeResponse.setApproverId(Objects.isNull(attendanceExceptionRequest.getApprover()) ? null : attendanceExceptionRequest.getApprover().getId().intValue());
-        requestDetilOtherTimeResponse.setApproverName(Objects.isNull(attendanceExceptionRequest.getApprover()) ? "" : attendanceExceptionRequest.getApprover().getName());
-        requestDetilOtherTimeResponse.setApproverComment(attendanceExceptionRequest.getApproverComment());
-        requestDetilOtherTimeResponse.setApprovalTime(Objects.isNull(attendanceExceptionRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getApprovalTime()));
-        return requestDetilOtherTimeResponse;
+        requestDetailOtherTimeResponse.setStatus(status);
+        requestDetailOtherTimeResponse.setShiftId(attendanceExceptionRequest.getShiftId().getShiftId().intValue());
+        requestDetailOtherTimeResponse.setTypeId(attendanceExceptionRequest.getAttendanceExceptionTypeId().getAttendanceExceptionTypeId().intValue());
+        requestDetailOtherTimeResponse.setBeginOtherTime(localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getBeginTime()));
+        requestDetailOtherTimeResponse.setEndOtherTime(localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getEndTime()));
+        requestDetailOtherTimeResponse.setRequestComment(attendanceExceptionRequest.getRequestComment());
+        requestDetailOtherTimeResponse.setRequestDate(localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getRequestDate()));
+        requestDetailOtherTimeResponse.setRequestStatus(attendanceExceptionRequest.getRequestStatus());
+        requestDetailOtherTimeResponse.setApproverId(Objects.isNull(attendanceExceptionRequest.getApprover()) ? null : attendanceExceptionRequest.getApprover().getId().intValue());
+        requestDetailOtherTimeResponse.setApproverName(Objects.isNull(attendanceExceptionRequest.getApprover()) ? "" : attendanceExceptionRequest.getApprover().getName());
+        requestDetailOtherTimeResponse.setApproverComment(attendanceExceptionRequest.getApproverComment());
+        requestDetailOtherTimeResponse.setApprovalTime(Objects.isNull(attendanceExceptionRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getApprovalTime()));
+        return requestDetailOtherTimeResponse;
     }
     // 月次申請詳細取得を作成後申請一覧取得の作成
-    @GetMapping("/reach/requestdetil/monthly")
-    public RequestDetilMonthlyResponse returnMonthlyResponse(HttpSession session, RequestIdInput request)
+    @GetMapping("/reach/requestdetail/monthly")
+    public RequestDetailMonthlyResponse returnMonthlyResponse(HttpSession session, RequestIdInput request)
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
-        RequestDetilMonthlyResponse requestDetilMonthlyResponse = new RequestDetilMonthlyResponse();
+        RequestDetailMonthlyResponse requestDetailMonthlyResponse = new RequestDetailMonthlyResponse();
         // securityutilから名前を取得
         String username = SecurityUtil.getCurrentUsername();
         Account account = accountService.findAccountByUsername(username);
@@ -472,38 +429,38 @@ public class GetController
         if(Objects.isNull(account))
         {
             status = 4;
-            requestDetilMonthlyResponse.setStatus(status);
-            return requestDetilMonthlyResponse;
+            requestDetailMonthlyResponse.setStatus(status);
+            return requestDetailMonthlyResponse;
         }
         MonthlyRequest monthlyRequest = monthlyRequestService.findByAccountIdAndMothlyRequestId(account, request.getRequestId());
         if(Objects.isNull(monthlyRequest))
         {
             status = 4;
-            requestDetilMonthlyResponse.setStatus(status);
-            return requestDetilMonthlyResponse;
+            requestDetailMonthlyResponse.setStatus(status);
+            return requestDetailMonthlyResponse;
         }
         status = 1;
-        requestDetilMonthlyResponse.setStatus(status);
-        requestDetilMonthlyResponse.setWorkTime(monthlyRequest.getWorkTime());
-        requestDetilMonthlyResponse.setOverTime(monthlyRequest.getOverTime());
-        requestDetilMonthlyResponse.setEarlyTime(monthlyRequest.getEarlyTime());
-        requestDetilMonthlyResponse.setLeavingTime(monthlyRequest.getLeavingTime());
-        requestDetilMonthlyResponse.setOutingTime(monthlyRequest.getOutingTime());
-        requestDetilMonthlyResponse.setAbsenceTime(monthlyRequest.getAbsenceTime());
-        requestDetilMonthlyResponse.setPaydHolidayTime(monthlyRequest.getPaydHolidayTime());
-        requestDetilMonthlyResponse.setSpecialTime(monthlyRequest.getSpecialTime());
-        requestDetilMonthlyResponse.setHolidayWorkTime(monthlyRequest.getHolidayWorkTime());
-        requestDetilMonthlyResponse.setLateNightWorkTime(monthlyRequest.getLateNightWorkTime());
-        requestDetilMonthlyResponse.setYear(monthlyRequest.getYear());
-        requestDetilMonthlyResponse.setMonth(monthlyRequest.getMonth());
-        requestDetilMonthlyResponse.setRequestComment(monthlyRequest.getRequestComment());
-        requestDetilMonthlyResponse.setRequestDate(localDateTimeToString.localDateTimeToString(monthlyRequest.getRequestDate()));
-        requestDetilMonthlyResponse.setRequestStatus(monthlyRequest.getRequestStatus());
-        requestDetilMonthlyResponse.setApproverId(Objects.isNull(monthlyRequest.getApprover()) ? null : monthlyRequest.getApprover().getId().intValue());
-        requestDetilMonthlyResponse.setApproverName(Objects.isNull(monthlyRequest.getApprover()) ? "" : monthlyRequest.getApprover().getName());
-        requestDetilMonthlyResponse.setApproverComment(monthlyRequest.getApproverComment());
-        requestDetilMonthlyResponse.setApprovalTime(Objects.isNull(monthlyRequest.getApprovalDate()) ? "" : localDateTimeToString.localDateTimeToString(monthlyRequest.getApprovalDate()));
-        return requestDetilMonthlyResponse;
+        requestDetailMonthlyResponse.setStatus(status);
+        requestDetailMonthlyResponse.setWorkTime(monthlyRequest.getWorkTime());
+        requestDetailMonthlyResponse.setOverTime(monthlyRequest.getOverTime());
+        requestDetailMonthlyResponse.setEarlyTime(monthlyRequest.getEarlyTime());
+        requestDetailMonthlyResponse.setLeavingTime(monthlyRequest.getLeavingTime());
+        requestDetailMonthlyResponse.setOutingTime(monthlyRequest.getOutingTime());
+        requestDetailMonthlyResponse.setAbsenceTime(monthlyRequest.getAbsenceTime());
+        requestDetailMonthlyResponse.setPaydHolidayTime(monthlyRequest.getPaydHolidayTime());
+        requestDetailMonthlyResponse.setSpecialTime(monthlyRequest.getSpecialTime());
+        requestDetailMonthlyResponse.setHolidayWorkTime(monthlyRequest.getHolidayWorkTime());
+        requestDetailMonthlyResponse.setLateNightWorkTime(monthlyRequest.getLateNightWorkTime());
+        requestDetailMonthlyResponse.setYear(monthlyRequest.getYear());
+        requestDetailMonthlyResponse.setMonth(monthlyRequest.getMonth());
+        requestDetailMonthlyResponse.setRequestComment(monthlyRequest.getRequestComment());
+        requestDetailMonthlyResponse.setRequestDate(localDateTimeToString.localDateTimeToString(monthlyRequest.getRequestDate()));
+        requestDetailMonthlyResponse.setRequestStatus(monthlyRequest.getRequestStatus());
+        requestDetailMonthlyResponse.setApproverId(Objects.isNull(monthlyRequest.getApprover()) ? null : monthlyRequest.getApprover().getId().intValue());
+        requestDetailMonthlyResponse.setApproverName(Objects.isNull(monthlyRequest.getApprover()) ? "" : monthlyRequest.getApprover().getName());
+        requestDetailMonthlyResponse.setApproverComment(monthlyRequest.getApproverComment());
+        requestDetailMonthlyResponse.setApprovalTime(Objects.isNull(monthlyRequest.getApprovalDate()) ? "" : localDateTimeToString.localDateTimeToString(monthlyRequest.getApprovalDate()));
+        return requestDetailMonthlyResponse;
     }
 
     @GetMapping("/reach/requestlist")

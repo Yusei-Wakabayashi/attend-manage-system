@@ -14,6 +14,8 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.springboot.dto.change.LocalDateTimeToString;
+import com.example.springboot.dto.response.RequestDetailShiftResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftRequest;
@@ -24,14 +26,17 @@ public class ShiftRequestService
 {
     // 再代入不可で定義
     private final ShiftRequestRepository shiftRequestRepository;
+    private final LocalDateTimeToString localDateTimeToString;
     // コンストラクタ定義(依存性注入)
     @Autowired // 念のため記載
     public ShiftRequestService
     (
-        ShiftRequestRepository shiftRequestRepository
+        ShiftRequestRepository shiftRequestRepository,
+        LocalDateTimeToString localDateTimeToString
     )
     {
         this.shiftRequestRepository = shiftRequestRepository;
+        this.localDateTimeToString = localDateTimeToString;
     }
 
     public List<ShiftRequest> findAllShiftRequest()
@@ -152,6 +157,28 @@ public class ShiftRequestService
         shift.setOuting(Time.valueOf("00:00:00"));
         shift.setOverWork(Time.valueOf("00:00:00"));
         return shift;
+    }
+
+    public RequestDetailShiftResponse mapToDetailResponse(ShiftRequest shiftRequest) 
+    {
+        RequestDetailShiftResponse requestDetailShiftResponse =
+        new RequestDetailShiftResponse
+        (
+            1,
+            localDateTimeToString.localDateTimeToString(shiftRequest.getBeginWork()),
+            localDateTimeToString.localDateTimeToString(shiftRequest.getEndWork()),
+            localDateTimeToString.localDateTimeToString(shiftRequest.getBeginBreak()),
+            localDateTimeToString.localDateTimeToString(shiftRequest.getEndBreak()),
+            shiftRequest.isVacationWork(),
+            shiftRequest.getRequestComment(),
+            localDateTimeToString.localDateTimeToString(shiftRequest.getRequestDate()),
+            shiftRequest.getRequestStatus(),
+            shiftRequest.getApprover().getId().intValue(),
+            shiftRequest.getApprover().getName(),
+            shiftRequest.getApproverComment(),
+            shiftRequest.getApprovalTime() == null ? "" : localDateTimeToString.localDateTimeToString(shiftRequest.getApprovalTime())
+        );
+        return requestDetailShiftResponse;
     }
 
     public ShiftRequest save(ShiftRequest shiftRequest)

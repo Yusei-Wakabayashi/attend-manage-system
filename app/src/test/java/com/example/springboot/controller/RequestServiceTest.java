@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import java.sql.Time;
@@ -35,6 +34,8 @@ import com.example.springboot.dto.input.ShiftChangeInput;
 import com.example.springboot.dto.input.ShiftInput;
 import com.example.springboot.dto.input.StampInput;
 import com.example.springboot.dto.input.VacationInput;
+import com.example.springboot.dto.response.RequestDetailShiftChangeResponse;
+import com.example.springboot.dto.response.RequestDetailShiftResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Attend;
 import com.example.springboot.model.AttendanceExceptionRequest;
@@ -994,4 +995,114 @@ public class RequestServiceTest
         assertEquals(1, result);
     }
 
+    @Test
+    void shiftRequestDatailSuccess()
+    {
+        Account generalAccount = new Account();
+        String generalAccountUsername = "testuser";
+        Long generalAccountId = 1L;
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Account adminAccount = new Account();
+        String adminAccountName = "かまどたかしろう";
+        Long adminAccountId = 2L;
+        adminAccount.setId(adminAccountId);
+        adminAccount.setName(adminAccountName);
+
+        ShiftRequest shiftRequest = new ShiftRequest();
+
+        LocalDateTime beginWork = LocalDateTime.parse("2025/08/08/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endWork = LocalDateTime.parse("2025/08/08/12/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime beginBreak = LocalDateTime.parse("2025/08/13/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endBreak = LocalDateTime.parse("2025/08/08/18/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        String requestComment = "";
+        LocalDateTime requestDate = LocalDateTime.parse("2025/07/07/00/00/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        int requestStatus = 1;
+        LocalDateTime approvalTime = null;
+        String approverComment = null;
+
+        Long shiftRequestId = 1L;
+
+        RequestDetailShiftResponse requestDetailShiftResponse =
+        new RequestDetailShiftResponse
+        (
+            1,
+            beginWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + beginWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            endWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + endWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            beginBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + beginBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            endBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + endBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            false,
+            requestComment,
+            requestDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + requestDate.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            requestStatus,
+            adminAccountId.intValue(),
+            adminAccountName,
+            approverComment,
+            approvalTime == null ? "" : approvalTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + approvalTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        );
+
+        when(shiftRequestService.findByAccountIdAndShiftRequestId(any(Account.class),anyLong())).thenReturn(shiftRequest);
+        when(shiftRequestService.mapToDetailResponse(any(ShiftRequest.class))).thenReturn(requestDetailShiftResponse);
+
+        RequestDetailShiftResponse resultRequestDetailShiftResponse = requestService.getShiftDetail(adminAccount, shiftRequestId);
+        assertEquals(1, resultRequestDetailShiftResponse.getStatus());
+    }
+
+    @Test
+    void shiftChangeRequestDetailSuccess()
+    {
+        Account generalAccount = new Account();
+        String generalAccountUsername = "testuser";
+        Long generalAccountId = 1L;
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Account adminAccount = new Account();
+        String adminAccountName = "かまどたかしろう";
+        Long adminAccountId = 2L;
+        adminAccount.setId(adminAccountId);
+        adminAccount.setName(adminAccountName);
+
+        Long shiftId = 1L;
+
+        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
+        LocalDateTime beginWork = LocalDateTime.parse("2025/08/08/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endWork = LocalDateTime.parse("2025/08/08/12/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime beginBreak = LocalDateTime.parse("2025/08/13/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endBreak = LocalDateTime.parse("2025/08/08/18/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        String requestComment = "";
+        LocalDateTime requestDate = LocalDateTime.parse("2025/07/07/00/00/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        int requestStatus = 1;
+        LocalDateTime approvalTime = null;
+        String approverComment = null;
+
+        Long shiftChangeRequestId = 1L;
+
+        RequestDetailShiftChangeResponse requestDetailShiftChangeResponse =
+        new RequestDetailShiftChangeResponse
+        (
+            1,
+            shiftId.intValue(),
+            beginWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + beginWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            endWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + endWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            beginBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + beginBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            endBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + endBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            false,
+            requestComment,
+            requestDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + requestDate.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            requestStatus,
+            adminAccountId.intValue(),
+            adminAccountName,
+            approverComment,
+            approvalTime == null ? "" : approvalTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + approvalTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        );
+
+        when(shiftChangeRequestService.findByAccountIdAndShiftChangeRequestId(any(Account.class), anyLong())).thenReturn(shiftChangeRequest);
+        when(shiftChangeRequestService.mapToDetailResponse(any(ShiftChangeRequest.class))).thenReturn(requestDetailShiftChangeResponse);
+
+        RequestDetailShiftChangeResponse resultRequestDetailShiftChangeResponse = requestService.getShiftChangeDetail(adminAccount, shiftChangeRequestId);
+
+        assertEquals(1, resultRequestDetailShiftChangeResponse.getStatus());
+    }
 }

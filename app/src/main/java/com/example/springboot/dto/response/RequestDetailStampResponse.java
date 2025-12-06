@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class RequestDetilStampResponse
+public class RequestDetailStampResponse
 {
     private int status;
     private int shiftId;

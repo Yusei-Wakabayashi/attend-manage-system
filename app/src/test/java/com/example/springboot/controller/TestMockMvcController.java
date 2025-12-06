@@ -48,6 +48,8 @@ import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.dto.response.AttendListResponse;
 import com.example.springboot.dto.response.NewsListResponse;
+import com.example.springboot.dto.response.RequestDetailShiftChangeResponse;
+import com.example.springboot.dto.response.RequestDetailShiftResponse;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
@@ -589,9 +591,8 @@ public class TestMockMvcController
     }
 
     @Test
-    void shiftRequestDetilSuccess() throws Exception
+    void shiftRequestDetailSuccess() throws Exception
     {
-        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         Account generalAccount = new Account();
         String generalAccountUsername = "testuser";
         Long generalAccountId = 1L;
@@ -604,8 +605,6 @@ public class TestMockMvcController
         adminAccount.setId(adminAccountId);
         adminAccount.setName(adminAccountName);
 
-        ShiftRequest shiftRequest = new ShiftRequest();
-        Long shiftRequestId = 1L;
         LocalDateTime beginWork = LocalDateTime.parse("2025/08/08/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
         LocalDateTime endWork = LocalDateTime.parse("2025/08/08/12/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
         LocalDateTime beginBreak = LocalDateTime.parse("2025/08/13/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
@@ -615,47 +614,52 @@ public class TestMockMvcController
         int requestStatus = 1;
         LocalDateTime approvalTime = null;
         String approverComment = null;
-        shiftRequest.setShiftRequestId(shiftRequestId);
-        shiftRequest.setAccountId(generalAccount);
-        shiftRequest.setBeginWork(beginWork);
-        shiftRequest.setEndWork(endWork);
-        shiftRequest.setBeginBreak(beginBreak);
-        shiftRequest.setEndBreak(endBreak);
-        shiftRequest.setRequestComment(requestComment);
-        shiftRequest.setRequestDate(requestDate);
-        shiftRequest.setRequestStatus(requestStatus);
-        shiftRequest.setApprover(adminAccount);
-        shiftRequest.setApproverComment(approverComment);
-        shiftRequest.setApprovalTime(approvalTime);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(shiftRequestService.findByAccountIdAndShiftRequestId(any(Account.class),anyLong())).thenReturn(shiftRequest);
+        RequestDetailShiftResponse requestDetailShiftResponse =
+        new RequestDetailShiftResponse
+        (
+            1,
+            beginWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + beginWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            endWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + endWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            beginBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + beginBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            endBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + endBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            false,
+            requestComment,
+            requestDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + requestDate.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            requestStatus,
+            adminAccountId.intValue(),
+            adminAccountName,
+            approverComment,
+            approvalTime == null ? "" : approvalTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + approvalTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        );
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.getShiftDetail(any(Account.class), anyLong())).thenReturn(requestDetailShiftResponse);
         mockMvc.perform
         (
-            get("/api/reach/requestdetil/shift")
+            get("/api/reach/requestdetail/shift")
             .param("requestId","1")
             .with(csrf())
             .with(user(generalAccountUsername))
         )
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(1))
-        .andExpect(jsonPath("$.beginWork").value(localDateTimeToString.localDateTimeToString(beginWork)))
-        .andExpect(jsonPath("$.endWork").value(localDateTimeToString.localDateTimeToString(endWork)))
-        .andExpect(jsonPath("$.beginBreak").value(localDateTimeToString.localDateTimeToString(beginBreak)))
-        .andExpect(jsonPath("$.endBreak").value(localDateTimeToString.localDateTimeToString(endBreak)))
+        .andExpect(jsonPath("$.beginWork").value(beginWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + beginWork.format(DateTimeFormatter.ofPattern("HH:mm:ss"))))
+        .andExpect(jsonPath("$.endWork").value(endWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + endWork.format(DateTimeFormatter.ofPattern("HH:mm:ss"))))
+        .andExpect(jsonPath("$.beginBreak").value(beginBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + beginBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss"))))
+        .andExpect(jsonPath("$.endBreak").value(endBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + endBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss"))))
         .andExpect(jsonPath("$.requestComment").value(requestComment))
-        .andExpect(jsonPath("$.requestDate").value(localDateTimeToString.localDateTimeToString(requestDate)))
+        .andExpect(jsonPath("$.requestDate").value(requestDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + requestDate.format(DateTimeFormatter.ofPattern("HH:mm:ss"))))
         .andExpect(jsonPath("$.requestStatus").value(requestStatus))
         .andExpect(jsonPath("$.approverId").value(adminAccountId.intValue()))
         .andExpect(jsonPath("$.approverName").value(adminAccountName))
         .andExpect(jsonPath("$.approverComment").value(approverComment))
-        .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : localDateTimeToString.localDateTimeToString(approvalTime)));
+        .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : approvalTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + approvalTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))));
     }
 
     @Test
-    void shiftChangeRequestDetilSuccess() throws Exception
+    void shiftChangeRequestDetailSuccess() throws Exception
     {
-        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         Account generalAccount = new Account();
         String generalAccountUsername = "testuser";
         Long generalAccountId = 1L;
@@ -697,11 +701,30 @@ public class TestMockMvcController
         shiftChangeRequest.setApprovalTime(approvalTime);
         shiftChangeRequest.setShiftId(shift);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(shiftChangeRequestService.findByAccountIdAndShiftChangeRequestId(any(Account.class),anyLong())).thenReturn(shiftChangeRequest);
+        RequestDetailShiftChangeResponse requestDetailShiftChangeResponse =
+        new RequestDetailShiftChangeResponse
+        (
+            1,
+            shiftId.intValue(),
+            beginWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + beginWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            endWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + endWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            beginBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + beginBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            endBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + endBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            false,
+            requestComment,
+            requestDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + requestDate.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            requestStatus,
+            adminAccountId.intValue(),
+            adminAccountName,
+            approverComment,
+            approvalTime == null ? "" : approvalTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + approvalTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        );
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.getShiftChangeDetail(any(Account.class), anyLong())).thenReturn(requestDetailShiftChangeResponse);
         mockMvc.perform
         (
-            get("/api/reach/requestdetil/changetime")
+            get("/api/reach/requestdetail/changetime")
             .param("requestId","1")
             .with(csrf())
             .with(user(generalAccountUsername))
@@ -709,21 +732,21 @@ public class TestMockMvcController
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(1))
         .andExpect(jsonPath("$.shiftId").value(shiftId))
-        .andExpect(jsonPath("$.beginWork").value(localDateTimeToString.localDateTimeToString(beginWork)))
-        .andExpect(jsonPath("$.endWork").value(localDateTimeToString.localDateTimeToString(endWork)))
-        .andExpect(jsonPath("$.beginBreak").value(localDateTimeToString.localDateTimeToString(beginBreak)))
-        .andExpect(jsonPath("$.endBreak").value(localDateTimeToString.localDateTimeToString(endBreak)))
+        .andExpect(jsonPath("$.beginWork").value(beginWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + beginWork.format(DateTimeFormatter.ofPattern("HH:mm:ss"))))
+        .andExpect(jsonPath("$.endWork").value(endWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + endWork.format(DateTimeFormatter.ofPattern("HH:mm:ss"))))
+        .andExpect(jsonPath("$.beginBreak").value(beginBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + beginBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss"))))
+        .andExpect(jsonPath("$.endBreak").value(endBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + endBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss"))))
         .andExpect(jsonPath("$.requestComment").value(requestComment))
-        .andExpect(jsonPath("$.requestDate").value(localDateTimeToString.localDateTimeToString(requestDate)))
+        .andExpect(jsonPath("$.requestDate").value(requestDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + requestDate.format(DateTimeFormatter.ofPattern("HH:mm:ss"))))
         .andExpect(jsonPath("$.requestStatus").value(requestStatus))
         .andExpect(jsonPath("$.approverId").value(adminAccountId))
         .andExpect(jsonPath("$.approverName").value(adminAccountName))
         .andExpect(jsonPath("$.approverComment").value(approverComment))
-        .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : localDateTimeToString.localDateTimeToString(approvalTime)));
+        .andExpect(jsonPath("$.approvalTime").value(Objects.isNull(approvalTime) ? "" : approvalTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + approvalTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))));
     }
 
     @Test
-    void stampRequestDetilSuccess() throws Exception
+    void stampRequestDetailSuccess() throws Exception
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         Account generalAccount = new Account();
@@ -771,7 +794,7 @@ public class TestMockMvcController
         when(stampRequestService.findByAccountIdAndStampId(any(Account.class),anyLong())).thenReturn(stampRequest);
         mockMvc.perform
         (
-            get("/api/reach/requestdetil/stamp")
+            get("/api/reach/requestdetail/stamp")
             .param("requestId","1")
             .with(csrf())
             .with(user(generalAccountUsername))
@@ -926,7 +949,7 @@ public class TestMockMvcController
     }
 
     @Test
-    void vacationRequestDetilSuccess() throws Exception
+    void vacationRequestDetailSuccess() throws Exception
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         Account generalAccount = new Account();
@@ -975,7 +998,7 @@ public class TestMockMvcController
         when(vacationRequestService.findByAccountIdAndVacationId(any(Account.class),anyLong())).thenReturn(vacationRequest);
         mockMvc.perform
         (
-            get("/api/reach/requestdetil/vacation")
+            get("/api/reach/requestdetail/vacation")
             .param("requestId","1")
             .with(csrf())
             .with(user(generalAccountUsername))
@@ -996,7 +1019,7 @@ public class TestMockMvcController
     }
 
     @Test
-    void overTimeRequestDetilSuccess() throws Exception
+    void overTimeRequestDetailSuccess() throws Exception
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         Account generalAccount = new Account();
@@ -1040,7 +1063,7 @@ public class TestMockMvcController
         when(overTimeRequestService.findByAccountIdAndOverTimeRequestId(any(Account.class),anyLong())).thenReturn(overTimeRequest);
         mockMvc.perform
         (
-            get("/api/reach/requestdetil/overtime")
+            get("/api/reach/requestdetail/overtime")
             .param("requestId","1")
             .with(csrf())
             .with(user(generalAccountUsername))
@@ -1060,7 +1083,7 @@ public class TestMockMvcController
     }
 
     @Test
-    void otherTimeRequestDetilSuccess() throws Exception
+    void otherTimeRequestDetailSuccess() throws Exception
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         Account generalAccount = new Account();
@@ -1109,7 +1132,7 @@ public class TestMockMvcController
         when(attendanceExceptionRequestService.findByAccountIdAndAttendanceExceptionId(any(Account.class),anyLong())).thenReturn(attendanceExceptionRequest);
         mockMvc.perform
         (
-            get("/api/reach/requestdetil/othertime")
+            get("/api/reach/requestdetail/othertime")
             .param("requestId","1")
             .with(csrf())
             .with(user(generalAccountUsername))
@@ -1177,7 +1200,7 @@ public class TestMockMvcController
     }
 
     @Test
-    void monthlyRequestDetilSuccess() throws Exception
+    void monthlyRequestDetailSuccess() throws Exception
     {
         StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
@@ -1234,7 +1257,7 @@ public class TestMockMvcController
         when(monthlyRequestService.findByAccountIdAndMothlyRequestId(any(Account.class), anyLong())).thenReturn(generalMonthlyRequest);
         mockMvc.perform
         (
-            get("/api/reach/requestdetil/monthly")
+            get("/api/reach/requestdetail/monthly")
             .param("requestId","1")
             .with(csrf())
             .with(user(generalAccountUsername))

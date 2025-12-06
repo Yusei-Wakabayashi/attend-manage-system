@@ -9,14 +9,14 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class RequestDetilShiftChangeResponse
+public class RequestDetailShiftResponse
 {
     private int status;
-    private int shiftId;
     private String beginWork;
     private String endWork;
     private String beginBreak;
     private String endBreak;
+    private boolean vacationWork;
     private String requestComment;
     private String requestDate;
     private int requestStatus;

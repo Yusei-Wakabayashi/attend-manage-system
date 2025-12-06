@@ -13,6 +13,7 @@ import javax.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import com.example.springboot.dto.change.DurationToString;
+import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.change.StringToDuration;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.input.MonthlyInput;
@@ -22,6 +23,8 @@ import com.example.springboot.dto.input.ShiftChangeInput;
 import com.example.springboot.dto.input.ShiftInput;
 import com.example.springboot.dto.input.StampInput;
 import com.example.springboot.dto.input.VacationInput;
+import com.example.springboot.dto.response.RequestDetailShiftChangeResponse;
+import com.example.springboot.dto.response.RequestDetailShiftResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Attend;
 import com.example.springboot.model.AttendanceExceptionRequest;
@@ -68,6 +71,7 @@ public class RequestService
     private final StringToDuration stringToDuration;
     private final AttendanceExceptionTypeService attendanceExceptionTypeService;
     private final LegalTimeService legalTimeService;
+    private final LocalDateTimeToString localDateTimeToString;
 
     public RequestService
     (
@@ -93,7 +97,8 @@ public class RequestService
         VacationTypeService vacationTypeService,
         StringToDuration stringToDuration,
         AttendanceExceptionTypeService attendanceExceptionTypeService,
-        LegalTimeService legalTimeService
+        LegalTimeService legalTimeService,
+        LocalDateTimeToString localDateTimeToString
     )
     {
         this.shiftRequestService = shiftRequestService;
@@ -119,6 +124,7 @@ public class RequestService
         this.stringToDuration = stringToDuration;
         this.attendanceExceptionTypeService = attendanceExceptionTypeService;
         this.legalTimeService = legalTimeService;
+        this.localDateTimeToString = localDateTimeToString;
     }
 
     @Transactional
@@ -183,6 +189,7 @@ public class RequestService
         }
         return 1;
     }
+
     @Transactional
     public int createShiftChangeRequest(Account account, ShiftChangeInput shiftChangeInput)
     {
@@ -247,6 +254,7 @@ public class RequestService
         }
         return 1;
     }
+
     @Transactional
     public int createStampRequest(Account account, StampInput stampInput)
     {
@@ -327,6 +335,7 @@ public class RequestService
         }
         return 1;
     }
+
     @Transactional
     public int createVacationRequest(Account account, VacationInput vacationInput)
     {
@@ -488,6 +497,7 @@ public class RequestService
         }
         return 1;
     }
+
     @Transactional
     public int createAttendanceExceptionRequest(Account account, OtherTimeInput otherTimeInput)
     {
@@ -667,6 +677,7 @@ public class RequestService
         }
         return 1;
     }
+
     @Transactional
     public int createOverTimeRequest(Account account, OverTimeInput overTimeInput)
     {
@@ -926,4 +937,15 @@ public class RequestService
         return 1;
     }
 
+    public RequestDetailShiftResponse getShiftDetail(Account account, Long requestId)
+    {
+        ShiftRequest shiftRequest = shiftRequestService.findByAccountIdAndShiftRequestId(account, requestId);
+        return shiftRequestService.mapToDetailResponse(shiftRequest);
+    }
+
+    public RequestDetailShiftChangeResponse getShiftChangeDetail(Account account, Long requestId)
+    {
+        ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findByAccountIdAndShiftChangeRequestId(account, requestId);
+        return shiftChangeRequestService.mapToDetailResponse(shiftChangeRequest);
+    }
 }

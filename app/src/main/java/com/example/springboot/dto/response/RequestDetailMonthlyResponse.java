@@ -1,5 +1,6 @@
 package com.example.springboot.dto.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -7,7 +8,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class RequestDetilMonthlyResponse
+@AllArgsConstructor
+public class RequestDetailMonthlyResponse
 {
     private int status;
     private String workTime;
