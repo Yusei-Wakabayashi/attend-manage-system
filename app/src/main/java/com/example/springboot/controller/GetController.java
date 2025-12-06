@@ -249,43 +249,18 @@ public class GetController
     @GetMapping("/reach/requestdetail/stamp")
     public RequestDetailStampResponse returnStampDetil(HttpSession session, RequestIdInput request)
     {
-        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
-        int status = 0;
-        // securityutilから名前を取得
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
-        RequestDetailStampResponse requestDetailStampResponse = new RequestDetailStampResponse();
+        Account account = accountService.findCurrentAccount();
         // 認証情報がなければエラー
         if(Objects.isNull(account))
         {
-            status = 5;
-            requestDetailStampResponse.setStatus(status);
+            RequestDetailStampResponse requestDetailStampResponse = new RequestDetailStampResponse();
+            requestDetailStampResponse.setStatus(4);
             return requestDetailStampResponse;
         }
-        StampRequest stampRequest = stampRequestService.findByAccountIdAndStampId(account, request.getRequestId());
-        // 名前から取得したアカウントとidで検索にかけ取得できれば返す取得できなければエラー
-        if(stampRequest.equals(null))
-        {
-            status = 5;
-            requestDetailStampResponse.setStatus(status);
-            return requestDetailStampResponse;
-        }
-        status = 1;
-        requestDetailStampResponse.setStatus(status);
-        requestDetailStampResponse.setShiftId(stampRequest.getShiftId().getShiftId().intValue());
-        requestDetailStampResponse.setBeginWork(localDateTimeToString.localDateTimeToString(stampRequest.getBeginWork()));
-        requestDetailStampResponse.setEndWork(localDateTimeToString.localDateTimeToString(stampRequest.getEndWork()));
-        requestDetailStampResponse.setBeginBreak(localDateTimeToString.localDateTimeToString(stampRequest.getBeginBreak()));
-        requestDetailStampResponse.setEndBreak(localDateTimeToString.localDateTimeToString(stampRequest.getEndBreak()));
-        requestDetailStampResponse.setRequestComment(stampRequest.getRequestComment());
-        requestDetailStampResponse.setRequestDate(localDateTimeToString.localDateTimeToString(stampRequest.getRequestDate()));
-        requestDetailStampResponse.setRequestStatus(stampRequest.getRequestStatus());
-        requestDetailStampResponse.setApproverId(stampRequest.getApprover().getId().intValue());
-        requestDetailStampResponse.setApproverName(stampRequest.getApprover().getName());
-        requestDetailStampResponse.setApproverComment(stampRequest.getApproverComment());
-        requestDetailStampResponse.setApprovalTime(Objects.isNull(stampRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(stampRequest.getApprovalTime()));
+        RequestDetailStampResponse requestDetailStampResponse = requestService.getStampDetail(account, request.getRequestId());
         return requestDetailStampResponse;
     }
+
     @GetMapping("/reach/attendlist")
     public ArrayResponse<AttendListResponse> returnAttendList(HttpSession session, @ModelAttribute YearMonthInput request)
     {

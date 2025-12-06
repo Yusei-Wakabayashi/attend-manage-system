@@ -50,6 +50,7 @@ import com.example.springboot.dto.response.AttendListResponse;
 import com.example.springboot.dto.response.NewsListResponse;
 import com.example.springboot.dto.response.RequestDetailShiftChangeResponse;
 import com.example.springboot.dto.response.RequestDetailShiftResponse;
+import com.example.springboot.dto.response.RequestDetailStampResponse;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
@@ -676,8 +677,6 @@ public class TestMockMvcController
         Long shiftId = 1L;
         shift.setShiftId(shiftId);
 
-        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
-        Long shiftChangeRequestId = 1L;
         LocalDateTime beginWork = LocalDateTime.parse("2025/08/08/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
         LocalDateTime endWork = LocalDateTime.parse("2025/08/08/12/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
         LocalDateTime beginBreak = LocalDateTime.parse("2025/08/13/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
@@ -687,19 +686,6 @@ public class TestMockMvcController
         int requestStatus = 1;
         LocalDateTime approvalTime = null;
         String approverComment = null;
-        shiftChangeRequest.setShiftChangeId(shiftChangeRequestId);
-        shiftChangeRequest.setAccountId(generalAccount);
-        shiftChangeRequest.setBeginWork(beginWork);
-        shiftChangeRequest.setEndWork(endWork);
-        shiftChangeRequest.setBeginBreak(beginBreak);
-        shiftChangeRequest.setEndBreak(endBreak);
-        shiftChangeRequest.setRequestComment(requestComment);
-        shiftChangeRequest.setRequestDate(requestDate);
-        shiftChangeRequest.setRequestStatus(requestStatus);
-        shiftChangeRequest.setApprover(adminAccount);
-        shiftChangeRequest.setApproverComment(approverComment);
-        shiftChangeRequest.setApprovalTime(approvalTime);
-        shiftChangeRequest.setShiftId(shift);
 
         RequestDetailShiftChangeResponse requestDetailShiftChangeResponse =
         new RequestDetailShiftChangeResponse
@@ -765,7 +751,6 @@ public class TestMockMvcController
         Long shiftId = 1L;
         shift.setShiftId(shiftId);
 
-        StampRequest stampRequest = new StampRequest();
         Long stampId = 1L;
         LocalDateTime beginWork = LocalDateTime.parse("2025/08/08/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
         LocalDateTime endWork = LocalDateTime.parse("2025/08/08/12/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
@@ -776,22 +761,27 @@ public class TestMockMvcController
         int requestStatus = 1;
         LocalDateTime approvalTime = null;
         String approverComment = null;
-        stampRequest.setStampId(stampId);
-        stampRequest.setAccountId(generalAccount);
-        stampRequest.setBeginWork(beginWork);
-        stampRequest.setEndWork(endWork);
-        stampRequest.setBeginBreak(beginBreak);
-        stampRequest.setEndBreak(endBreak);
-        stampRequest.setRequestComment(requestComment);
-        stampRequest.setRequestDate(requestDate);
-        stampRequest.setRequestStatus(requestStatus);
-        stampRequest.setApprover(adminAccount);
-        stampRequest.setApproverComment(approverComment);
-        stampRequest.setApprovalTime(approvalTime);
-        stampRequest.setShiftId(shift);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(stampRequestService.findByAccountIdAndStampId(any(Account.class),anyLong())).thenReturn(stampRequest);
+        RequestDetailStampResponse requestDetailStampResponse =
+        new RequestDetailStampResponse
+        (
+            1,
+            stampId.intValue(),
+            beginWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + beginWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            endWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + endWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            beginBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + beginBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            endBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + endBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            requestComment,
+            requestDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + requestDate.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            requestStatus,
+            adminAccountId.intValue(),
+            adminAccountName,
+            approverComment,
+            approvalTime == null ? "" : approvalTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + approvalTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        );
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.getStampDetail(any(Account.class), anyLong())).thenReturn(requestDetailStampResponse);
         mockMvc.perform
         (
             get("/api/reach/requestdetail/stamp")

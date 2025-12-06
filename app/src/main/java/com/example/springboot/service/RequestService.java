@@ -13,7 +13,6 @@ import javax.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import com.example.springboot.dto.change.DurationToString;
-import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.change.StringToDuration;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.input.MonthlyInput;
@@ -25,6 +24,7 @@ import com.example.springboot.dto.input.StampInput;
 import com.example.springboot.dto.input.VacationInput;
 import com.example.springboot.dto.response.RequestDetailShiftChangeResponse;
 import com.example.springboot.dto.response.RequestDetailShiftResponse;
+import com.example.springboot.dto.response.RequestDetailStampResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Attend;
 import com.example.springboot.model.AttendanceExceptionRequest;
@@ -71,7 +71,6 @@ public class RequestService
     private final StringToDuration stringToDuration;
     private final AttendanceExceptionTypeService attendanceExceptionTypeService;
     private final LegalTimeService legalTimeService;
-    private final LocalDateTimeToString localDateTimeToString;
 
     public RequestService
     (
@@ -97,8 +96,7 @@ public class RequestService
         VacationTypeService vacationTypeService,
         StringToDuration stringToDuration,
         AttendanceExceptionTypeService attendanceExceptionTypeService,
-        LegalTimeService legalTimeService,
-        LocalDateTimeToString localDateTimeToString
+        LegalTimeService legalTimeService
     )
     {
         this.shiftRequestService = shiftRequestService;
@@ -124,7 +122,6 @@ public class RequestService
         this.stringToDuration = stringToDuration;
         this.attendanceExceptionTypeService = attendanceExceptionTypeService;
         this.legalTimeService = legalTimeService;
-        this.localDateTimeToString = localDateTimeToString;
     }
 
     @Transactional
@@ -948,4 +945,11 @@ public class RequestService
         ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findByAccountIdAndShiftChangeRequestId(account, requestId);
         return shiftChangeRequestService.mapToDetailResponse(shiftChangeRequest);
     }
+
+    public RequestDetailStampResponse getStampDetail(Account account, Long requestid)
+    {
+        StampRequest stampRequest = stampRequestService.findByAccountIdAndStampId(account, requestid);
+        return stampRequestService.mapToDetailResponse(stampRequest);
+    }
+
 }

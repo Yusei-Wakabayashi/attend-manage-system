@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.sql.Time;
@@ -36,6 +37,7 @@ import com.example.springboot.dto.input.StampInput;
 import com.example.springboot.dto.input.VacationInput;
 import com.example.springboot.dto.response.RequestDetailShiftChangeResponse;
 import com.example.springboot.dto.response.RequestDetailShiftResponse;
+import com.example.springboot.dto.response.RequestDetailStampResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Attend;
 import com.example.springboot.model.AttendanceExceptionRequest;
@@ -1105,4 +1107,75 @@ public class RequestServiceTest
 
         assertEquals(1, resultRequestDetailShiftChangeResponse.getStatus());
     }
+
+    @Test
+    void stampRequestDetailSuccess()
+    {
+        Account generalAccount = new Account();
+        String generalAccountUsername = "testuser";
+        Long generalAccountId = 1L;
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Account adminAccount = new Account();
+        String adminAccountName = "かまどたかしろう";
+        Long adminAccountId = 2L;
+        adminAccount.setId(adminAccountId);
+        adminAccount.setName(adminAccountName);
+
+        Shift shift = new Shift();
+        Long shiftId = 1L;
+        shift.setShiftId(shiftId);
+
+        StampRequest stampRequest = new StampRequest();
+        Long stampId = 1L;
+        LocalDateTime beginWork = LocalDateTime.parse("2025/08/08/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endWork = LocalDateTime.parse("2025/08/08/12/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime beginBreak = LocalDateTime.parse("2025/08/13/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endBreak = LocalDateTime.parse("2025/08/08/18/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        String requestComment = "";
+        LocalDateTime requestDate = LocalDateTime.parse("2025/07/07/00/00/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        int requestStatus = 1;
+        LocalDateTime approvalTime = null;
+        String approverComment = null;
+        stampRequest.setStampId(stampId);
+        stampRequest.setAccountId(generalAccount);
+        stampRequest.setBeginWork(beginWork);
+        stampRequest.setEndWork(endWork);
+        stampRequest.setBeginBreak(beginBreak);
+        stampRequest.setEndBreak(endBreak);
+        stampRequest.setRequestComment(requestComment);
+        stampRequest.setRequestDate(requestDate);
+        stampRequest.setRequestStatus(requestStatus);
+        stampRequest.setApprover(adminAccount);
+        stampRequest.setApproverComment(approverComment);
+        stampRequest.setApprovalTime(approvalTime);
+        stampRequest.setShiftId(shift);
+
+        RequestDetailStampResponse requestDetailStampResponse =
+        new RequestDetailStampResponse
+        (
+            1,
+            stampId.intValue(),
+            beginWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + beginWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            endWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + endWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            beginBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + beginBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            endBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + endBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            requestComment,
+            requestDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + requestDate.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            requestStatus,
+            adminAccountId.intValue(),
+            adminAccountName,
+            approverComment,
+            approvalTime == null ? "" : approvalTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + approvalTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        );
+
+        when(stampRequestService.findByAccountIdAndStampId(any(Account.class), anyLong())).thenReturn(stampRequest);
+        when(stampRequestService.mapToDetailResponse(any(StampRequest.class))).thenReturn(requestDetailStampResponse);
+
+        RequestDetailStampResponse resultRequestDetailStampResponse = requestService.getStampDetail(adminAccount, stampId);
+
+        assertEquals(1, resultRequestDetailStampResponse.getStatus());
+    }
+
 }
