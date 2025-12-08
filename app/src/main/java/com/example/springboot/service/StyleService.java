@@ -15,14 +15,20 @@ import com.example.springboot.repository.StyleRepository;
 @Service
 public class StyleService
 {
-    @Autowired
-    StyleRepository styleRepository;
+    private final StyleRepository styleRepository;
+
+    private final StylePlaceService stylePlaceService;
 
     @Autowired
-    StylePlaceService stylePlaceService;
-
-    @Autowired
-    AccountService accountService;
+    public StyleService
+    (
+        StyleRepository styleRepository,
+        StylePlaceService stylePlaceService
+    )
+    {
+        this.styleRepository = styleRepository;
+        this.stylePlaceService = stylePlaceService;
+    }
 
     @Transactional
     public int updateStyle(Account account , Long newStylePlaceId)

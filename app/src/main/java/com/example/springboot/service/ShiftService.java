@@ -46,10 +46,12 @@ public class ShiftService
         accountId.setId(id);
         return shiftRepository.findByAccountId(accountId);
     }
+
     public List<Shift> findByAccountId(Account id)
     {
         return shiftRepository.findByAccountId(id);
     }
+
     public Shift findByAccountIdAndShiftId(Account account, Long id)
     {
         return shiftRepository.findByAccountIdAndShiftId(account, id)
@@ -74,6 +76,7 @@ public class ShiftService
         return shiftRepository.findByAccountIdAndShiftId(account, id)
             .orElseThrow(() -> new RuntimeException("シフトが見つかりません"));
     }
+    
     // 一月ごとの取得
     public List<Shift> findByAccountIdAndBeginWorkBetween(Long id, int year, int month)
     {
@@ -87,6 +90,7 @@ public class ShiftService
         List<Shift> shiftList = shiftRepository.findByAccountIdAndBeginWorkBetween(accountId, startPeriod, endPeriod);
         return shiftList;
     }
+
     public List<Shift> findByAccountIdAndBeginWorkBetween(Account id, int year, int month)
     {
         YearMonth yearMonth = YearMonth.of(year, month);
