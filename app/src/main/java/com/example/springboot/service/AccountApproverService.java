@@ -17,14 +17,24 @@ import com.example.springboot.repository.AccountApproverRepository;
 @Service
 public class AccountApproverService 
 {
-    @Autowired
-    AccountApproverRepository accountApproverRepository;
+    private final AccountApproverRepository accountApproverRepository;
+
+    private final AccountService accountService;
+    
+    private final ApprovalSettingService approvalSettingService;
 
     @Autowired
-    AccountService accountService;
-    
-    @Autowired
-    ApprovalSettingService approvalSettingService;
+    public AccountApproverService
+    (
+        AccountApproverRepository accountApproverRepository,
+        AccountService accountService,
+        ApprovalSettingService approvalSettingService
+    )
+    {
+        this.accountApproverRepository = accountApproverRepository;
+        this.accountService = accountService;
+        this.approvalSettingService = approvalSettingService;
+    }
 
     @Transactional
     public int updateApprover(Account account, Long newAccountId)

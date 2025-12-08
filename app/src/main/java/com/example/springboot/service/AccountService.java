@@ -20,17 +20,28 @@ import com.example.springboot.util.SecurityUtil;
 @Service
 public class AccountService
 {
-    @Autowired
-    private AccountRepository accountRepository;
+    private final AccountRepository accountRepository;
+
+    private final ApprovalSettingService approvalSettingService;
+
+    private final RoleService roleService;
+
+    private final DepartmentService departmentService;
 
     @Autowired
-    private ApprovalSettingService approvalSettingService;
-
-    @Autowired
-    private RoleService roleService;
-
-    @Autowired
-    private DepartmentService departmentService;
+    public AccountService
+    (
+        AccountRepository accountRepository,
+        ApprovalSettingService approvalSettingService,
+        RoleService roleService,
+        DepartmentService departmentService
+    )
+    {
+        this.accountRepository = accountRepository;
+        this.approvalSettingService = approvalSettingService;
+        this.roleService = roleService;
+        this.departmentService = departmentService;
+    }
 
     // ユーザー名とアカウントの取得
     public Account findCurrentAccount()

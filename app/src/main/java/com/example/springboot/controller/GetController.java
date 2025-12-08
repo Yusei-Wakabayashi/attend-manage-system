@@ -264,19 +264,13 @@ public class GetController
     @GetMapping("/reach/attendlist")
     public ArrayResponse<AttendListResponse> returnAttendList(HttpSession session, @ModelAttribute YearMonthInput request)
     {
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
-        List<AttendListResponse> attendListResponse = new ArrayList<AttendListResponse>();
-        List<Attend> attendList = attendService.findByAccountIdAndBeginWorkBetween(account.getId(), request.getYear(), request.getMonth());
-        ArrayResponse<AttendListResponse> arrayResponse = new ArrayResponse<AttendListResponse>();
-        for(Attend attend : attendList)
+        Account account = accountService.findCurrentAccount();
+        if(Objects.isNull(account))
         {
-            attendListResponse.add(attendService.attendToAttendListResponse(attend));
+            return new ArrayResponse<AttendListResponse>(4, Collections.emptyList(), "attendList");
         }
-        arrayResponse.setStatus(1);
-        arrayResponse.setList(attendListResponse);
-        arrayResponse.setKey("attendList");
-        return arrayResponse;
+        List<AttendListResponse> attendListResponse = attendService.findAttendListFor(account, request);
+        return new ArrayResponse<AttendListResponse>(1, attendListResponse, "attendList");
     }
 
     @GetMapping("/reach/requestdetail/vacation")

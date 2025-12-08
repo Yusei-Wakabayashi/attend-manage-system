@@ -3,6 +3,7 @@ package com.example.springboot.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.transaction.Transactional;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.springboot.dto.change.LocalDateTimeToString;
+import com.example.springboot.dto.input.YearMonthInput;
 import com.example.springboot.dto.response.AttendListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Attend;
@@ -19,8 +21,19 @@ import com.example.springboot.repository.AttendRepository;
 @Service
 public class AttendService
 {
+    private final AttendRepository attendRepository;
+    private final LocalDateTimeToString localDateTimeToString;
+
     @Autowired
-    AttendRepository attendRepository;
+    public AttendService
+    (
+        AttendRepository attendRepository,
+        LocalDateTimeToString localDateTimeToString
+    )
+    {
+        this.attendRepository = attendRepository;
+        this.localDateTimeToString = localDateTimeToString;
+    }
 
     public Attend findAttendById(Long id)
     {
@@ -41,6 +54,7 @@ public class AttendService
         List<Attend> attendList = attendRepository.findByAccountIdAndBeginWorkBetween(accountId, startPeriod, endPeriod);
         return attendList;
     }
+
     public List<Attend> findByAccountIdAndBeginWorkBetween(Account id, int year, int month)
     {
         YearMonth yearMonth = YearMonth.of(year, month);
@@ -52,9 +66,19 @@ public class AttendService
         return attendList;
     }
 
+    public List<AttendListResponse> findAttendListFor(Account account, YearMonthInput request)
+    {
+        List<AttendListResponse> attendListResponses = new ArrayList<AttendListResponse>();
+        List<Attend> attendList = findByAccountIdAndBeginWorkBetween(account.getId(), request.getYear(), request.getMonth());
+        for(Attend attend : attendList)
+        {
+            attendListResponses.add(attendToAttendListResponse(attend));
+        }
+        return attendListResponses;
+    }
+
     public AttendListResponse attendToAttendListResponse(Attend attend)
     {
-        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         AttendListResponse attendListResponse = new AttendListResponse();
         attendListResponse.setId(attend.getAttendanceId());
         attendListResponse.setBeginWork(localDateTimeToString.localDateTimeToString(attend.getBeginWork()));

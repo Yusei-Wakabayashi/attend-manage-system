@@ -854,7 +854,6 @@ public class TestMockMvcController
     @Test
     void attendListSuccess() throws Exception
     {
-        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         Long generalAccountId = 1L;
         String generalAccountName = "testuser";
         String time = "00:00:00";
@@ -892,10 +891,10 @@ public class TestMockMvcController
         AttendListResponse generalAttendListResponse = new AttendListResponse
         (
             generalAttendId,
-            localDateTimeToString.localDateTimeToString(generalAttendBeginWork),
-            localDateTimeToString.localDateTimeToString(generalAttendEndWork),
-            localDateTimeToString.localDateTimeToString(generalAttendBeginBreak),
-            localDateTimeToString.localDateTimeToString(generalAttendEndBreak),
+            generalAttendBeginWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalAttendBeginWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            generalAttendEndWork.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalAttendEndWork.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            generalAttendBeginBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalAttendBeginBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            generalAttendEndBreak.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalAttendEndBreak.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
             generalAttendWorkTime,
             generalAttendBreakTime,
             generalAttendLateness,
@@ -910,9 +909,12 @@ public class TestMockMvcController
 
         List<Attend> generalAttends = new ArrayList<Attend>();
         generalAttends.add(generalAttend);
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(attendService.findByAccountIdAndBeginWorkBetween(anyLong(), anyInt(), anyInt())).thenReturn(generalAttends);
-        when(attendService.attendToAttendListResponse(any(Attend.class))).thenReturn(generalAttendListResponse);
+
+        List<AttendListResponse> generalAttendListResponses = new ArrayList<AttendListResponse>();
+        generalAttendListResponses.add(generalAttendListResponse);
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(attendService.findAttendListFor(any(Account.class), any(YearMonthInput.class))).thenReturn(generalAttendListResponses);
         mockMvc.perform
         (
             get("/api/reach/attendlist")
