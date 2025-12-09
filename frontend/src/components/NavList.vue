@@ -120,7 +120,7 @@ onMounted(() => {
 
         <!-- ログアウトボタン -->
         <button
-          class="w-full bg-red-500 hover:bg-red-600 text-white text-center rounded px-3 py-2"
+          class="w-full bg-gray-500 hover:bg-gray-600 text-white text-center rounded px-3 py-2"
           @click="logout"
         >
           ログアウト
