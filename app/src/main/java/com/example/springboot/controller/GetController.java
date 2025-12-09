@@ -33,9 +33,11 @@ import com.example.springboot.dto.response.RequestDetailShiftResponse;
 import com.example.springboot.dto.response.RequestDetailStampResponse;
 import com.example.springboot.dto.response.RequestDetailVacationResponse;
 import com.example.springboot.dto.response.RequestListResponse;
+import com.example.springboot.dto.response.Response;
 import com.example.springboot.dto.ArrayResponse;
 import com.example.springboot.dto.change.DurationToString;
 import com.example.springboot.dto.change.LocalDateTimeToString;
+import com.example.springboot.dto.input.LegalCheckShiftInput;
 import com.example.springboot.dto.input.RequestIdInput;
 import com.example.springboot.dto.input.UserAttendInput;
 import com.example.springboot.dto.input.UserMonthWorkInfoInput;
@@ -276,39 +278,15 @@ public class GetController
     @GetMapping("/reach/requestdetail/vacation")
     public RequestDetailVacationResponse returnVacationDetil(HttpSession session, RequestIdInput request)
     {
-        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
-        RequestDetailVacationResponse requestDetailVacation = new RequestDetailVacationResponse();
-        // securityutilから名前を取得
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
-        int status = 0;
+        Account account = accountService.findCurrentAccount();
         if(Objects.isNull(account))
         {
-            status = 4;
-            requestDetailVacation.setStatus(status);
+            RequestDetailVacationResponse requestDetailVacation = new RequestDetailVacationResponse();
+            requestDetailVacation.setStatus(4);
             return requestDetailVacation;
         }
-        VacationRequest vacationRequest = vacationRequestService.findByAccountIdAndVacationId(account, request.getRequestId());
-        if(Objects.isNull(vacationRequest))
-        {
-            status = 4;
-            requestDetailVacation.setStatus(status);
-            return requestDetailVacation;
-        }
-        status = 1;
-        requestDetailVacation.setStatus(status);
-        requestDetailVacation.setShiftId(vacationRequest.getShiftId().getShiftId().intValue());
-        requestDetailVacation.setVacationType(vacationRequest.getVacationTypeId().getVacationTypeId().intValue());
-        requestDetailVacation.setBeginVacation(localDateTimeToString.localDateTimeToString(vacationRequest.getBeginVacation()));
-        requestDetailVacation.setEndVacation(localDateTimeToString.localDateTimeToString(vacationRequest.getEndVacation()));
-        requestDetailVacation.setRequestComment(vacationRequest.getRequestComment());
-        requestDetailVacation.setRequestDate(localDateTimeToString.localDateTimeToString(vacationRequest.getRequestDate()));
-        requestDetailVacation.setRequestStatus(vacationRequest.getRequestStatus());
-        requestDetailVacation.setApproverId(vacationRequest.getApprover().getId().intValue());
-        requestDetailVacation.setApproverName(vacationRequest.getApprover().getName());
-        requestDetailVacation.setApproverComment(vacationRequest.getApproverComment());
-        requestDetailVacation.setApprovalTime(Objects.isNull(vacationRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(vacationRequest.getApprovalTime()));
-        return requestDetailVacation;
+        RequestDetailVacationResponse requestDetailVacationResponse = requestService.getVacationDetail(account, request.getRequestId());
+        return requestDetailVacationResponse;
     }
 
     @GetMapping("/reach/requestdetail/overtime")
@@ -921,5 +899,19 @@ public class GetController
             newsListResponses.add(newsListResponse);
         }
         return new ArrayResponse<NewsListResponse>(1, newsListResponses, "newsList");
+    }
+
+    @GetMapping("/reach/legalcheck/shift")
+    public Response shiftLegalCheck(LegalCheckShiftInput legalCheckShiftInput)
+    {
+        int result = 1;
+        return new Response(result);
+    }
+
+    @GetMapping("/reach/legalcheck/shiftchange")
+    public Response shiftChangeResponse(LegalCheckShiftInput legalCheckShiftInput)
+    {
+        int result = 1;
+        return new Response(result);
     }
 }

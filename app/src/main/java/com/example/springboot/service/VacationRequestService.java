@@ -1,25 +1,18 @@
 package com.example.springboot.service;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Objects;
 
-import javax.transaction.Transactional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.example.springboot.dto.change.StringToDuration;
-import com.example.springboot.dto.change.StringToLocalDateTime;
-import com.example.springboot.dto.input.VacationInput;
+import com.example.springboot.dto.change.LocalDateTimeToString;
+import com.example.springboot.dto.response.RequestDetailVacationResponse;
 import com.example.springboot.model.Account;
-import com.example.springboot.model.OverTimeRequest;
-import com.example.springboot.model.PaydHoliday;
 import com.example.springboot.model.Shift;
-import com.example.springboot.model.ShiftListOverTime;
 import com.example.springboot.model.VacationRequest;
 import com.example.springboot.model.VacationType;
 import com.example.springboot.repository.VacationRequestRepository;
@@ -28,14 +21,17 @@ import com.example.springboot.repository.VacationRequestRepository;
 public class VacationRequestService
 {
     private final VacationRequestRepository vacationRequestRepository;
+    private final LocalDateTimeToString localDateTimeToString;
 
     @Autowired
     public VacationRequestService
     (
-        VacationRequestRepository vacationRequestRepository
+        VacationRequestRepository vacationRequestRepository,
+        LocalDateTimeToString localDateTimeToString
     )
     {
         this.vacationRequestRepository = vacationRequestRepository;
+        this.localDateTimeToString = localDateTimeToString;
     }
 
     public VacationRequest findById(Long id)
@@ -188,6 +184,26 @@ public class VacationRequestService
         int wait = 1;
         List<VacationRequest> vacationRequests = vacationRequestRepository.findByAccountIdAndRequestStatusAndBeginVacationBetween(account, wait, startPeriod, endPeriod);
         return vacationRequests;
+    }
+
+    public RequestDetailVacationResponse mapToDetailResponse(VacationRequest vacationRequest)
+    {
+        RequestDetailVacationResponse requestDetailVacationResponse = new RequestDetailVacationResponse
+        (
+            1,
+            vacationRequest.getShiftId().getShiftId().intValue(),
+            vacationRequest.getVacationTypeId().getVacationTypeId().intValue(),
+            localDateTimeToString.localDateTimeToString(vacationRequest.getBeginVacation()),
+            localDateTimeToString.localDateTimeToString(vacationRequest.getEndVacation()),
+            vacationRequest.getRequestComment(),
+            localDateTimeToString.localDateTimeToString(vacationRequest.getRequestDate()),
+            vacationRequest.getRequestStatus(),
+            vacationRequest.getApprover().getId().intValue(),
+            vacationRequest.getApprover().getName(),
+            vacationRequest.getApproverComment(),
+            Objects.isNull(vacationRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(vacationRequest.getApprovalTime())
+        );
+        return requestDetailVacationResponse;
     }
 
     public VacationRequest save(VacationRequest vacationRequest)

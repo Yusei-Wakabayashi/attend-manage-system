@@ -51,6 +51,7 @@ import com.example.springboot.dto.response.NewsListResponse;
 import com.example.springboot.dto.response.RequestDetailShiftChangeResponse;
 import com.example.springboot.dto.response.RequestDetailShiftResponse;
 import com.example.springboot.dto.response.RequestDetailStampResponse;
+import com.example.springboot.dto.response.RequestDetailVacationResponse;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
@@ -986,8 +987,24 @@ public class TestMockMvcController
         vacationRequest.setApprovalTime(approvalTime);
         vacationRequest.setShiftId(shift);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(vacationRequestService.findByAccountIdAndVacationId(any(Account.class),anyLong())).thenReturn(vacationRequest);
+        RequestDetailVacationResponse requestDetailVacationResponse = new RequestDetailVacationResponse
+        (
+            1,
+            vacationRequest.getShiftId().getShiftId().intValue(),
+            vacationRequest.getVacationTypeId().getVacationTypeId().intValue(),
+            vacationRequest.getBeginVacation().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + vacationRequest.getBeginVacation().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            vacationRequest.getEndVacation().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + vacationRequest.getEndVacation().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            vacationRequest.getRequestComment(),
+            vacationRequest.getRequestDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + vacationRequest.getRequestDate().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            vacationRequest.getRequestStatus(),
+            vacationRequest.getApprover().getId().intValue(),
+            vacationRequest.getApprover().getName(),
+            vacationRequest.getApproverComment(),
+            Objects.isNull(vacationRequest.getApprovalTime()) ? "" : vacationRequest.getApprovalTime().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + vacationRequest.getApprovalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        );
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.getVacationDetail(any(Account.class), anyLong())).thenReturn(requestDetailVacationResponse);
         mockMvc.perform
         (
             get("/api/reach/requestdetail/vacation")

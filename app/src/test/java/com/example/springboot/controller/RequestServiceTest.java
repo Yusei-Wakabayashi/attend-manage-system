@@ -14,6 +14,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +38,7 @@ import com.example.springboot.dto.input.VacationInput;
 import com.example.springboot.dto.response.RequestDetailShiftChangeResponse;
 import com.example.springboot.dto.response.RequestDetailShiftResponse;
 import com.example.springboot.dto.response.RequestDetailStampResponse;
+import com.example.springboot.dto.response.RequestDetailVacationResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Attend;
 import com.example.springboot.model.AttendanceExceptionRequest;
@@ -1177,4 +1179,71 @@ public class RequestServiceTest
         assertEquals(1, resultRequestDetailStampResponse.getStatus());
     }
 
+    @Test
+    void vacationRequestDetailSuccess()
+    {
+        Account generalAccount = new Account();
+        String generalAccountUsername = "testuser";
+        Long generalAccountId = 1L;
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Account adminAccount = new Account();
+        String adminAccountName = "かまどたかしろう";
+        Long adminAccountId = 2L;
+        adminAccount.setId(adminAccountId);
+        adminAccount.setName(adminAccountName);
+
+        Shift shift = new Shift();
+        Long shiftId = 1L;
+        shift.setShiftId(shiftId);
+
+        VacationType vacationType = new VacationType();
+        Long vacationTypeId = 1L;
+        vacationType.setVacationTypeId(vacationTypeId);
+
+        VacationRequest vacationRequest = new VacationRequest();
+        Long vacationRequestId = 1L;
+        LocalDateTime beginVacation = LocalDateTime.parse("2025/08/08/09/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endVacation = LocalDateTime.parse("2025/08/08/12/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        String requestComment = "";
+        LocalDateTime requestDate = LocalDateTime.parse("2025/07/07/00/00/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        int requestStatus = 1;
+        LocalDateTime approvalTime = null;
+        String approverComment = null;
+        vacationRequest.setVacationId(vacationRequestId);
+        vacationRequest.setAccountId(generalAccount);
+        vacationRequest.setVacationTypeId(vacationType);
+        vacationRequest.setBeginVacation(beginVacation);
+        vacationRequest.setEndVacation(endVacation);
+        vacationRequest.setRequestComment(requestComment);
+        vacationRequest.setRequestDate(requestDate);
+        vacationRequest.setRequestStatus(requestStatus);
+        vacationRequest.setApprover(adminAccount);
+        vacationRequest.setApproverComment(approverComment);
+        vacationRequest.setApprovalTime(approvalTime);
+        vacationRequest.setShiftId(shift);
+
+        RequestDetailVacationResponse requestDetailVacationResponse = new RequestDetailVacationResponse
+        (
+            1,
+            vacationRequest.getShiftId().getShiftId().intValue(),
+            vacationRequest.getVacationTypeId().getVacationTypeId().intValue(),
+            vacationRequest.getBeginVacation().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + vacationRequest.getBeginVacation().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            vacationRequest.getEndVacation().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + vacationRequest.getEndVacation().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            vacationRequest.getRequestComment(),
+            vacationRequest.getRequestDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + vacationRequest.getRequestDate().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            vacationRequest.getRequestStatus(),
+            vacationRequest.getApprover().getId().intValue(),
+            vacationRequest.getApprover().getName(),
+            vacationRequest.getApproverComment(),
+            Objects.isNull(vacationRequest.getApprovalTime()) ? "" : vacationRequest.getApprovalTime().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + vacationRequest.getApprovalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        );
+
+        when(vacationRequestService.findByAccountIdAndVacationId(any(Account.class),anyLong())).thenReturn(vacationRequest);
+        when(vacationRequestService.mapToDetailResponse(vacationRequest)).thenReturn(requestDetailVacationResponse);
+
+        RequestDetailVacationResponse resutlRequestDetailVacationResponse = requestService.getVacationDetail(adminAccount, vacationRequestId);
+        assertEquals(1, resutlRequestDetailVacationResponse.getStatus());
+    }
 }

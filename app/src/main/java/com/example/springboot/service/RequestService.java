@@ -25,6 +25,7 @@ import com.example.springboot.dto.input.VacationInput;
 import com.example.springboot.dto.response.RequestDetailShiftChangeResponse;
 import com.example.springboot.dto.response.RequestDetailShiftResponse;
 import com.example.springboot.dto.response.RequestDetailStampResponse;
+import com.example.springboot.dto.response.RequestDetailVacationResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Attend;
 import com.example.springboot.model.AttendanceExceptionRequest;
@@ -946,10 +947,15 @@ public class RequestService
         return shiftChangeRequestService.mapToDetailResponse(shiftChangeRequest);
     }
 
-    public RequestDetailStampResponse getStampDetail(Account account, Long requestid)
+    public RequestDetailStampResponse getStampDetail(Account account, Long requestId)
     {
-        StampRequest stampRequest = stampRequestService.findByAccountIdAndStampId(account, requestid);
+        StampRequest stampRequest = stampRequestService.findByAccountIdAndStampId(account, requestId);
         return stampRequestService.mapToDetailResponse(stampRequest);
     }
 
+    public RequestDetailVacationResponse getVacationDetail(Account account, Long requestId)
+    {
+        VacationRequest vacationRequest = vacationRequestService.findByAccountIdAndVacationId(account, requestId);
+        return vacationRequestService.mapToDetailResponse(vacationRequest);
+    }
 }
