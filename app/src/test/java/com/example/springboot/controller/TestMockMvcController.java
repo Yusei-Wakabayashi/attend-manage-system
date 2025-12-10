@@ -48,6 +48,9 @@ import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.dto.response.AttendListResponse;
 import com.example.springboot.dto.response.NewsListResponse;
+import com.example.springboot.dto.response.RequestDetailMonthlyResponse;
+import com.example.springboot.dto.response.RequestDetailOtherTimeResponse;
+import com.example.springboot.dto.response.RequestDetailOverTimeResponse;
 import com.example.springboot.dto.response.RequestDetailShiftChangeResponse;
 import com.example.springboot.dto.response.RequestDetailShiftResponse;
 import com.example.springboot.dto.response.RequestDetailStampResponse;
@@ -1068,8 +1071,23 @@ public class TestMockMvcController
         overTimeRequest.setApprovalTime(approvalTime);
         overTimeRequest.setShiftId(shift);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(overTimeRequestService.findByAccountIdAndOverTimeRequestId(any(Account.class),anyLong())).thenReturn(overTimeRequest);
+        RequestDetailOverTimeResponse requestDetailOverTimeResponse = new RequestDetailOverTimeResponse
+        (
+            1,
+            overTimeRequest.getShiftId().getShiftId().intValue(),
+            overTimeRequest.getBeginWork().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + overTimeRequest.getBeginWork().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            overTimeRequest.getEndWork().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + overTimeRequest.getEndWork().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            overTimeRequest.getRequestComment(),
+            overTimeRequest.getRequestDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + overTimeRequest.getRequestDate().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            overTimeRequest.getRequestStatus(),
+            Objects.isNull(overTimeRequest.getApprover()) ? null : overTimeRequest.getApprover().getId().intValue(),
+            Objects.isNull(overTimeRequest.getApprover()) ? "" : overTimeRequest.getApprover().getName(),
+            overTimeRequest.getApproverComment(),
+            Objects.isNull(overTimeRequest.getApprovalTime()) ? "" : overTimeRequest.getApprovalTime().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + overTimeRequest.getApprovalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        );
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.getOverTimeDetail(any(Account.class),anyLong())).thenReturn(requestDetailOverTimeResponse);
         mockMvc.perform
         (
             get("/api/reach/requestdetail/overtime")
@@ -1137,8 +1155,24 @@ public class TestMockMvcController
         attendanceExceptionRequest.setApprovalTime(approvalTime);
         attendanceExceptionRequest.setShiftId(shift);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(attendanceExceptionRequestService.findByAccountIdAndAttendanceExceptionId(any(Account.class),anyLong())).thenReturn(attendanceExceptionRequest);
+        RequestDetailOtherTimeResponse requestDetailOtherTimeResponse = new RequestDetailOtherTimeResponse
+        (
+            1,
+            attendanceExceptionRequest.getShiftId().getShiftId().intValue(),
+            attendanceExceptionRequest.getAttendanceExceptionTypeId().getAttendanceExceptionTypeId().intValue(),
+            attendanceExceptionRequest.getBeginTime().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + attendanceExceptionRequest.getBeginTime().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            attendanceExceptionRequest.getEndTime().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + attendanceExceptionRequest.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            attendanceExceptionRequest.getRequestComment(),
+            attendanceExceptionRequest.getRequestDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + attendanceExceptionRequest.getRequestDate().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            attendanceExceptionRequest.getRequestStatus(),
+            Objects.isNull(attendanceExceptionRequest.getApprover()) ? null : attendanceExceptionRequest.getApprover().getId().intValue(),
+            Objects.isNull(attendanceExceptionRequest.getApprover()) ? "" : attendanceExceptionRequest.getApprover().getName(),
+            attendanceExceptionRequest.getApproverComment(),
+            Objects.isNull(attendanceExceptionRequest.getApprovalTime()) ? "" : attendanceExceptionRequest.getApprovalTime().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + attendanceExceptionRequest.getApprovalTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        );
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.getOtherTimeDetail(any(Account.class),anyLong())).thenReturn(requestDetailOtherTimeResponse);
         mockMvc.perform
         (
             get("/api/reach/requestdetail/othertime")
@@ -1262,8 +1296,32 @@ public class TestMockMvcController
         generalMonthlyRequest.setApprovalDate(Objects.isNull(generalApprovalTime) ? null : stringToLocalDateTime.stringToLocalDateTime(generalApprovalTime));
         generalMonthlyRequest.setApproverComment(genearlApproverComment);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(monthlyRequestService.findByAccountIdAndMothlyRequestId(any(Account.class), anyLong())).thenReturn(generalMonthlyRequest);
+        RequestDetailMonthlyResponse requestDetailMonthlyResponse = new RequestDetailMonthlyResponse
+        (
+            1,
+            generalMonthlyRequest.getWorkTime(),
+            generalMonthlyRequest.getOverTime(),
+            generalMonthlyRequest.getEarlyTime(),
+            generalMonthlyRequest.getLeavingTime(),
+            generalMonthlyRequest.getOutingTime(),
+            generalMonthlyRequest.getAbsenceTime(),
+            generalMonthlyRequest.getPaydHolidayTime(),
+            generalMonthlyRequest.getSpecialTime(),
+            generalMonthlyRequest.getHolidayWorkTime(),
+            generalMonthlyRequest.getLateNightWorkTime(),
+            generalMonthlyRequest.getYear(),
+            generalMonthlyRequest.getMonth(),
+            generalMonthlyRequest.getRequestComment(),
+            generalMonthlyRequest.getRequestDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalMonthlyRequest.getRequestDate().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+            generalMonthlyRequest.getRequestStatus(),
+            Objects.isNull(generalMonthlyRequest.getApprover()) ? null : generalMonthlyRequest.getApprover().getId().intValue(),
+            Objects.isNull(generalMonthlyRequest.getApprover()) ? "" : generalMonthlyRequest.getApprover().getName(),
+            generalMonthlyRequest.getApproverComment(),
+            Objects.isNull(generalMonthlyRequest.getApprovalDate()) ? "" : generalMonthlyRequest.getApprovalDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalMonthlyRequest.getApprovalDate().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        );
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.getMonthlyDetail(any(Account.class), anyLong())).thenReturn(requestDetailMonthlyResponse);
         mockMvc.perform
         (
             get("/api/reach/requestdetail/monthly")

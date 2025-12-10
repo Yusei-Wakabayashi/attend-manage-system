@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -12,6 +13,8 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.springboot.dto.change.LocalDateTimeToString;
+import com.example.springboot.dto.response.RequestDetailOverTimeResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.OverTimeRequest;
 import com.example.springboot.model.Shift;
@@ -21,14 +24,17 @@ import com.example.springboot.repository.OverTimeRequestRepository;
 public class OverTimeRequestService
 {
     private final OverTimeRequestRepository overTimeRequestRepository;
+    private final LocalDateTimeToString localDateTimeToString;
 
     @Autowired
     public OverTimeRequestService
     (
-        OverTimeRequestRepository overTimeRequestRepository
+        OverTimeRequestRepository overTimeRequestRepository,
+        LocalDateTimeToString localDateTimeToString
     )
     {
         this.overTimeRequestRepository = overTimeRequestRepository;
+        this.localDateTimeToString = localDateTimeToString;
     }
 
     public OverTimeRequest findById(Long requestId)
@@ -196,6 +202,25 @@ public class OverTimeRequestService
         int wait = 1;
         List<OverTimeRequest> overTimeRequests = overTimeRequestRepository.findByAccountIdAndRequestStatusAndBeginWorkBetween(account, wait, startPeriod, endPeriod);
         return overTimeRequests;
+    }
+
+    public RequestDetailOverTimeResponse mapToDetailResponse(OverTimeRequest overTimeRequest)
+    {
+        RequestDetailOverTimeResponse requestDetailOverTimeResponse = new RequestDetailOverTimeResponse
+        (
+            1,
+            overTimeRequest.getShiftId().getShiftId().intValue(),
+            localDateTimeToString.localDateTimeToString(overTimeRequest.getBeginWork()),
+            localDateTimeToString.localDateTimeToString(overTimeRequest.getEndWork()),
+            overTimeRequest.getRequestComment(),
+            localDateTimeToString.localDateTimeToString(overTimeRequest.getRequestDate()),
+            overTimeRequest.getRequestStatus(),
+            Objects.isNull(overTimeRequest.getApprover()) ? null : overTimeRequest.getApprover().getId().intValue(),
+            Objects.isNull(overTimeRequest.getApprover()) ? "" : overTimeRequest.getApprover().getName(),
+            overTimeRequest.getApproverComment(),
+            Objects.isNull(overTimeRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(overTimeRequest.getApprovalTime())
+        );
+        return requestDetailOverTimeResponse;
     }
 
     public OverTimeRequest save(OverTimeRequest overTimeRequest)

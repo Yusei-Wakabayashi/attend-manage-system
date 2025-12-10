@@ -4,12 +4,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.springboot.dto.change.LocalDateTimeToString;
+import com.example.springboot.dto.response.RequestDetailOtherTimeResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AttendanceExceptionRequest;
 import com.example.springboot.model.AttendanceExceptionType;
@@ -20,14 +23,17 @@ import com.example.springboot.repository.AttendanceExceptionRequestRepsitory;
 public class AttendanceExceptionRequestService
 {
     private final AttendanceExceptionRequestRepsitory attendanceExceptionRequestRepsitory;
+    private final LocalDateTimeToString localDateTimeToString;
 
     @Autowired
     public AttendanceExceptionRequestService
     (
-        AttendanceExceptionRequestRepsitory attendanceExceptionRequestRepsitory
+        AttendanceExceptionRequestRepsitory attendanceExceptionRequestRepsitory,
+        LocalDateTimeToString localDateTimeToString
     )
     {
         this.attendanceExceptionRequestRepsitory = attendanceExceptionRequestRepsitory;
+        this.localDateTimeToString = localDateTimeToString;
     }
 
     public AttendanceExceptionRequest findById(Long id)
@@ -176,6 +182,26 @@ public class AttendanceExceptionRequestService
         int wait = 1;
         List<AttendanceExceptionRequest> attendanceExceptionRequests = attendanceExceptionRequestRepsitory.findByAccountIdAndRequestStatusAndBeginTimeBetween(account, wait, startPeriod, endPeriod);
         return attendanceExceptionRequests;
+    }
+    
+    public RequestDetailOtherTimeResponse mapTorequestDetail(AttendanceExceptionRequest attendanceExceptionRequest)
+    {
+        RequestDetailOtherTimeResponse requestDetailOtherTimeResponse = new RequestDetailOtherTimeResponse
+        (
+            1,
+            attendanceExceptionRequest.getShiftId().getShiftId().intValue(),
+            attendanceExceptionRequest.getAttendanceExceptionTypeId().getAttendanceExceptionTypeId().intValue(),
+            localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getBeginTime()),
+            localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getEndTime()),
+            attendanceExceptionRequest.getRequestComment(),
+            localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getRequestDate()),
+            attendanceExceptionRequest.getRequestStatus(),
+            Objects.isNull(attendanceExceptionRequest.getApprover()) ? null : attendanceExceptionRequest.getApprover().getId().intValue(),
+            Objects.isNull(attendanceExceptionRequest.getApprover()) ? "" : attendanceExceptionRequest.getApprover().getName(),
+            attendanceExceptionRequest.getApproverComment(),
+            Objects.isNull(attendanceExceptionRequest.getApprovalTime()) ? "" : localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getApprovalTime())
+        );
+        return requestDetailOtherTimeResponse;
     }
 
     public AttendanceExceptionRequest save(AttendanceExceptionRequest attendanceExceptionRequest)

@@ -22,6 +22,9 @@ import com.example.springboot.dto.input.ShiftChangeInput;
 import com.example.springboot.dto.input.ShiftInput;
 import com.example.springboot.dto.input.StampInput;
 import com.example.springboot.dto.input.VacationInput;
+import com.example.springboot.dto.response.RequestDetailMonthlyResponse;
+import com.example.springboot.dto.response.RequestDetailOtherTimeResponse;
+import com.example.springboot.dto.response.RequestDetailOverTimeResponse;
 import com.example.springboot.dto.response.RequestDetailShiftChangeResponse;
 import com.example.springboot.dto.response.RequestDetailShiftResponse;
 import com.example.springboot.dto.response.RequestDetailStampResponse;
@@ -958,4 +961,24 @@ public class RequestService
         VacationRequest vacationRequest = vacationRequestService.findByAccountIdAndVacationId(account, requestId);
         return vacationRequestService.mapToDetailResponse(vacationRequest);
     }
+
+    public RequestDetailOverTimeResponse getOverTimeDetail(Account account, Long requestId)
+    {
+        OverTimeRequest overTimeRequest = overTimeRequestService.findByAccountIdAndOverTimeRequestId(account, requestId);
+        return overTimeRequestService.mapToDetailResponse(overTimeRequest);
+    }
+
+    public RequestDetailOtherTimeResponse getOtherTimeDetail(Account account, Long requestId)
+    {
+        AttendanceExceptionRequest attendanceExceptionRequest = attendanceExceptionRequestService.findByAccountIdAndAttendanceExceptionId(account, requestId);
+        return attendanceExceptionRequestService.mapTorequestDetail(attendanceExceptionRequest);
+    }
+
+    public RequestDetailMonthlyResponse getMonthlyDetail(Account account, Long requestId)
+    {
+        MonthlyRequest monthlyRequest = monthlyRequestService.findByAccountIdAndMothlyRequestId(account, requestId);
+        return monthlyRequestService.mapToDetailResponse(monthlyRequest);
+    }
+
+    
 }
