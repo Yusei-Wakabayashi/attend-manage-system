@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.sql.Time;
@@ -27,7 +26,6 @@ import org.springframework.test.context.ContextConfiguration;
 
 import com.example.springboot.Config;
 import com.example.springboot.dto.change.DurationToString;
-import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.change.StringToDuration;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.input.MonthlyInput;
@@ -37,6 +35,7 @@ import com.example.springboot.dto.input.ShiftChangeInput;
 import com.example.springboot.dto.input.ShiftInput;
 import com.example.springboot.dto.input.StampInput;
 import com.example.springboot.dto.input.VacationInput;
+import com.example.springboot.dto.input.WithDrowInput;
 import com.example.springboot.dto.response.RequestDetailMonthlyResponse;
 import com.example.springboot.dto.response.RequestDetailOtherTimeResponse;
 import com.example.springboot.dto.response.RequestDetailOverTimeResponse;
@@ -1464,4 +1463,259 @@ public class RequestServiceTest
         RequestDetailMonthlyResponse resultRequestDetailMonthlyResponse = requestService.getMonthlyDetail(adminAccount, adminAccountId);
         assertEquals(1, resultRequestDetailMonthlyResponse.getStatus());
     }
+
+    @Test
+    void withdrowShiftSuccess()
+    {
+        Long requestId = 1L;
+        int requestType = 1;
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        ShiftRequest shiftRequest = new ShiftRequest();
+        Long shiftRequestid = 43L;
+        shiftRequest.setShiftRequestId(shiftRequestid);
+        shiftRequest.setRequestStatus(1);
+
+        WithDrowInput withDrowInput = new WithDrowInput();
+        withDrowInput.setRequestType(requestType);
+        withDrowInput.setRequestId(requestId);
+
+        when(shiftRequestService.findByAccountIdAndShiftRequestId(any(Account.class), anyLong())).thenReturn(shiftRequest);
+        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn(shiftRequest);
+
+        int result = requestService.withdrow(generalAccount, withDrowInput);
+        assertEquals(1, result);
+    }
+
+    @Test
+    void withdrowShiftChangeSuccess()
+    {
+        Long requestId = 5L;
+        int requestType = 2;
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
+        Long shiftChangeRequestId = 97L;
+        shiftChangeRequest.setShiftChangeId(shiftChangeRequestId);
+        shiftChangeRequest.setRequestStatus(1);
+
+        WithDrowInput withDrowInput = new WithDrowInput();
+        withDrowInput.setRequestType(requestType);
+        withDrowInput.setRequestId(requestId);
+
+        when(shiftChangeRequestService.findByAccountIdAndShiftChangeRequestId(any(Account.class), anyLong())).thenReturn(shiftChangeRequest);
+        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn(shiftChangeRequest);
+
+        int result = requestService.withdrow(generalAccount, withDrowInput);
+        assertEquals(1, result);
+    }
+
+    @Test
+    void withdrowStampSuccess()
+    {
+        Long requestId = 3L;
+        int requestType = 3;
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        StampRequest stampRequest = new StampRequest();
+        Long stampRequestId = 9L;
+        stampRequest.setStampId(stampRequestId);
+        stampRequest.setRequestStatus(1);
+
+        WithDrowInput withDrowInput = new WithDrowInput();
+        withDrowInput.setRequestType(requestType);
+        withDrowInput.setRequestId(requestId);
+
+        when(stampRequestService.findByAccountIdAndStampId(any(Account.class), anyLong())).thenReturn(stampRequest);
+        when(stampRequestService.save(any(StampRequest.class))).thenReturn(stampRequest);
+
+        int result = requestService.withdrow(generalAccount, withDrowInput);
+        assertEquals(1, result);
+    }
+
+    @Test
+    void withdrowVacationSuccess()
+    {
+        Long requestId = 8L;
+        int requestType = 4;
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        VacationRequest vacationRequest = new VacationRequest();
+        Long vacationRequestId = 30L;
+        vacationRequest.setVacationId(vacationRequestId);
+        vacationRequest.setRequestStatus(1);
+
+        WithDrowInput withDrowInput = new WithDrowInput();
+        withDrowInput.setRequestType(requestType);
+        withDrowInput.setRequestId(requestId);
+
+        when(vacationRequestService.findByAccountIdAndVacationId(any(Account.class), anyLong())).thenReturn(vacationRequest);
+        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn(vacationRequest);
+
+        int result = requestService.withdrow(generalAccount, withDrowInput);
+        assertEquals(1, result);
+    }
+    
+    @Test
+    void withdrowOverTimeSuccess()
+    {
+        Long requestId = 2L;
+        int requestType = 5;
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        OverTimeRequest overTimeRequest = new OverTimeRequest();
+        Long overTimeRequestId = 498L;
+        overTimeRequest.setOverTimeId(overTimeRequestId);
+        overTimeRequest.setRequestStatus(1);
+
+        WithDrowInput withDrowInput = new WithDrowInput();
+        withDrowInput.setRequestType(requestType);
+        withDrowInput.setRequestId(requestId);
+
+        when(overTimeRequestService.findByAccountIdAndOverTimeRequestId(any(Account.class), anyLong())).thenReturn(overTimeRequest);
+        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn(overTimeRequest);
+
+        int result = requestService.withdrow(generalAccount, withDrowInput);
+        assertEquals(1, result);
+    }
+
+    @Test
+    void withdrowOtherTimeSuccess()
+    {
+        Long requestId = 38L;
+        int requestType = 6;
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        Long attendanceExceptionRequestId = 49L;
+        attendanceExceptionRequest.setAttendanceExceptionId(attendanceExceptionRequestId);
+        attendanceExceptionRequest.setRequestStatus(1);
+
+        WithDrowInput withDrowInput = new WithDrowInput();
+        withDrowInput.setRequestType(requestType);
+        withDrowInput.setRequestId(requestId);
+
+        when(attendanceExceptionRequestService.findByAccountIdAndAttendanceExceptionId(any(Account.class), anyLong())).thenReturn(attendanceExceptionRequest);
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
+
+        int result = requestService.withdrow(generalAccount, withDrowInput);
+        assertEquals(1, result);
+    }
+
+    @Test
+    void withdrowMonthlySuccess()
+    {
+        Long requestId = 29L;
+        int requestType = 7;
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        MonthlyRequest monthlyRequest = new MonthlyRequest();
+        Long monthlyRequestId = 4398L;
+        monthlyRequest.setMonthRequestId(monthlyRequestId);
+        monthlyRequest.setRequestStatus(1);
+
+        List<Shift> shifts = new ArrayList<Shift>();
+        Shift shift = new Shift();
+        shifts.add(shift);
+
+        List<ShiftListOtherTime> shiftListOtherTimes = new ArrayList<ShiftListOtherTime>();
+        ShiftListOtherTime shiftListOtherTime = new ShiftListOtherTime();
+        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        shiftListOtherTime.setAttendanceExceptionId(attendanceExceptionRequest);
+        shiftListOtherTimes.add(shiftListOtherTime);
+
+        List<ShiftListOverTime> shiftListOverTimes = new ArrayList<ShiftListOverTime>();
+        ShiftListOverTime shiftListOverTime = new ShiftListOverTime();
+        OverTimeRequest overTimeRequest = new OverTimeRequest();
+        shiftListOverTime.setOverTimeId(overTimeRequest);
+        shiftListOverTimes.add(shiftListOverTime);
+
+        List<ShiftListShiftRequest> shiftListShiftRequests = new ArrayList<ShiftListShiftRequest>();
+        ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
+        ShiftRequest shiftRequest = new ShiftRequest();
+        shiftListShiftRequest.setShiftRequestId(shiftRequest);
+
+        ShiftListShiftRequest shiftListShiftChangeRequest = new ShiftListShiftRequest();
+        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
+        shiftListShiftChangeRequest.setShiftRequestId(shiftRequest);
+        shiftListShiftChangeRequest.setShiftChangeRequestId(shiftChangeRequest);
+        shiftListShiftRequests.add(shiftListShiftRequest);
+        shiftListShiftRequests.add(shiftListShiftChangeRequest);
+
+        List<ShiftListVacation> shiftListVacations = new ArrayList<ShiftListVacation>();
+        ShiftListVacation shiftListVacation = new ShiftListVacation();
+        VacationRequest vacationRequest = new VacationRequest();
+        shiftListVacation.setVacationId(vacationRequest);
+        shiftListVacations.add(shiftListVacation);
+
+        List<Attend> attends = new ArrayList<Attend>();
+        Attend attend = new Attend();
+        attends.add(attend);
+
+        List<AttendanceListSource> attendanceListSources = new ArrayList<AttendanceListSource>();
+        AttendanceListSource attendanceListSource = new AttendanceListSource();
+        StampRequest stampRequest = new StampRequest();
+        attendanceListSource.setStampRequestId(stampRequest);
+        attendanceListSources.add(attendanceListSource);
+
+        WithDrowInput withDrowInput = new WithDrowInput();
+        withDrowInput.setRequestType(requestType);
+        withDrowInput.setRequestId(requestId);
+
+        when(monthlyRequestService.findByAccountIdAndMothlyRequestId(any(Account.class), anyLong())).thenReturn(monthlyRequest);
+        when(shiftService.findByAccountIdAndBeginWorkBetween(any(Account.class), anyInt(), anyInt())).thenReturn(shifts);
+        when(shiftListOtherTimeService.findByShiftIdIn(anyList())).thenReturn(shiftListOtherTimes);
+        when(shiftListOverTimeService.findByShiftIdIn(anyList())).thenReturn(shiftListOverTimes);
+        when(shiftListShiftRequestService.findByShiftIdIn(anyList())).thenReturn(shiftListShiftRequests);
+        when(shiftListVacationService.findByShiftIdIn(anyList())).thenReturn(shiftListVacations);
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
+        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn(overTimeRequest);
+        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn(shiftRequest);
+        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn(shiftChangeRequest);
+        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn(vacationRequest);
+        when(attendService.findByAccountIdAndBeginWorkBetween(any(Account.class), anyInt(), anyInt())).thenReturn(attends);
+        when(attendanceListSourceService.findByAttendIdIn(anyList())).thenReturn(attendanceListSources);
+        when(stampRequestService.save(any(StampRequest.class))).thenReturn(stampRequest);
+        when(monthlyRequestService.save(any(MonthlyRequest.class))).thenReturn(monthlyRequest);
+
+        int result = requestService.withdrow(generalAccount, withDrowInput);
+        assertEquals(1, result);
+    }
+
+
 }

@@ -27,7 +27,7 @@ public class RequestDetailMonthlyResponse
     private String requestComment;
     private String requestDate;
     private int requestStatus;
-    private int approverId;
+    private Integer approverId;
     private String approverName;
     private String approverComment;
     private String approvalTime;

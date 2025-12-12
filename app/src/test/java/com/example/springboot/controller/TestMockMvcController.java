@@ -43,6 +43,7 @@ import com.example.springboot.dto.input.ShiftChangeInput;
 import com.example.springboot.dto.input.ShiftInput;
 import com.example.springboot.dto.input.StampInput;
 import com.example.springboot.dto.input.VacationInput;
+import com.example.springboot.dto.input.WithDrowInput;
 import com.example.springboot.dto.input.YearMonthInput;
 import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
@@ -2673,9 +2674,8 @@ public class TestMockMvcController
         shiftRequest.setShiftRequestId(shiftRequestid);
         shiftRequest.setRequestStatus(1);
 
-        when(accountService.findAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
-        when(shiftRequestService.findByAccountIdAndShiftRequestId(any(Account.class), anyLong())).thenReturn(shiftRequest);
-        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn(shiftRequest);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.withdrow(any(Account.class), any(WithDrowInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/withdrow")
@@ -2689,7 +2689,7 @@ public class TestMockMvcController
     }
 
     @Test
-    void withdrowShiftChaneSuccess() throws Exception
+    void withdrowShiftChangeSuccess() throws Exception
     {
         int requestId = 5;
         int requestType = 2;
@@ -2715,9 +2715,8 @@ public class TestMockMvcController
         shiftChangeRequest.setShiftChangeId(shiftChangeRequestId);
         shiftChangeRequest.setRequestStatus(1);
 
-        when(accountService.findAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
-        when(shiftChangeRequestService.findByAccountIdAndShiftChangeRequestId(any(Account.class), anyLong())).thenReturn(shiftChangeRequest);
-        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn(shiftChangeRequest);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.withdrow(any(Account.class), any(WithDrowInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/withdrow")
@@ -2757,9 +2756,8 @@ public class TestMockMvcController
         stampRequest.setStampId(stampRequestId);
         stampRequest.setRequestStatus(1);
 
-        when(accountService.findAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
-        when(stampRequestService.findByAccountIdAndStampId(any(Account.class), anyLong())).thenReturn(stampRequest);
-        when(stampRequestService.save(any(StampRequest.class))).thenReturn(stampRequest);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.withdrow(any(Account.class), any(WithDrowInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/withdrow")
@@ -2799,9 +2797,8 @@ public class TestMockMvcController
         vacationRequest.setVacationId(vacationRequestId);
         vacationRequest.setRequestStatus(1);
 
-        when(accountService.findAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
-        when(vacationRequestService.findByAccountIdAndVacationId(any(Account.class), anyLong())).thenReturn(vacationRequest);
-        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn(vacationRequest);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.withdrow(any(Account.class), any(WithDrowInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/withdrow")
@@ -2841,9 +2838,8 @@ public class TestMockMvcController
         overTimeRequest.setOverTimeId(overTimeRequestId);
         overTimeRequest.setRequestStatus(1);
 
-        when(accountService.findAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
-        when(overTimeRequestService.findByAccountIdAndOverTimeRequestId(any(Account.class), anyLong())).thenReturn(overTimeRequest);
-        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn(overTimeRequest);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.withdrow(any(Account.class), any(WithDrowInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/withdrow")
@@ -2883,9 +2879,8 @@ public class TestMockMvcController
         attendanceExceptionRequest.setAttendanceExceptionId(attendanceExceptionRequestId);
         attendanceExceptionRequest.setRequestStatus(1);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(attendanceExceptionRequestService.findByAccountIdAndAttendanceExceptionId(any(Account.class), anyLong())).thenReturn(attendanceExceptionRequest);
-        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.withdrow(any(Account.class), any(WithDrowInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/withdrow")
@@ -2969,20 +2964,8 @@ public class TestMockMvcController
         attendanceListSource.setStampRequestId(stampRequest);
         attendanceListSources.add(attendanceListSource);
 
-        when(accountService.findAccountByUsername(generalAccountUsername)).thenReturn(generalAccount);
-        when(monthlyRequestService.findByAccountIdAndMothlyRequestId(any(Account.class), anyLong())).thenReturn(monthlyRequest);
-        when(shiftService.findByAccountIdAndBeginWorkBetween(any(Account.class), anyInt(), anyInt())).thenReturn(shifts);
-        when(shiftListOtherTimeService.findByShiftIdIn(anyList())).thenReturn(shiftListOtherTimes);
-        when(shiftListOverTimeService.findByShiftIdIn(anyList())).thenReturn(shiftListOverTimes);
-        when(shiftListShiftRequestService.findByShiftIdIn(anyList())).thenReturn(shiftListShiftRequests);
-        when(shiftListVacationService.findByShiftIdIn(anyList())).thenReturn(shiftListVacations);
-        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(attendanceExceptionRequest);
-        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn(overTimeRequest);
-        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn(shiftRequest);
-        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn(shiftChangeRequest);
-        when(stampRequestService.save(any(StampRequest.class))).thenReturn(stampRequest);
-        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn(vacationRequest);
-        when(monthlyRequestService.save(any(MonthlyRequest.class))).thenReturn(monthlyRequest);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.withdrow(any(Account.class), any(WithDrowInput.class))).thenReturn(1);
         mockMvc.perform
         (
             post("/api/send/withdrow")

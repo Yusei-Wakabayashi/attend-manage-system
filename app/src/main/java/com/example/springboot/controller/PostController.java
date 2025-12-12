@@ -38,7 +38,6 @@ import com.example.springboot.dto.input.WithDrowInput;
 import com.example.springboot.dto.IdData;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
-import com.example.springboot.model.Attend;
 import com.example.springboot.model.AttendanceExceptionRequest;
 import com.example.springboot.model.AttendanceListSource;
 import com.example.springboot.model.LegalTime;
@@ -134,9 +133,6 @@ public class PostController
 
     @Autowired
     private ShiftListVacationService shiftListVacationService;
-
-    @Autowired
-    private AttendService attendService;
 
     @Autowired
     private AttendanceListSourceService attendanceListSourceService;
@@ -560,289 +556,13 @@ public class PostController
     @PostMapping("/send/withdrow")
     public Response withDrow(@RequestBody WithDrowInput withDrowInput, HttpSession session)
     {
-        int status = 0;
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
+        Account account = accountService.findCurrentAccount();
         if(Objects.isNull(account))
         {
-            status = 3;
-            return new Response(status);
+            return new Response(3);
         }
-
-        int requestType = withDrowInput.getRequestType();
-        Long requestId = withDrowInput.getRequestId();
-
-        // 月次申請以外はその申請のステータスを3の却下に変更する
-        // 月次申請はその範囲の月次申請済みの申請を承認に戻す作業が必要
-        switch (requestType)
-        {
-            // シフト申請
-            case 1:
-                ShiftRequest shiftRequest = shiftRequestService.findByAccountIdAndShiftRequestId(account, requestId);
-                // 申請がない場合
-                if(Objects.isNull(shiftRequest))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // 申請の状態チェック
-                if(shiftRequest.getRequestStatus() == 1)
-                {
-                    shiftRequest.setRequestStatus(5);
-                    // 正常に更新できたか
-                    ShiftRequest resultShiftRequest = shiftRequestService.save(shiftRequest);
-                    if(Objects.isNull(resultShiftRequest))
-                    {
-                        status = 3;
-                        return new Response(status);
-                    }
-                    status = 1;
-                }
-                else
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                break;
-            // シフト時間変更申請
-            case 2:
-                ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findByAccountIdAndShiftChangeRequestId(account, requestId);
-                // 申請がない場合
-                if(Objects.isNull(shiftChangeRequest))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // 申請の状態チェック
-                if(shiftChangeRequest.getRequestStatus() == 1)
-                {
-                    shiftChangeRequest.setRequestStatus(5);
-                    // 正常に更新できたか
-                    ShiftChangeRequest resultShiftChangeRequest = shiftChangeRequestService.save(shiftChangeRequest);
-                    if(Objects.isNull(resultShiftChangeRequest))
-                    {
-                        status = 3;
-                        return new Response(status);
-                    }
-                    status = 1;
-                }
-                else
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                break;
-            // 打刻漏れ申請
-            case 3:
-                StampRequest stampRequest = stampRequestService.findByAccountIdAndStampId(account, requestId);
-                // 申請がない場合
-                if(Objects.isNull(stampRequest))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // 申請の状態チェック
-                if(stampRequest.getRequestStatus() == 1)
-                {
-                    stampRequest.setRequestStatus(5);
-                    // 正常に更新できたか
-                    StampRequest resultStampRequest = stampRequestService.save(stampRequest);
-                    if(Objects.isNull(resultStampRequest))
-                    {
-                        status = 3;
-                        return new Response(status);
-                    }
-                    status = 1;
-                }
-                else
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                break;
-            // 休暇申請
-            case 4:
-                VacationRequest vacationRequest = vacationRequestService.findByAccountIdAndVacationId(account, requestId);
-                // 申請がない場合
-                if(Objects.isNull(vacationRequest))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // 申請の状態チェック
-                if(vacationRequest.getRequestStatus() == 1)
-                {
-                    vacationRequest.setRequestStatus(5);
-                    // 正常に更新できたか
-                    VacationRequest resultVacationRequest = vacationRequestService.save(vacationRequest);
-                    if(Objects.isNull(resultVacationRequest))
-                    {
-                        status = 3;
-                        return new Response(status);
-                    }
-                    status = 1;
-                }
-                else
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                break;
-            // 残業申請
-            case 5:
-                OverTimeRequest overTimeRequest = overTimeRequestService.findByAccountIdAndOverTimeRequestId(account, requestId);
-                // 申請がない場合
-                if(Objects.isNull(overTimeRequest))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // 申請の状態チェック
-                if(overTimeRequest.getRequestStatus() == 1)
-                {
-                    overTimeRequest.setRequestStatus(5);
-                    OverTimeRequest resultOverTimeRequest = overTimeRequestService.save(overTimeRequest);
-                    if(Objects.isNull(resultOverTimeRequest))
-                    {
-                        status = 3;
-                        return new Response(status);
-                    }
-                    status = 1;
-                }
-                else
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                break;
-            // 勤怠例外申請
-            case 6:
-                AttendanceExceptionRequest attendanceExceptionRequest = attendanceExceptionRequestService.findByAccountIdAndAttendanceExceptionId(account, requestId);
-                // 申請がない場合
-                if(Objects.isNull(attendanceExceptionRequest))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // 申請の状態チェック
-                if(attendanceExceptionRequest.getRequestStatus() == 1)
-                {
-                    attendanceExceptionRequest.setRequestStatus(5);
-                    // 正常に更新できたか
-                    AttendanceExceptionRequest resultAttendanceExceptionRequest = attendanceExceptionRequestService.save(attendanceExceptionRequest);
-                    if(Objects.isNull(resultAttendanceExceptionRequest))
-                    {
-                        status = 3;
-                        return new Response(status);
-                    }
-                    status = 1;
-                }
-                else
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                break;
-            // 月次申請
-            case 7:
-                MonthlyRequest monthlyRequest = monthlyRequestService.findByAccountIdAndMothlyRequestId(account, requestId);
-                // 申請がない場合
-                if(Objects.isNull(monthlyRequest))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // 申請の状態チェック
-                if(monthlyRequest.getRequestStatus() == 1)
-                {
-                    // 正常
-                }
-                else
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // 月次申請の期間内のシフト取得
-                List<Shift> shifts = shiftService.findByAccountIdAndBeginWorkBetween(account, monthlyRequest.getYear(), monthlyRequest.getMonth());
-                // シフトから関連テーブルを検索
-                List<ShiftListOtherTime> shiftListOtherTimes = shiftListOtherTimeService.findByShiftIdIn(shifts);
-                List<ShiftListOverTime> shiftListOverTimes = shiftListOverTimeService.findByShiftIdIn(shifts);
-                List<ShiftListShiftRequest> shiftListShiftRequests = shiftListShiftRequestService.findByShiftIdIn(shifts);
-                List<ShiftListVacation> shiftListVacations = shiftListVacationService.findByShiftIdIn(shifts);
-                // 最終的に取得した申請のステータスを月次申請済みから承認に変更
-                int monthlyRequestStatus = 2;
-                for(ShiftListOtherTime shiftListOtherTime : shiftListOtherTimes)
-                {
-                    AttendanceExceptionRequest attendanceExceptionRequestMonthly = shiftListOtherTime.getAttendanceExceptionId();
-                    attendanceExceptionRequestMonthly.setRequestStatus(monthlyRequestStatus);
-                    attendanceExceptionRequestService.save(attendanceExceptionRequestMonthly);
-                }
-                for(ShiftListOverTime shiftListOverTime : shiftListOverTimes)
-                {
-                    OverTimeRequest overTimeRequestMonthly = shiftListOverTime.getOverTimeId();
-                    overTimeRequestMonthly.setRequestStatus(monthlyRequestStatus);
-                    overTimeRequestService.save(overTimeRequestMonthly);
-                }
-                for(ShiftListShiftRequest shiftListShiftRequest : shiftListShiftRequests)
-                {
-                    // どちらも存在しなければエラー
-                    if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()) && Objects.isNull(shiftListShiftRequest.getShiftRequestId()))
-                    {
-                        status = 3;
-                        return new Response(status);
-                    }
-                    else if(Objects.isNull(shiftListShiftRequest.getShiftRequestId()))
-                    {
-                        // シフト申請がなければエラー
-                        status = 3;
-                        return new Response(status);
-                    }
-                    // シフト時間変更申請がなければシフト申請を
-                    else if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
-                    {
-                        ShiftRequest shiftRequestMonthly = shiftListShiftRequest.getShiftRequestId();
-                        shiftRequestMonthly.setRequestStatus(monthlyRequestStatus);
-                        shiftRequestService.save(shiftRequestMonthly);
-                    }
-                    // どちらも存在すればエラー
-                    else
-                    {
-                        ShiftChangeRequest shiftChangeRequestMonthly = shiftListShiftRequest.getShiftChangeRequestId();
-                        shiftChangeRequestMonthly.setRequestStatus(monthlyRequestStatus);
-                        shiftChangeRequestService.save(shiftChangeRequestMonthly);
-                    }
-                }
-                for(ShiftListVacation shiftListVacation : shiftListVacations)
-                {
-                    VacationRequest vacationRequestMonthly = shiftListVacation.getVacationId();
-                    vacationRequestMonthly.setRequestStatus(monthlyRequestStatus);
-                    vacationRequestService.save(vacationRequestMonthly);
-                }
-                // 月次申請の期間内の勤怠情報取得
-                List<Attend> attends = attendService.findByAccountIdAndBeginWorkBetween(account, monthlyRequest.getYear(), monthlyRequest.getMonth());
-                // 勤怠情報から関連テーブルを検索
-                List<AttendanceListSource> attendanceListSources = attendanceListSourceService.findByAttendIdIn(attends);
-                // 最終的に取得した申請のステータスを月次申請済みから承認に変更
-                for(AttendanceListSource attendanceListSource : attendanceListSources)
-                {
-                    StampRequest stampRequestMonthly = attendanceListSource.getStampRequestId();
-                    stampRequestMonthly.setRequestStatus(monthlyRequestStatus);
-                    stampRequestService.save(stampRequestMonthly);
-                }
-                // 正常に更新できたか
-                monthlyRequest.setRequestStatus(5);
-                MonthlyRequest resultMonthlyRequest = monthlyRequestService.save(monthlyRequest);
-                if(Objects.isNull(resultMonthlyRequest))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                status = 1;
-                break;
-            default:
-                break;
-        }
-        return new Response(status);
+        int result = requestService.withdrow(account, withDrowInput);
+        return new Response(result);
     }
     
     @PostMapping("/send/approval")
@@ -1128,82 +848,13 @@ public class PostController
     @PostMapping("/send/approvalcancel")
     public Response approvalcancel(@RequestBody RequestJudgmentInput requestJudgmentInput, HttpSession session)
     {
-       int status = 0;
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
+        Account account = accountService.findCurrentAccount();
         if(Objects.isNull(account))
         {
-            status = 3;
-            return new Response(status);
+            return new Response(3);
         }
-
-        // 申請を取得
-        // 申請者の承認者であることを確認
-        // 申請の状態が申請待ち状態であることを確認
-
-        int request = requestJudgmentInput.getRequestType();
-        switch (request)
-        {
-            // シフト申請
-            case 1:
-                ShiftRequest shiftRequest = shiftRequestService.findById(requestJudgmentInput.getRequestId());
-                Account generalAccount = shiftRequest.getAccountId();
-                AccountApprover accountApprover = accountApproverService.findAccountAndApprover(generalAccount, account);
-                if(Objects.isNull(accountApprover))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // シフトの削除
-                // シフトとシフトに関する申請テーブル
-                break;
-            // シフト時間変更申請
-            case 2:
-                ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findById(requestJudgmentInput.getRequestId());
-                // 同じ日の承認済みの時間変更申請で更新日時が最も最近のものに変更
-                // 上記がなければ同じ日のシフトを取得、これもない場合シフトを削除
-                // シフトとシフトに関する申請テーブル
-
-                break;
-            // 打刻漏れ申請
-            case 3:
-                StampRequest stampRequest = stampRequestService.findById(requestJudgmentInput.getRequestId());
-
-                // 勤怠と勤怠に関する情報源テーブルを基に勤怠テーブルから削除
-                // 勤怠と勤怠に関する情報源テーブル
-                break;
-            // 休暇申請
-            case 4:
-                VacationRequest vacationRequest = vacationRequestService.findById(requestJudgmentInput.getRequestId());
-                // シフトの休暇時間
-                // シフトと休暇テーブル
-                // 休暇テーブル
-                // 有給休暇消費テーブルから対象を削除
-                break;
-            // 残業申請
-            case 5:
-                OverTimeRequest overTimeRequest = overTimeRequestService.findById(requestJudgmentInput.getRequestId());
-                // シフトの残業時間
-                // シフトと残業テーブル
-                break;
-            // 遅刻、早退、残業申請
-            case 6:
-                AttendanceExceptionRequest attendanceExceptionRequest = attendanceExceptionRequestService.findById(requestJudgmentInput.getRequestId());
-                // シフトの遅刻時間、早退時間、外出時間
-                // シフトと勤怠例外テーブル
-                break;
-            // 月次申請
-            case 7:
-                MonthlyRequest monthlyRequest = monthlyRequestService.findById(requestJudgmentInput.getRequestId());
-                // 月次申請の範囲の申請を承認に変更
-                break;
-
-            default:
-                break;
-        }
-
-        return new Response(status);
-
+        int result = requestService.approvalCancel(account, requestJudgmentInput);
+        return new Response(result);
     }
 
 }
