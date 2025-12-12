@@ -183,6 +183,7 @@ public class RequestService
         shiftRequest.setBeginBreak(beginBreak);
         shiftRequest.setEndBreak(endBreak);
         shiftRequest.setEndWork(endWork);
+        shiftRequest.setVacationWork(false);
         shiftRequest.setRequestComment(shiftInput.getRequestComment());
         shiftRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(shiftInput.getRequestDate()));
         shiftRequest.setRequestStatus(1);
@@ -247,6 +248,7 @@ public class RequestService
         shiftChangeRequest.setEndWork(endWork);
         shiftChangeRequest.setBeginBreak(beginBreak);
         shiftChangeRequest.setEndBreak(endBreak);
+        shiftChangeRequest.setVacationWork(false);
         shiftChangeRequest.setRequestComment(shiftChangeInput.getRequestComment());
         shiftChangeRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(shiftChangeInput.getRequestDate()));
         shiftChangeRequest.setRequestStatus(1);
@@ -1016,10 +1018,7 @@ public class RequestService
                     }
                     return 1;
                 }
-                else
-                {
-                    return 3;
-                }
+                return 3;
             // シフト時間変更申請
             case 2:
                 ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findByAccountIdAndShiftChangeRequestId(account, requestId);
@@ -1237,13 +1236,503 @@ public class RequestService
     @Transactional
     public int reject(Account account, RequestJudgmentInput requestJudgmentInput)
     {
-        return 1;
+        // 申請を取得
+        // 申請者の承認者であることを確認
+        // 申請の状態が申請待ち状態であることを確認
+
+        int request = requestJudgmentInput.getRequestType();
+        switch (request)
+        {
+            // シフト申請
+            case 1:
+                ShiftRequest shiftRequest = shiftRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(shiftRequest))
+                {
+                    return 3;
+                }
+                Account shiftAccount = shiftRequest.getAccountId();
+                AccountApprover shiftAccountApprover = accountApproverService.findAccountAndApprover(shiftAccount, account);
+                if(Objects.isNull(shiftAccountApprover))
+                {
+                    return 3;
+                }
+                // 申請の状態を変更
+                if(shiftRequest.getRequestStatus() == 1)
+                {
+                    shiftRequest.setRequestStatus(3);
+                    shiftRequest.setApprover(account);
+                    shiftRequest.setApproverComment(requestJudgmentInput.getApprovalComment());
+                    shiftRequest.setApprovalTime(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime()));
+                    ShiftRequest resultShiftRequest = shiftRequestService.save(shiftRequest);
+                    if(Objects.isNull(resultShiftRequest))
+                    {
+                        return 3;
+                    }
+                    return 1;
+                }
+                return 3;
+            // シフト時間変更申請
+            case 2:
+                ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(shiftChangeRequest))
+                {
+                    return 3;
+                }
+                Account shiftChangeAccount = shiftChangeRequest.getAccountId();
+                AccountApprover shiftChangeApprover = accountApproverService.findAccountAndApprover(shiftChangeAccount, account);
+                if(Objects.isNull(shiftChangeApprover))
+                {
+                    return 3;
+                }
+                // 申請の状態を変更
+                if(shiftChangeRequest.getRequestStatus() == 1)
+                {
+                    shiftChangeRequest.setRequestStatus(3);
+                    shiftChangeRequest.setApprover(account);
+                    shiftChangeRequest.setApproverComment(requestJudgmentInput.getApprovalComment());
+                    shiftChangeRequest.setApprovalTime(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime()));
+                    ShiftChangeRequest resultShiftChangeRequest = shiftChangeRequestService.save(shiftChangeRequest);
+                    if(Objects.isNull(resultShiftChangeRequest))
+                    {
+                        return 3;
+                    }
+                    return 1;
+                }
+                return 3;
+            // 打刻漏れ申請
+            case 3:
+                StampRequest stampRequest = stampRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(stampRequest))
+                {
+                    return 3;
+                }
+                Account stampAccount = stampRequest.getAccountId();
+                AccountApprover stampAccountApprover = accountApproverService.findAccountAndApprover(stampAccount, account);
+                if(Objects.isNull(stampAccountApprover))
+                {
+                    return 3;
+                }
+                // 申請の状態を変更
+                if(stampRequest.getRequestStatus() == 1)
+                {
+                    stampRequest.setRequestStatus(3);
+                    stampRequest.setApprover(account);
+                    stampRequest.setApproverComment(requestJudgmentInput.getApprovalComment());
+                    stampRequest.setApprovalTime(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime()));
+                    StampRequest resultStampRequest = stampRequestService.save(stampRequest);
+                    if(Objects.isNull(resultStampRequest))
+                    {
+                        return 3;
+                    }
+                    return 1;
+                }
+                return 3;
+            // 休暇申請
+            case 4:
+                VacationRequest vacationRequest = vacationRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(vacationRequest))
+                {
+                    return 3;
+                }
+                Account vacationAccount = vacationRequest.getAccountId();
+                AccountApprover vacationAccountApprover = accountApproverService.findAccountAndApprover(vacationAccount, account);
+                if(Objects.isNull(vacationAccountApprover))
+                {
+                    return 3;
+                }
+                // 申請の状態を変更
+                if(vacationRequest.getRequestStatus() == 1)
+                {
+                    vacationRequest.setRequestStatus(3);
+                    vacationRequest.setApprover(account);
+                    vacationRequest.setApproverComment(requestJudgmentInput.getApprovalComment());
+                    vacationRequest.setApprovalTime(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime()));
+                    VacationRequest resultVacationRequest = vacationRequestService.save(vacationRequest);
+                    if(Objects.isNull(resultVacationRequest))
+                    {
+                        return 3;
+                    }
+                    return 1;
+                }
+                return 1;
+            // 残業申請
+            case 5:
+                OverTimeRequest overTimeRequest = overTimeRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(overTimeRequest))
+                {
+                    return 3;
+                }
+                Account overTimeAccount = overTimeRequest.getAccountId();
+                AccountApprover overTimeAccountApprover = accountApproverService.findAccountAndApprover(overTimeAccount, account);
+                if(Objects.isNull(overTimeAccountApprover))
+                {
+                    return 3;
+                }
+                // 申請の状態を変更
+                if(overTimeRequest.getRequestStatus() == 1)
+                {
+                    overTimeRequest.setRequestStatus(3);
+                    overTimeRequest.setApprover(account);
+                    overTimeRequest.setApproverComment(requestJudgmentInput.getApprovalComment());
+                    overTimeRequest.setApprovalTime(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime()));
+                    OverTimeRequest resultOverTimeRequest = overTimeRequestService.save(overTimeRequest);
+                    if(Objects.isNull(resultOverTimeRequest))
+                    {
+                        return 3;
+                    }
+                    return 1;
+                }
+                return 3;
+            // 遅刻、早退、残業申請
+            case 6:
+                AttendanceExceptionRequest attendanceExceptionRequest = attendanceExceptionRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(attendanceExceptionRequest))
+                {
+                    return 3;
+                }
+                Account attendanceExceptionAccount = attendanceExceptionRequest.getAccountId();
+                AccountApprover attendanceExceptionAccountApprover = accountApproverService.findAccountAndApprover(attendanceExceptionAccount, account);
+                if(Objects.isNull(attendanceExceptionAccountApprover))
+                {
+                    return 3;
+                }
+                // 申請の状態を変更
+                if(attendanceExceptionRequest.getRequestStatus() == 1)
+                {
+                    attendanceExceptionRequest.setRequestStatus(3);
+                    attendanceExceptionRequest.setApprover(account);
+                    attendanceExceptionRequest.setApproverComment(requestJudgmentInput.getApprovalComment());
+                    attendanceExceptionRequest.setApprovalTime(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime()));
+                    AttendanceExceptionRequest resultAttendanceExceptionRequest = attendanceExceptionRequestService.save(attendanceExceptionRequest);
+                    if(Objects.isNull(resultAttendanceExceptionRequest))
+                    {
+                        return 3;
+                    }
+                    return 1;
+                }
+                return 3;
+            // 月次申請
+            case 7:
+                MonthlyRequest monthlyRequest = monthlyRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(monthlyRequest))
+                {
+                    return 3;
+                }
+                Account monthlyAccount = monthlyRequest.getAccountId();
+                AccountApprover monthlyAccountApprover = accountApproverService.findAccountAndApprover(monthlyAccount, account);
+                if(Objects.isNull(monthlyAccountApprover))
+                {
+                    return 3;
+                }
+                // 申請の状態チェック
+                if(monthlyRequest.getRequestStatus() == 1)
+                {
+                    // 正常
+                }
+                else
+                {
+                    return 3;
+                }
+                // 月次申請の期間内のシフト取得
+                List<Shift> shifts = shiftService.findByAccountIdAndBeginWorkBetween(monthlyAccount, monthlyRequest.getYear(), monthlyRequest.getMonth());
+                // シフトから関連テーブルを検索
+                List<ShiftListOtherTime> shiftListOtherTimes = shiftListOtherTimeService.findByShiftIdIn(shifts);
+                List<ShiftListOverTime> shiftListOverTimes = shiftListOverTimeService.findByShiftIdIn(shifts);
+                List<ShiftListShiftRequest> shiftListShiftRequests = shiftListShiftRequestService.findByShiftIdIn(shifts);
+                List<ShiftListVacation> shiftListVacations = shiftListVacationService.findByShiftIdIn(shifts);
+                // 最終的に取得した申請のステータスを月次申請済みから承認に変更
+                int monthlyRequestStatus = 2;
+                for(ShiftListOtherTime shiftListOtherTime : shiftListOtherTimes)
+                {
+                    AttendanceExceptionRequest attendanceExceptionRequestMonthly = shiftListOtherTime.getAttendanceExceptionId();
+                    attendanceExceptionRequestMonthly.setRequestStatus(monthlyRequestStatus);
+                    attendanceExceptionRequestService.save(attendanceExceptionRequestMonthly);
+                }
+                for(ShiftListOverTime shiftListOverTime : shiftListOverTimes)
+                {
+                    OverTimeRequest overTimeRequestMonthly = shiftListOverTime.getOverTimeId();
+                    overTimeRequestMonthly.setRequestStatus(monthlyRequestStatus);
+                    overTimeRequestService.save(overTimeRequestMonthly);
+                }
+                for(ShiftListShiftRequest shiftListShiftRequest : shiftListShiftRequests)
+                {
+                    // どちらも存在しなければエラー
+                    if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()) && Objects.isNull(shiftListShiftRequest.getShiftRequestId()))
+                    {
+                        return 3;
+                    }
+                    else if(Objects.isNull(shiftListShiftRequest.getShiftRequestId()))
+                    {
+                        // シフト申請がなければエラー
+                        return 3;
+                    }
+                    // シフト時間変更申請がなければシフト申請を
+                    else if(Objects.isNull(shiftListShiftRequest.getShiftChangeRequestId()))
+                    {
+                        ShiftRequest shiftRequestMonthly = shiftListShiftRequest.getShiftRequestId();
+                        shiftRequestMonthly.setRequestStatus(monthlyRequestStatus);
+                        shiftRequestService.save(shiftRequestMonthly);
+                    }
+                    // どちらも存在すればエラー
+                    else
+                    {
+                        ShiftChangeRequest shiftChangeRequestMonthly = shiftListShiftRequest.getShiftChangeRequestId();
+                        shiftChangeRequestMonthly.setRequestStatus(monthlyRequestStatus);
+                        shiftChangeRequestService.save(shiftChangeRequestMonthly);
+                    }
+                }
+                for(ShiftListVacation shiftListVacation : shiftListVacations)
+                {
+                    VacationRequest vacationRequestMonthly = shiftListVacation.getVacationId();
+                    vacationRequestMonthly.setRequestStatus(monthlyRequestStatus);
+                    vacationRequestService.save(vacationRequestMonthly);
+                }
+                // 月次申請の期間内の勤怠情報取得
+                List<Attend> attends = attendService.findByAccountIdAndBeginWorkBetween(monthlyAccount, monthlyRequest.getYear(), monthlyRequest.getMonth());
+                // 勤怠情報から関連テーブルを検索
+                List<AttendanceListSource> attendanceListSources = attendanceListSourceService.findByAttendIdIn(attends);
+                // 最終的に取得した申請のステータスを月次申請済みから承認に変更
+                for(AttendanceListSource attendanceListSource : attendanceListSources)
+                {
+                    StampRequest stampRequestMonthly = attendanceListSource.getStampRequestId();
+                    stampRequestMonthly.setRequestStatus(monthlyRequestStatus);
+                    stampRequestService.save(stampRequestMonthly);
+                }
+                // 正常に更新できたか
+                monthlyRequest.setRequestStatus(5);
+                monthlyRequest.setApprover(account);
+                monthlyRequest.setApproverComment(requestJudgmentInput.getApprovalComment());
+                monthlyRequest.setApprovalDate(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime()));
+                MonthlyRequest resultMonthlyRequest = monthlyRequestService.save(monthlyRequest);
+                if(Objects.isNull(resultMonthlyRequest))
+                {
+                    return 3;
+                }
+                return 1;
+            default:
+                return 3;
+        }
     }
 
     @Transactional
     public int approval(Account account, RequestJudgmentInput requestJudgmentInput)
     {
-        return 1;
+        // 申請を取得
+        // 申請者の承認者であることを確認
+        // 申請の状態が申請待ち状態であることを確認
+
+        int request = requestJudgmentInput.getRequestType();
+        switch (request)
+        {
+            // シフト申請
+            case 1:
+                ShiftRequest shiftRequest = shiftRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(shiftRequest))
+                {
+                    return 3;
+                }
+                Account shiftGeneralAccount = shiftRequest.getAccountId();
+                AccountApprover shiftAccountApprover = accountApproverService.findAccountAndApprover(shiftGeneralAccount, account);
+                // 申請者の承認者の情報がなければエラー
+                if(Objects.isNull(shiftAccountApprover))
+                {
+                    return 3;
+                }
+                // 申請の状態確認
+                if(shiftRequest.getRequestStatus() == 1)
+                {
+                    // 承認に変更
+                    shiftRequest.setRequestStatus(2);
+                    if(shiftService.findByAccountIdAndBeginWorkBetweenWeek(shiftGeneralAccount, shiftRequest.getBeginWork()).size() >= 6)
+                    {
+                        // 6以上なら休日出勤のためフラグを立てる
+                        shiftRequest.setVacationWork(true);
+                    }
+                    ShiftRequest resultShiftRequest = shiftRequestService.save(shiftRequest);
+                    if(Objects.isNull(resultShiftRequest))
+                    {
+                        return 3;
+                    }
+                }
+                else
+                {
+                    return 3;
+                }
+                // シフトに記録
+                Shift shiftRequestShift = shiftRequestService.shiftRequestToShift(shiftRequest);
+                Shift resultShiftRequestShift = shiftService.save(shiftRequestShift);
+                if(Objects.isNull(resultShiftRequestShift))
+                {
+                    return 3;
+                }
+                // シフトとシフトに関する申請テーブル登録
+                ShiftListShiftRequest shiftShiftListShiftRequest = new ShiftListShiftRequest();
+                // シフト設定
+                shiftShiftListShiftRequest.setShiftId(resultShiftRequestShift);
+                // シフト申請設定
+                shiftShiftListShiftRequest.setShiftRequestId(shiftRequest);
+
+                ShiftListShiftRequest resultShiftShiftListShiftRequest = shiftListShiftRequestService.save(shiftShiftListShiftRequest);
+                // 結果をチェック
+                if(Objects.isNull(resultShiftShiftListShiftRequest))
+                {
+                    return 3;
+                }
+                return 1;
+            // シフト時間変更申請
+            case 2:
+                ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(shiftChangeRequest))
+                {
+                    return 3;
+                }
+                Account shiftChangeGeneralAccount = shiftChangeRequest.getAccountId();
+                AccountApprover shiftChangeAccountApprover = accountApproverService.findAccountAndApprover(shiftChangeGeneralAccount, account);
+                if(Objects.isNull(shiftChangeAccountApprover))
+                {
+                    return 3;
+                }
+                // シフトで既に勤怠情報が確定していればエラー
+                AttendanceListSource shiftChangeAttendanceListSource = attendanceListSourceService.findByShiftId(shiftChangeRequest.getShiftId());
+                if(Objects.isNull(shiftChangeAttendanceListSource))
+                {
+                    // nullが想定通り
+                }
+                else
+                {
+                    return 3;
+                }
+                // 申請の状態確認
+                if(shiftChangeRequest.getRequestStatus() == 1)
+                {
+                    // 承認に変更
+                    shiftChangeRequest.setRequestStatus(2);
+                    if(shiftService.findByAccountIdAndBeginWorkBetweenWeek(shiftChangeGeneralAccount, shiftChangeRequest.getBeginWork()).size() >= 6)
+                    {
+                        // 6以上なら休日出勤フラグを立てる
+                        shiftChangeRequest.setVacationWork(true);
+                    }
+                    ShiftChangeRequest resultShiftChangeRequest = shiftChangeRequestService.save(shiftChangeRequest);
+                    if(Objects.isNull(resultShiftChangeRequest))
+                    {
+                        return 3;
+                    }
+                }
+                else
+                {
+                    return 3;
+                }
+                // シフトに記録
+                Shift shiftChangeRequestShift = shiftChangeRequestService.shiftChangeRequestToShift(shiftChangeRequest);
+                Shift resultShiftChangeRequestShift = shiftService.save(shiftChangeRequestShift);
+                if(Objects.isNull(resultShiftChangeRequestShift))
+                {
+                    return 3;
+                }
+                // シフトとシフトに関する申請テーブル
+                ShiftListShiftRequest shiftChangeShiftListShiftRequest = shiftListShiftRequestService.findByShiftId(resultShiftChangeRequestShift);
+                // 時間変更申請を登録
+                shiftChangeShiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
+                ShiftListShiftRequest resultShiftChangeShiftListShiftRequest = shiftListShiftRequestService.save(shiftChangeShiftListShiftRequest);
+                // 結果をチェック
+                if(Objects.isNull(resultShiftChangeShiftListShiftRequest))
+                {
+                    return 3;
+                }
+                // シフトに関連する申請で反映状態のものがあれば却下し関連テーブルは削除する
+                List<ShiftListOtherTime> shiftChangeShiftListOtherTimes = shiftListOtherTimeService.findByShiftId(resultShiftChangeRequestShift);
+                for(ShiftListOtherTime shiftChangeShiftListOtherTime : shiftChangeShiftListOtherTimes)
+                {
+                    AttendanceExceptionRequest shiftChangeAttendanceExceptionRequest = shiftChangeShiftListOtherTime.getAttendanceExceptionId();
+                    shiftChangeAttendanceExceptionRequest.setRequestStatus(3);
+                    shiftListOtherTimeService.deleteByShiftListOtherTime(shiftChangeShiftListOtherTime);
+                }
+                List<ShiftListOverTime> shiftChangeShiftListOverTimes = shiftListOverTimeService.findByShiftId(resultShiftChangeRequestShift);
+                for(ShiftListOverTime shiftChangeShiftListOverTime : shiftChangeShiftListOverTimes)
+                {
+                    OverTimeRequest shiftChangeOverTimeRequest = shiftChangeShiftListOverTime.getOverTimeId();
+                    shiftChangeOverTimeRequest.setRequestStatus(3);
+                    shiftListOverTimeService.deleteByShiftListOverTime(shiftChangeShiftListOverTime);
+                }
+                List<ShiftListVacation> shiftChangeShiftListVacations = shiftListVacationService.findByShiftId(resultShiftChangeRequestShift);
+                for(ShiftListVacation shiftChangeShiftListVacation : shiftChangeShiftListVacations)
+                {
+                    VacationRequest shiftChangeVacationRequest = shiftChangeShiftListVacation.getVacationId();
+                    shiftChangeVacationRequest.setRequestStatus(3);
+                    shiftListVacationService.deleteByShiftListVacationId(shiftChangeShiftListVacation);
+                }
+                return 1;
+            // 打刻漏れ申請
+            case 3:
+                StampRequest stampRequest = stampRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(stampRequest))
+                {
+                    return 3;
+                }
+                // 勤怠テーブルに記録
+                // 遅刻時間、早退時間、外出時間、労働時間、休憩時間、残業時間、休日労働時間(法定時間より)、深夜労働時間(法定時間より取得した内容から計算)、休暇時間()、欠勤時間()
+                // 勤怠と勤怠に関する情報源テーブル
+                return 3;
+            // 休暇申請
+            case 4:
+                VacationRequest vacationRequest = vacationRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(vacationRequest))
+                {
+                    return 3;
+                }
+                // シフトの休暇時間
+                // シフトと休暇テーブル
+                // 休暇テーブル(計算の際に間に休憩が挟まっているもしくは休暇の前後に休憩が入っている場合休憩を除いて計算する必要がある)
+                // 有給休暇消費テーブル
+                return 3;
+            // 残業申請
+            case 5:
+                OverTimeRequest overTimeRequest = overTimeRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(overTimeRequest))
+                {
+                    return 3;
+                }
+                // シフトの残業時間
+                // シフトと残業テーブル
+                return 3;
+            // 遅刻、早退、残業申請
+            case 6:
+                AttendanceExceptionRequest attendanceExceptionRequest = attendanceExceptionRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(attendanceExceptionRequest))
+                {
+                    return 3;
+                }
+                // シフトの遅刻時間、早退時間、外出時間
+                // シフト内で労働時間内にどれだけ外出しているか計算
+                // シフトと勤怠例外テーブル
+                return 3;
+            // 月次申請
+            case 7:
+                MonthlyRequest monthlyRequest = monthlyRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(monthlyRequest))
+                {
+                    return 3;
+                }
+                // 申請者の承認者か
+                Account monthGeneralAccount = monthlyRequest.getAccountId();
+                if(Objects.isNull(monthGeneralAccount))
+                {
+                    return 3;
+                }
+                // 申請の状態は?
+                if(monthlyRequest.getRequestStatus() == 1)
+                {
+                    monthlyRequest.setRequestStatus(2);
+                    monthlyRequestService.save(monthlyRequest);
+                }
+                else
+                {
+                    return 3;
+                }
+                return 1;
+            default:
+                return 3;
+        }
     }
 
     @Transactional
@@ -1259,6 +1748,10 @@ public class RequestService
             // シフト申請
             case 1:
                 ShiftRequest shiftRequest = shiftRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(shiftRequest))
+                {
+                    return 3;
+                }
                 Account generalAccount = shiftRequest.getAccountId();
                 AccountApprover accountApprover = accountApproverService.findAccountAndApprover(generalAccount, account);
                 if(Objects.isNull(accountApprover))
@@ -1271,6 +1764,10 @@ public class RequestService
             // シフト時間変更申請
             case 2:
                 ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(shiftChangeRequest))
+                {
+                    return 3;
+                }
                 // 同じ日の承認済みの時間変更申請で更新日時が最も最近のものに変更
                 // 上記がなければ同じ日のシフトを取得、これもない場合シフトを削除
                 // シフトとシフトに関する申請テーブル
@@ -1279,13 +1776,20 @@ public class RequestService
             // 打刻漏れ申請
             case 3:
                 StampRequest stampRequest = stampRequestService.findById(requestJudgmentInput.getRequestId());
-
+                if(Objects.isNull(stampRequest))
+                {
+                    return 3;
+                }
                 // 勤怠と勤怠に関する情報源テーブルを基に勤怠テーブルから削除
                 // 勤怠と勤怠に関する情報源テーブル
                 break;
             // 休暇申請
             case 4:
                 VacationRequest vacationRequest = vacationRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(vacationRequest))
+                {
+                    return 3;
+                }
                 // シフトの休暇時間
                 // シフトと休暇テーブル
                 // 休暇テーブル
@@ -1294,18 +1798,30 @@ public class RequestService
             // 残業申請
             case 5:
                 OverTimeRequest overTimeRequest = overTimeRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(overTimeRequest))
+                {
+                    return 3;
+                }
                 // シフトの残業時間
                 // シフトと残業テーブル
                 break;
             // 遅刻、早退、残業申請
             case 6:
                 AttendanceExceptionRequest attendanceExceptionRequest = attendanceExceptionRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(attendanceExceptionRequest))
+                {
+                    return 3;
+                }
                 // シフトの遅刻時間、早退時間、外出時間
                 // シフトと勤怠例外テーブル
                 break;
             // 月次申請
             case 7:
                 MonthlyRequest monthlyRequest = monthlyRequestService.findById(requestJudgmentInput.getRequestId());
+                if(Objects.isNull(monthlyRequest))
+                {
+                    return 3;
+                }
                 // 月次申請の範囲の申請を承認に変更
                 break;
 

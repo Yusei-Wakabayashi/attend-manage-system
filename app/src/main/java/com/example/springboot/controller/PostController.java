@@ -37,41 +37,19 @@ import com.example.springboot.dto.input.VacationInput;
 import com.example.springboot.dto.input.WithDrowInput;
 import com.example.springboot.dto.IdData;
 import com.example.springboot.model.Account;
-import com.example.springboot.model.AccountApprover;
-import com.example.springboot.model.AttendanceExceptionRequest;
-import com.example.springboot.model.AttendanceListSource;
 import com.example.springboot.model.LegalTime;
-import com.example.springboot.model.MonthlyRequest;
-import com.example.springboot.model.OverTimeRequest;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
-import com.example.springboot.model.ShiftListOtherTime;
-import com.example.springboot.model.ShiftListOverTime;
 import com.example.springboot.model.ShiftListShiftRequest;
-import com.example.springboot.model.ShiftListVacation;
 import com.example.springboot.model.ShiftRequest;
-import com.example.springboot.model.StampRequest;
 import com.example.springboot.model.Vacation;
-import com.example.springboot.model.VacationRequest;
 import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
-import com.example.springboot.service.AttendService;
-import com.example.springboot.service.AttendanceExceptionRequestService;
-import com.example.springboot.service.AttendanceListSourceService;
 import com.example.springboot.service.LegalTimeService;
-import com.example.springboot.service.MonthlyRequestService;
-import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.RequestService;
-import com.example.springboot.service.ShiftChangeRequestService;
-import com.example.springboot.service.ShiftListOtherTimeService;
-import com.example.springboot.service.ShiftListOverTimeService;
 import com.example.springboot.service.ShiftListShiftRequestService;
-import com.example.springboot.service.ShiftListVacationService;
-import com.example.springboot.service.ShiftRequestService;
 import com.example.springboot.service.ShiftService;
-import com.example.springboot.service.StampRequestService;
 import com.example.springboot.service.StyleService;
-import com.example.springboot.service.VacationRequestService;
 import com.example.springboot.service.VacationService;
 import com.example.springboot.util.SecurityUtil;
 
@@ -93,49 +71,16 @@ public class PostController
     private StyleService styleService;
 
     @Autowired
-    private ShiftRequestService shiftRequestService;
-
-    @Autowired
     private LegalTimeService legalTimeService;
 
     @Autowired
     private ShiftService shiftService;
 
     @Autowired
-    private ShiftChangeRequestService shiftChangeRequestService;
-
-    @Autowired
     private VacationService vacationService;
 
     @Autowired
     private ShiftListShiftRequestService shiftListShiftRequestService;
-
-    @Autowired
-    private StampRequestService stampRequestService;
-
-    @Autowired
-    private VacationRequestService vacationRequestService;
-
-    @Autowired
-    private ShiftListOverTimeService shiftListOverTimeService;
-
-    @Autowired
-    private OverTimeRequestService overTimeRequestService;
-
-    @Autowired
-    private MonthlyRequestService monthlyRequestService;
-
-    @Autowired
-    private AttendanceExceptionRequestService attendanceExceptionRequestService;
-
-    @Autowired
-    private ShiftListOtherTimeService shiftListOtherTimeService;
-
-    @Autowired
-    private ShiftListVacationService shiftListVacationService;
-
-    @Autowired
-    private AttendanceListSourceService attendanceListSourceService;
 
     @Autowired
     private RequestService requestService;
@@ -568,281 +513,25 @@ public class PostController
     @PostMapping("/send/approval")
     public Response approval(@RequestBody RequestJudgmentInput requestJudgmentInput, HttpSession session)
     {
-        int status = 0;
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
+        Account account = accountService.findCurrentAccount();
         if(Objects.isNull(account))
         {
-            status = 3;
-            return new Response(status);
+            return new Response(3);
         }
-
-        // 申請を取得
-        // 申請者の承認者であることを確認
-        // 申請の状態が申請待ち状態であることを確認
-
-        int request = requestJudgmentInput.getRequestType();
-        switch (request)
-        {
-            // シフト申請
-            case 1:
-                ShiftRequest shiftRequest = shiftRequestService.findById(requestJudgmentInput.getRequestId());
-                Account shiftGeneralAccount = shiftRequest.getAccountId();
-                AccountApprover shiftAccountApprover = accountApproverService.findAccountAndApprover(shiftGeneralAccount, account);
-                // 申請者の承認者の情報がなければエラー
-                if(Objects.isNull(shiftAccountApprover))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // 申請の状態確認
-                if(shiftRequest.getRequestStatus() == 1)
-                {
-                    // 承認に変更
-                    shiftRequest.setRequestStatus(2);
-                    shiftRequestService.save(shiftRequest);
-                }
-                else
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // シフトに記録
-                Shift shiftRequestShift = shiftRequestService.shiftRequestToShift(shiftRequest);
-                Shift resultShiftRequestShift = shiftService.save(shiftRequestShift);
-                if(Objects.isNull(resultShiftRequestShift))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // シフトとシフトに関する申請テーブル登録
-                ShiftListShiftRequest shiftShiftListShiftRequest = new ShiftListShiftRequest();
-                // シフト設定
-                shiftShiftListShiftRequest.setShiftId(resultShiftRequestShift);
-                // シフト申請設定
-                shiftShiftListShiftRequest.setShiftRequestId(shiftRequest);
-                ShiftListShiftRequest resultShiftShiftListShiftRequest = shiftListShiftRequestService.save(shiftShiftListShiftRequest);
-                // 結果をチェック
-                if(Objects.isNull(resultShiftShiftListShiftRequest))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                status = 1;
-                break;
-            // シフト時間変更申請
-            case 2:
-                ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findById(requestJudgmentInput.getRequestId());
-                Account shiftChangeGeneralAccount = shiftChangeRequest.getAccountId();
-                AccountApprover shiftChangeAccountApprover = accountApproverService.findAccountAndApprover(shiftChangeGeneralAccount, account);
-                if(Objects.isNull(shiftChangeAccountApprover))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // シフトで既に勤怠情報が確定していればエラー
-                AttendanceListSource shiftChangeAttendanceListSource = attendanceListSourceService.findByShiftId(shiftChangeRequest.getShiftId());
-                if(Objects.isNull(shiftChangeAttendanceListSource))
-                {
-                    // nullが想定通り
-                }
-                else
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // 申請の状態確認
-                if(shiftChangeRequest.getRequestStatus() == 1)
-                {
-                    // 承認に変更
-                    shiftChangeRequest.setRequestStatus(2);
-                    shiftChangeRequestService.save(shiftChangeRequest);
-                }
-                else
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // シフトに記録
-                Shift shiftChangeRequestShift = shiftChangeRequestService.shiftChangeRequestToShift(shiftChangeRequest);
-                Shift resultShiftChangeRequestShift = shiftService.save(shiftChangeRequestShift);
-                if(Objects.isNull(resultShiftChangeRequestShift))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // シフトとシフトに関する申請テーブル
-                ShiftListShiftRequest shiftChangeShiftListShiftRequest = shiftListShiftRequestService.findByShiftId(resultShiftChangeRequestShift);
-                // 時間変更申請を登録
-                shiftChangeShiftListShiftRequest.setShiftChangeRequestId(shiftChangeRequest);
-                ShiftListShiftRequest resultShiftChangeShiftListShiftRequest = shiftListShiftRequestService.save(shiftChangeShiftListShiftRequest);
-                // 結果をチェック
-                if(Objects.isNull(resultShiftChangeShiftListShiftRequest))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // シフトに関連する申請で反映状態のものがあれば却下し関連テーブルは削除する
-                List<ShiftListOtherTime> shiftChangeShiftListOtherTimes = shiftListOtherTimeService.findByShiftId(resultShiftChangeRequestShift);
-                for(ShiftListOtherTime shiftChangeShiftListOtherTime : shiftChangeShiftListOtherTimes)
-                {
-                    AttendanceExceptionRequest shiftChangeAttendanceExceptionRequest = shiftChangeShiftListOtherTime.getAttendanceExceptionId();
-                    shiftChangeAttendanceExceptionRequest.setRequestStatus(3);
-                    shiftListOtherTimeService.deleteByShiftListOtherTime(shiftChangeShiftListOtherTime);
-                }
-                List<ShiftListOverTime> shiftChangeShiftListOverTimes = shiftListOverTimeService.findByShiftId(resultShiftChangeRequestShift);
-                for(ShiftListOverTime shiftChangeShiftListOverTime : shiftChangeShiftListOverTimes)
-                {
-                    OverTimeRequest shiftChangeOverTimeRequest = shiftChangeShiftListOverTime.getOverTimeId();
-                    shiftChangeOverTimeRequest.setRequestStatus(3);
-                    shiftListOverTimeService.deleteByShiftListOverTime(shiftChangeShiftListOverTime);
-                }
-                List<ShiftListVacation> shiftChangeShiftListVacations = shiftListVacationService.findByShiftId(resultShiftChangeRequestShift);
-                for(ShiftListVacation shiftChangeShiftListVacation : shiftChangeShiftListVacations)
-                {
-                    VacationRequest shiftChangeVacationRequest = shiftChangeShiftListVacation.getVacationId();
-                    shiftChangeVacationRequest.setRequestStatus(3);
-                    shiftListVacationService.deleteByShiftListVacationId(shiftChangeShiftListVacation);
-                }
-                status = 1;
-                break;
-            // 打刻漏れ申請
-            case 3:
-                StampRequest stampRequest = stampRequestService.findById(requestJudgmentInput.getRequestId());
-
-                // 勤怠テーブルに記録
-                // 遅刻時間、早退時間、外出時間、労働時間、休憩時間、残業時間、休日労働時間(法定時間より)、深夜労働時間(法定時間より取得した内容から計算)、休暇時間()、欠勤時間()
-                // 勤怠と勤怠に関する情報源テーブル
-                break;
-            // 休暇申請
-            case 4:
-                VacationRequest vacationRequest = vacationRequestService.findById(requestJudgmentInput.getRequestId());
-                // シフトの休暇時間
-                // シフトと休暇テーブル
-                // 休暇テーブル(計算の際に間に休憩が挟まっているもしくは休暇の前後に休憩が入っている場合休憩を除いて計算する必要がある)
-                // 有給休暇消費テーブル
-                break;
-            // 残業申請
-            case 5:
-                OverTimeRequest overTimeRequest = overTimeRequestService.findById(requestJudgmentInput.getRequestId());
-                // シフトの残業時間
-                // シフトと残業テーブル
-                break;
-            // 遅刻、早退、残業申請
-            case 6:
-                AttendanceExceptionRequest attendanceExceptionRequest = attendanceExceptionRequestService.findById(requestJudgmentInput.getRequestId());
-                // シフトの遅刻時間、早退時間、外出時間
-                // シフト内で労働時間内にどれだけ外出しているか計算
-                // シフトと勤怠例外テーブル
-                break;
-            // 月次申請
-            case 7:
-                MonthlyRequest monthlyRequest = monthlyRequestService.findById(requestJudgmentInput.getRequestId());
-                // 申請者の承認者か
-                Account monthGeneralAccount = monthlyRequest.getAccountId();
-                if(Objects.isNull(monthGeneralAccount))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // 申請の状態は?
-                if(monthlyRequest.getRequestStatus() == 1)
-                {
-                    monthlyRequest.setRequestStatus(2);
-                    monthlyRequestService.save(monthlyRequest);
-                }
-                else
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                status = 1;
-                break;
-
-            default:
-                status = 3;
-                break;
-        }
-        return new Response(status);
+        int result = requestService.approval(account, requestJudgmentInput);
+        return new Response(result);
     }
 
     @PostMapping("/send/reject")
     public Response reject(@RequestBody RequestJudgmentInput requestJudgmentInput, HttpSession session)
     {
-       int status = 0;
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
+        Account account = accountService.findCurrentAccount();
         if(Objects.isNull(account))
         {
-            status = 3;
-            return new Response(status);
+            return new Response(3);
         }
-
-        // 申請を取得
-        // 申請者の承認者であることを確認
-        // 申請の状態が申請待ち状態であることを確認
-
-        int request = requestJudgmentInput.getRequestType();
-        switch (request)
-        {
-            // シフト申請
-            case 1:
-                ShiftRequest shiftRequest = shiftRequestService.findById(requestJudgmentInput.getRequestId());
-                Account generalAccount = shiftRequest.getAccountId();
-                AccountApprover accountApprover = accountApproverService.findAccountAndApprover(generalAccount, account);
-                if(Objects.isNull(accountApprover))
-                {
-                    status = 3;
-                    return new Response(status);
-                }
-                // 申請が反映状態にあるか確認
-                // 反映状態でなければよし
-                // 反映状態ならを反映を解除し
-                // 申請の状態を変更
-                break;
-            // シフト時間変更申請
-            case 2:
-                ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findById(requestJudgmentInput.getRequestId());
-                // 申請の状態を変更
-
-                break;
-            // 打刻漏れ申請
-            case 3:
-                StampRequest stampRequest = stampRequestService.findById(requestJudgmentInput.getRequestId());
-                // 申請の状態を変更
-
-                break;
-            // 休暇申請
-            case 4:
-                VacationRequest vacationRequest = vacationRequestService.findById(requestJudgmentInput.getRequestId());
-                // 申請の状態を変更
-
-                break;
-            // 残業申請
-            case 5:
-                OverTimeRequest overTimeRequest = overTimeRequestService.findById(requestJudgmentInput.getRequestId());
-                // 申請の状態を変更
-
-                break;
-            // 遅刻、早退、残業申請
-            case 6:
-                AttendanceExceptionRequest attendanceExceptionRequest = attendanceExceptionRequestService.findById(requestJudgmentInput.getRequestId());
-                // 申請の状態を変更
-
-                break;
-            // 月次申請
-            case 7:
-                MonthlyRequest monthlyRequest = monthlyRequestService.findById(requestJudgmentInput.getRequestId());
-                // 申請の状態を変更
-                // 範囲内の月次申請済みの申請の状態を承認に戻す
-
-                break;
-
-            default:
-                break;
-        }
-
-        return new Response(status);
+        int result = requestService.reject(account, requestJudgmentInput);
+        return new Response(result);
     }
 
     @PostMapping("/send/approvalcancel")
