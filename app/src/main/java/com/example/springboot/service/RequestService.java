@@ -1,5 +1,6 @@
 package com.example.springboot.service;
 
+import java.sql.Time;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -551,8 +552,8 @@ public class RequestService
             // shiftIdと申請したい時間帯で検索時間帯の中にその他の外出申請の開始または、終了があればエラー
             case 1:
                 // 重なる時間を許容したいのでequalで等しい場合にもtrueになるように
-                if ((startTime.isAfter(shift.getBeginWork()) || startTime.isEqual(shift.getBeginWork())) &&
-                (endTime.isBefore(shift.getEndWork()) || endTime.isEqual(shift.getEndWork())))
+                if (((startTime.isAfter(shift.getBeginWork()) || startTime.isEqual(shift.getBeginWork())) && (endTime.isBefore(shift.getBeginBreak()) || endTime.isEqual(shift.getBeginBreak()))) ||
+                ((startTime.isAfter(shift.getEndBreak()) || startTime.isEqual(shift.getEndBreak())) && (endTime.isBefore(shift.getEndWork()) || endTime.isEqual(shift.getEndWork()))))
                 {
                     // 条件通りなら何もしない
                 }
@@ -719,13 +720,6 @@ public class RequestService
         // 既に存在する残業と重複する場合申請NG
         List<OverTimeRequest> overTimeRequests = overTimeRequestService.findByAccounIdAndRequestStatusWaitOrApprovedAndBeginWorkOrEndWorkBetween(account, startTimeOverWork, endTimeOverWork);
         if(overTimeRequests.size() > 0)
-        {
-            // 1件でも存在すれば重複があったということなのでエラー
-            return 3;
-        }
-        // シフトと時間が重なっていないこと
-        List<Shift> shifts = shiftService.shiftOverLapping(account, startTimeOverWork, endTimeOverWork);
-        if(shifts.size() > 0)
         {
             // 1件でも存在すれば重複があったということなのでエラー
             return 3;
@@ -1543,6 +1537,9 @@ public class RequestService
                 {
                     // 承認に変更
                     shiftRequest.setRequestStatus(2);
+                    shiftRequest.setApprover(account);
+                    shiftRequest.setApproverComment(requestJudgmentInput.getApprovalComment());
+                    shiftRequest.setApprovalTime(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime()));
                     if(shiftService.findByAccountIdAndBeginWorkBetweenWeek(shiftGeneralAccount, shiftRequest.getBeginWork()).size() >= 6)
                     {
                         // 6以上なら休日出勤のためフラグを立てる
@@ -1607,6 +1604,9 @@ public class RequestService
                 {
                     // 承認に変更
                     shiftChangeRequest.setRequestStatus(2);
+                    shiftChangeRequest.setApprover(account);
+                    shiftChangeRequest.setApproverComment(requestJudgmentInput.getApprovalComment());
+                    shiftChangeRequest.setApprovalTime(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime()));
                     if(shiftService.findByAccountIdAndBeginWorkBetweenWeek(shiftChangeGeneralAccount, shiftChangeRequest.getBeginWork()).size() >= 6)
                     {
                         // 6以上なら休日出勤フラグを立てる
@@ -1669,10 +1669,180 @@ public class RequestService
                 {
                     return 3;
                 }
+
+                Account stampGeneralAccount = stampRequest.getAccountId();
+                AccountApprover stampAccountApprover = accountApproverService.findAccountAndApprover(stampGeneralAccount, account);
+                if(Objects.isNull(stampAccountApprover))
+                {
+                    return 3;
+                }
+
+                AttendanceListSource stampAttendanceListSource = attendanceListSourceService.findByShiftId(stampRequest.getShiftId());
+                if(Objects.isNull(stampAttendanceListSource))
+                {
+                    // nullなら正常
+                }
+                else
+                {
+                    return 3;
+                }
+                // 申請の状態確認
+                StampRequest resultStampRequest = new StampRequest();
+                if(stampRequest.getRequestStatus() == 1)
+                {
+                    stampRequest.setRequestStatus(2);
+                    stampRequest.setApprover(account);
+                    stampRequest.setApproverComment(requestJudgmentInput.getApprovalComment());
+                    stampRequest.setApprovalTime(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime()));
+                    resultStampRequest = stampRequestService.save(stampRequest);
+                    if(Objects.isNull(resultStampRequest))
+                    {
+                        return 3;
+                    }
+                }
+                else
+                {
+                    return 3;
+                }
+
                 // 勤怠テーブルに記録
                 // 遅刻時間、早退時間、外出時間、労働時間、休憩時間、残業時間、休日労働時間(法定時間より)、深夜労働時間(法定時間より取得した内容から計算)、休暇時間()、欠勤時間()
+                // 労働時間、休憩時間、休日労働時間、深夜労働時間
+                ShiftListShiftRequest stampShiftListShiftRequest = shiftListShiftRequestService.findByShiftId(stampRequest.getShiftId());
+                // 休暇時間、欠勤時間
+                List<ShiftListVacation> stampShiftListVacations = shiftListVacationService.findByShiftId(stampRequest.getShiftId());
+                // 残業時間
+                List<ShiftListOverTime> stampShiftListOverTimes = shiftListOverTimeService.findByShiftId(stampRequest.getShiftId());
+                // 遅刻、早退、外出時間
+                List<ShiftListOtherTime> stampShiftListOtherTimes = shiftListOtherTimeService.findByShiftId(stampRequest.getShiftId());
+
+                // 労働時間を休憩前と休憩後で取得し足し算
+                Duration stampWorkTime = Duration.between(stampRequest.getShiftId().getBeginWork(), stampRequest.getShiftId().getBeginBreak()).plus(Duration.between(stampRequest.getShiftId().getEndBreak(), stampRequest.getShiftId().getEndWork()));
+                // 休憩時間を取得
+                Duration stampBreakTime = Duration.between(stampRequest.getShiftId().getBeginBreak(), stampRequest.getShiftId().getEndBreak());
+
+                // 深夜労働を取得
+                Time stampBeginWork = Time.valueOf(stampRequest.getShiftId().getBeginWork().toLocalTime());
+                Time stampEndWork = Time.valueOf(stampRequest.getShiftId().getEndWork().toLocalTime());
+                Time stampBeginBreak = Time.valueOf(stampRequest.getShiftId().getBeginBreak().toLocalTime());
+                Time stampEndBreak = Time.valueOf(stampRequest.getShiftId().getEndBreak().toLocalTime());
+                Time stampLateNightWorkTime = getLateNight(stampBeginWork.toLocalTime(), stampBeginBreak.toLocalTime(), stampEndBreak.toLocalTime(), stampEndWork.toLocalTime());
+
+                // 休暇時間
+                Duration stampVacationTime = Duration.ZERO;
+                //　欠勤時間
+                Duration stampAbsenceTime = Duration.ZERO;
+                for(ShiftListVacation stampShiftListVacation : stampShiftListVacations)
+                {
+                    if(stampShiftListVacation.getVacationId().getVacationTypeId().getVacationTypeId().intValue() == 3)
+                    {
+                        // 休暇申請が欠勤なら欠勤時間にプラス
+                        stampAbsenceTime = stampAbsenceTime.plus(Duration.between(stampShiftListVacation.getVacationId().getBeginVacation(), stampShiftListVacation.getVacationId().getEndVacation()));
+                    }
+                    else
+                    {
+                        // その他なら休暇時間にプラス
+                        stampVacationTime = stampVacationTime.plus(Duration.between(stampShiftListVacation.getVacationId().getBeginVacation(), stampShiftListVacation.getVacationId().getEndVacation()));
+                    }
+                }
+
+                // 残業時間
+                Duration stampOverTime = Duration.ZERO;
+                for(ShiftListOverTime stampShiftListOverTime : stampShiftListOverTimes)
+                {
+                    stampOverTime = stampOverTime.plus(Duration.between(stampShiftListOverTime.getOverTimeId().getBeginWork(), stampShiftListOverTime.getOverTimeId().getEndWork()));
+                }
+
+                // 遅刻時間
+                Duration stampLatenessTime = Duration.ZERO;
+                // 早退時間
+                Duration stampLeavearlyTime = Duration.ZERO;
+                // 外出時間
+                Duration stampOutingTime = Duration.ZERO;
+                for(ShiftListOtherTime stampShiftListOtherTime : stampShiftListOtherTimes)
+                {
+                    if(stampShiftListOtherTime.getAttendanceExceptionId().getAttendanceExceptionTypeId().getAttendanceExceptionTypeId().intValue() == 1)
+                    {
+                        // 外出時間に加算
+                        stampOutingTime = stampOutingTime.plus(Duration.between(stampShiftListOtherTime.getAttendanceExceptionId().getBeginTime(), stampShiftListOtherTime.getAttendanceExceptionId().getEndTime()));
+                    }
+                    else if(stampShiftListOtherTime.getAttendanceExceptionId().getAttendanceExceptionTypeId().getAttendanceExceptionTypeId().intValue() == 2)
+                    {
+                        // 遅刻時間に加算
+                        stampLatenessTime = stampLatenessTime.plus(Duration.between(stampShiftListOtherTime.getAttendanceExceptionId().getBeginTime(), stampShiftListOtherTime.getAttendanceExceptionId().getEndTime()));
+                    }
+                    else if(stampShiftListOtherTime.getAttendanceExceptionId().getAttendanceExceptionTypeId().getAttendanceExceptionTypeId().intValue() == 3)
+                    {  
+                        // 早退時間に加算
+                        stampLeavearlyTime = stampLeavearlyTime.plus(Duration.between(stampShiftListOtherTime.getAttendanceExceptionId().getBeginTime(), stampShiftListOtherTime.getAttendanceExceptionId().getEndTime()));
+                    }
+                }
+
+                Attend stampAttend = new Attend();
+                stampAttend.setAccountId(stampGeneralAccount);
+                stampAttend.setBeginWork(stampRequest.getShiftId().getBeginWork());
+                stampAttend.setEndWork(stampRequest.getShiftId().getEndWork());
+                stampAttend.setBeginBreak(stampRequest.getShiftId().getBeginBreak());
+                stampAttend.setEndBreak(stampRequest.getShiftId().getEndBreak());
+                boolean isVacationWork = false;
+                if(Objects.isNull(stampShiftListShiftRequest.getShiftRequestId()) && Objects.isNull(stampShiftListShiftRequest.getShiftChangeRequestId()))
+                {
+                    // シフト申請,シフト時間変更申請がなければエラー
+                    return 3;
+                }
+                else if(Objects.isNull(stampShiftListShiftRequest.getShiftRequestId()))
+                {
+                    // シフト申請がなければエラー
+                    return 3;
+                }
+                else if(Objects.isNull(stampShiftListShiftRequest.getShiftChangeRequestId()))
+                {
+                    // シフト申請があればシフト申請を利用
+                    isVacationWork = stampShiftListShiftRequest.getShiftRequestId().isVacationWork();
+                }
+                else
+                {
+                    // シフト時間変更申請があればシフト時間変更申請を利用
+                    isVacationWork = stampShiftListShiftRequest.getShiftChangeRequestId().isVacationWork();
+                }
+                if(isVacationWork)
+                {
+                    // 休日出勤なら休日労働に加算
+                    stampAttend.setHolidayWork(new Time(stampWorkTime.toSeconds()));
+                }
+                else
+                {
+                    // 休日出勤でなければ労働時間に加算
+                    stampAttend.setWorkTime(new Time(stampWorkTime.toSeconds()));
+                }
+                stampAttend.setBreakTime(new Time(stampBreakTime.getSeconds()));
+                stampAttend.setLateness(new Time(stampLatenessTime.toSeconds()));
+                stampAttend.setLeaveEarly(new Time(stampLeavearlyTime.toSeconds()));
+                stampAttend.setOuting(new Time(stampOutingTime.toSeconds()));
+                stampAttend.setOverWork(new Time(stampOverTime.toSeconds()));
+                stampAttend.setLateNightWork(stampLateNightWorkTime);
+                stampAttend.setVacationTime(new Time(stampVacationTime.toSeconds()));
+                stampAttend.setAbsenceTime(new Time(stampAbsenceTime.toSeconds()));
+
+                Attend resultStampAttend = attendService.save(stampAttend);
+                if(Objects.isNull(resultStampAttend))
+                {
+                    return 3;
+                }
                 // 勤怠と勤怠に関する情報源テーブル
-                return 3;
+                AttendanceListSource newStampAttendanceListSource = new AttendanceListSource();
+                newStampAttendanceListSource.setAttendanceId(resultStampAttend);
+                newStampAttendanceListSource.setShiftId(stampRequest.getShiftId());
+                newStampAttendanceListSource.setStampRequestId(resultStampRequest);
+                AttendanceListSource resultNewStampAttendanceListSource = attendanceListSourceService.save(newStampAttendanceListSource);
+                if(Objects.isNull(resultNewStampAttendanceListSource))
+                {
+                    return 3;
+                }
+                else
+                {
+                    return 1;
+                }
             // 休暇申請
             case 4:
                 VacationRequest vacationRequest = vacationRequestService.findById(requestJudgmentInput.getRequestId());
@@ -1680,8 +1850,8 @@ public class RequestService
                 {
                     return 3;
                 }
-                // シフトの休暇時間
                 // シフトと休暇テーブル
+                ShiftListVacation vacationShiftListVacation;
                 // 休暇テーブル(計算の際に間に休憩が挟まっているもしくは休暇の前後に休憩が入っている場合休憩を除いて計算する必要がある)
                 // 有給休暇消費テーブル
                 return 3;
@@ -1832,5 +2002,186 @@ public class RequestService
         return 1;
     }
 
+    public Time getLateNight(LocalTime beginWork, LocalTime beginBreak, LocalTime endBreak, LocalTime endWork)
+    {
+        LocalTime firstLateNightStart  = LocalTime.of(22, 0);
+        LocalTime firstLateNightEnd    = LocalTime.MAX;
+        LocalTime secondLateNightStart = LocalTime.MIDNIGHT;
+        LocalTime secondLateNightEnd   = LocalTime.of(5, 0);
 
+        long totalMinutes = 0;
+
+        LocalTime workIntervalStart;
+        LocalTime workIntervalEnd;
+        LocalTime nightIntervalStart;
+        LocalTime nightIntervalEnd;
+        LocalTime overlapStart;
+        LocalTime overlapEnd;
+
+        workIntervalStart = beginWork;
+        workIntervalEnd   = beginBreak;
+
+        nightIntervalStart = firstLateNightStart;
+        nightIntervalEnd   = firstLateNightEnd;
+
+        if(workIntervalStart.isBefore(nightIntervalEnd) && nightIntervalStart.isBefore(workIntervalEnd))
+        {
+            if(workIntervalStart.isAfter(nightIntervalStart))
+            {
+                overlapStart = workIntervalStart;
+            }
+            else
+            {
+                overlapStart = nightIntervalStart;
+            }
+
+            if(workIntervalEnd.isBefore(nightIntervalEnd))
+            {
+                overlapEnd = workIntervalEnd;
+            }
+            else
+            {
+                overlapEnd = nightIntervalEnd;
+            }
+
+            if(overlapStart.isBefore(overlapEnd))
+            {
+                totalMinutes += Duration.between(overlapStart, overlapEnd).toMinutes();
+            }
+        }
+
+        nightIntervalStart = secondLateNightStart;
+        nightIntervalEnd   = secondLateNightEnd;
+
+        if(workIntervalStart.isBefore(nightIntervalEnd) && nightIntervalStart.isBefore(workIntervalEnd))
+        {
+            if(workIntervalStart.isAfter(nightIntervalStart))
+            {
+                overlapStart = workIntervalStart;
+            }
+            else
+            {
+                overlapStart = nightIntervalStart;
+            }
+
+            if(workIntervalEnd.isBefore(nightIntervalEnd))
+            {
+                overlapEnd = workIntervalEnd;
+            }
+            else
+            {
+                overlapEnd = nightIntervalEnd;
+            }
+
+            if(overlapStart.isBefore(overlapEnd))
+            {
+                totalMinutes += Duration.between(overlapStart, overlapEnd).toMinutes();
+            }
+        }
+
+        workIntervalStart = endBreak;
+        workIntervalEnd   = endWork;
+
+        nightIntervalStart = firstLateNightStart;
+        nightIntervalEnd   = firstLateNightEnd;
+
+        if(workIntervalStart.isBefore(nightIntervalEnd) && nightIntervalStart.isBefore(workIntervalEnd))
+        {
+            if(workIntervalStart.isAfter(nightIntervalStart))
+            {
+                overlapStart = workIntervalStart;
+            }
+            else
+            {
+                overlapStart = nightIntervalStart;
+            }
+
+            if(workIntervalEnd.isBefore(nightIntervalEnd))
+            {
+                overlapEnd = workIntervalEnd;
+            }
+            else
+            {
+                overlapEnd = nightIntervalEnd;
+            }
+
+            if(overlapStart.isBefore(overlapEnd))
+            {
+                totalMinutes += Duration.between(overlapStart, overlapEnd).toMinutes();
+            }
+        }
+
+        nightIntervalStart = secondLateNightStart;
+        nightIntervalEnd   = secondLateNightEnd;
+
+        if(workIntervalStart.isBefore(nightIntervalEnd) && nightIntervalStart.isBefore(workIntervalEnd))
+        {
+            if(workIntervalStart.isAfter(nightIntervalStart))
+            {
+                overlapStart = workIntervalStart;
+            }
+            else
+            {
+                overlapStart = nightIntervalStart;
+            }
+
+            if(workIntervalEnd.isBefore(nightIntervalEnd))
+            {
+                overlapEnd = workIntervalEnd;
+            }
+            else
+            {
+                overlapEnd = nightIntervalEnd;
+            }
+
+            if(overlapStart.isBefore(overlapEnd))
+            {
+                totalMinutes += Duration.between(overlapStart, overlapEnd).toMinutes();
+            }
+        }
+        LocalTime result = LocalTime.MIDNIGHT.plusMinutes(totalMinutes);
+        return Time.valueOf(result);
+    }
+
+    public Time getVacation(LocalTime beginVacation, LocalTime endVacation, LocalTime beginBreak, LocalTime endBreak)
+    {
+        long totalMinutes = 0;
+
+        // 休暇が休憩の完全に外側(前または後)にある場合
+        if (endVacation.isBefore(beginBreak) || beginVacation.isAfter(endBreak))
+        {
+            // 休憩とは一切重ならないため、休暇時間をそのまま加算
+            totalMinutes += Duration.between(beginVacation, endVacation).toMinutes();
+        }
+
+        // 休暇が休憩を完全に含んでいる場合
+        else if (!beginVacation.isAfter(beginBreak) && !endVacation.isBefore(endBreak))
+        {
+            // 休暇全体から休憩時間を差し引く
+            totalMinutes += Duration.between(beginVacation, endVacation).minus(Duration.between(beginBreak, endBreak)).toMinutes();
+        }
+
+        // 休暇が完全に休憩の中に収まっている場合
+        else if (!beginVacation.isBefore(beginBreak) && !endVacation.isAfter(endBreak))
+        {
+            // 休憩中の休暇なのでカウントしない
+        }
+
+        // 休暇の開始が休憩中、終了は休憩後の場合
+        else if (!beginVacation.isBefore(beginBreak) && beginVacation.isBefore(endBreak))
+        {
+            // 休暇のうち、休憩後の部分のみを加算
+            totalMinutes += Duration.between(endBreak, endVacation).toMinutes();
+        }
+
+        // 休暇の開始は休憩前、終了が休憩中の場合
+        else if (beginVacation.isBefore(beginBreak) && !endVacation.isAfter(endBreak))
+        {
+            // 休暇のうち、休憩前の部分のみを加算
+            totalMinutes += Duration.between(beginVacation, beginBreak).toMinutes();
+        }
+
+        return Time.valueOf(LocalTime.MIDNIGHT.plusMinutes(totalMinutes));
+
+    }
 }
