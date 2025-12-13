@@ -14,8 +14,16 @@ import com.example.springboot.repository.AttendanceListSourceRepository;
 @Service
 public class AttendanceListSourceService
 {
+    private final AttendanceListSourceRepository attendanceListSourceRepository;
+
     @Autowired
-    private AttendanceListSourceRepository attendanceListSourceRepository;
+    public AttendanceListSourceService
+    (
+        AttendanceListSourceRepository attendanceListSourceRepository
+    )
+    {
+        this.attendanceListSourceRepository = attendanceListSourceRepository;
+    }
 
     public AttendanceListSource findByShiftId(Shift shift)
     {
@@ -46,5 +54,10 @@ public class AttendanceListSourceService
     {
         List<AttendanceListSource> attendanceListSources = attendanceListSourceRepository.findByAttendanceIdIn(attends);
         return attendanceListSources;
+    }
+
+    public AttendanceListSource save(AttendanceListSource attendanceListSource)
+    {
+        return attendanceListSourceRepository.save(attendanceListSource);
     }
 }

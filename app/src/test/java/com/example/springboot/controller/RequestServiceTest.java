@@ -453,9 +453,13 @@ public class RequestServiceTest
         Long generalShiftId = 5L;
         String generalShiftBeginWork = "2025/12/23T09:00:00";
         String generalShiftEndWork = "2025/12/23T18:00:00";
+        String generalShiftBeginBreak = "2025/12/23T12:00:00";
+        String generalShiftEndBreak = "2025/12/23T13:00:00";
         generalShift.setShiftId(generalShiftId);
         generalShift.setBeginWork(LocalDateTime.parse(LocalDateTime.parse(generalShiftBeginWork,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
         generalShift.setEndWork(LocalDateTime.parse(LocalDateTime.parse(generalShiftEndWork,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        generalShift.setBeginBreak(LocalDateTime.parse(LocalDateTime.parse(generalShiftBeginBreak,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        generalShift.setEndBreak(LocalDateTime.parse(LocalDateTime.parse(generalShiftEndBreak,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
 
         List<ShiftListOverTime> shiftListOverTimes = new ArrayList<ShiftListOverTime>();
 

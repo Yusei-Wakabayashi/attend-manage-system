@@ -98,10 +98,9 @@ public class AttendService
         return attendListResponse;
     }
 
-    public String save(Attend attend)
+    public Attend save(Attend attend)
     {
-        attendRepository.save(attend);
-        return "ok";
+        return attendRepository.save(attend);
     }
 
     @Transactional

@@ -39,6 +39,7 @@ import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.input.MonthlyInput;
 import com.example.springboot.dto.input.OtherTimeInput;
 import com.example.springboot.dto.input.OverTimeInput;
+import com.example.springboot.dto.input.RequestJudgmentInput;
 import com.example.springboot.dto.input.ShiftChangeInput;
 import com.example.springboot.dto.input.ShiftInput;
 import com.example.springboot.dto.input.StampInput;
@@ -2977,4 +2978,315 @@ public class TestMockMvcController
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(1));
     }
+
+    @Test
+    void rejectShiftSuccess() throws Exception
+    {
+        int requestId = 1;
+        int requestType = 1;
+        String requestComment = "hogehoge";
+        String requestTime = "2025/12/13T00:00:00";
+        String json = String.format
+        (
+            """
+                {
+                    "requestId": "%s",
+                    "requestType": "%s",
+                    "requestComment": "%s",
+                    "requestTime": "%s"
+                }
+            """,
+            requestId, requestType, requestComment, requestTime
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        ShiftRequest shiftRequest = new ShiftRequest();
+        Long shiftRequestid = 43L;
+        shiftRequest.setShiftRequestId(shiftRequestid);
+        shiftRequest.setRequestStatus(1);
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.reject(any(Account.class), any(RequestJudgmentInput.class))).thenReturn(1);
+        mockMvc.perform
+        (
+            post("/api/send/reject")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void rejectShiftChangeSuccess() throws Exception
+    {
+        int requestId = 5;
+        int requestType = 2;
+        String requestComment = "hogehoge";
+        String requestTime = "2025/12/13T00:00:00";
+        String json = String.format
+        (
+            """
+                {
+                    "requestId": "%s",
+                    "requestType": "%s",
+                    "requestComment": "%s",
+                    "requestTime": "%s"
+                }
+            """,
+            requestId, requestType, requestComment, requestTime
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
+        Long shiftChangeRequestId = 97L;
+        shiftChangeRequest.setShiftChangeId(shiftChangeRequestId);
+        shiftChangeRequest.setRequestStatus(1);
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.reject(any(Account.class), any(RequestJudgmentInput.class))).thenReturn(1);
+        mockMvc.perform
+        (
+            post("/api/send/reject")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void rejectStampSuccess() throws Exception
+    {
+        int requestId = 3;
+        int requestType = 3;
+        String requestComment = "";
+        String requestTime = "2025/12/13T00:00:00";
+        String json = String.format
+        (
+            """
+                {
+                    "requestId": "%s",
+                    "requestType": "%s",
+                    "requestComment": "%s",
+                    "requestTime": "%s"
+                }
+            """,
+            requestId, requestType, requestComment, requestTime
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        StampRequest stampRequest = new StampRequest();
+        Long stampRequestId = 9L;
+        stampRequest.setStampId(stampRequestId);
+        stampRequest.setRequestStatus(1);
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.reject(any(Account.class), any(RequestJudgmentInput.class))).thenReturn(1);
+        mockMvc.perform
+        (
+            post("/api/send/reject")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void rejectVacationSuccess() throws Exception
+    {
+        int requestId = 8;
+        int requestType = 4;
+        String requestComment = "hogehoge";
+        String requestTime = "2025/12/13T00:00:00";
+        String json = String.format
+        (
+            """
+                {
+                    "requestId": "%s",
+                    "requestType": "%s",
+                    "requestComment": "%s",
+                    "requestTime": "%s"
+                }
+            """,
+            requestId, requestType, requestComment, requestTime
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        VacationRequest vacationRequest = new VacationRequest();
+        Long vacationRequestId = 30L;
+        vacationRequest.setVacationId(vacationRequestId);
+        vacationRequest.setRequestStatus(1);
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.reject(any(Account.class), any(RequestJudgmentInput.class))).thenReturn(1);
+        mockMvc.perform
+        (
+            post("/api/send/reject")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void rejectOverTimeSuccess() throws Exception
+    {
+        int requestId = 2;
+        int requestType = 5;
+        String requestComment = "hogehoge";
+        String requestTime = "2025/12/13T00:00:00";
+        String json = String.format
+        (
+            """
+                {
+                    "requestId": "%s",
+                    "requestType": "%s",
+                    "reqeustCommnet": "%s",
+                    "requestTime": "%s"
+                }
+            """,
+            requestId, requestType, requestComment, requestTime
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        OverTimeRequest overTimeRequest = new OverTimeRequest();
+        Long overTimeRequestId = 498L;
+        overTimeRequest.setOverTimeId(overTimeRequestId);
+        overTimeRequest.setRequestStatus(1);
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.reject(any(Account.class), any(RequestJudgmentInput.class))).thenReturn(1);
+        mockMvc.perform
+        (
+            post("/api/send/reject")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void rejectOtherTimeSuccess() throws Exception
+    {
+        int requestId = 38;
+        int requestType = 6;
+        String requestComment = "hogehoge";
+        String requestTime = "2025/12/13T00:00:00";
+        String json = String.format
+        (
+            """
+                {
+                    "requestId": "%s",
+                    "requestType": "%s",
+                    "requestComment": "%s",
+                    "requestTime": "%s"
+                }
+            """,
+            requestId, requestType, requestComment, requestTime
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        Long attendanceExceptionRequestId = 49L;
+        attendanceExceptionRequest.setAttendanceExceptionId(attendanceExceptionRequestId);
+        attendanceExceptionRequest.setRequestStatus(1);
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.reject(any(Account.class), any(RequestJudgmentInput.class))).thenReturn(1);
+        mockMvc.perform
+        (
+            post("/api/send/reject")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void rejectMonthlySuccess() throws Exception
+    {
+        int requestId = 29;
+        int requestType = 7;
+        String reqeustComment = "hogehoge";
+        String requestTime = "2025/12/13T00:00:00";
+        String json = String.format
+        (
+            """
+                {
+                    "requestId": "%s",
+                    "requestType": "%s",
+                    "requestComment": "%s",
+                    "requestTime": "%s"
+                }
+            """,
+            requestId, requestType, reqeustComment, requestTime
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.reject(any(Account.class), any(RequestJudgmentInput.class))).thenReturn(1);
+        mockMvc.perform
+        (
+            post("/api/send/reject")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
 }
