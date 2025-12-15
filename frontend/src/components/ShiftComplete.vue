@@ -27,7 +27,7 @@ const changeText = () => {
     case "/vacation":
       //今後追加
     case "/overtime":
-      //今後追加
+      return "残業申請";
     case "/attendancerequest":
       //今後追加
     default:
