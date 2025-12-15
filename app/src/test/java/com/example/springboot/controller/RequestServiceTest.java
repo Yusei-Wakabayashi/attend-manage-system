@@ -673,8 +673,6 @@ public class RequestServiceTest
 
         List<OverTimeRequest> overTimeRequests = new ArrayList<OverTimeRequest>();
 
-        List<Shift> shifts = new ArrayList<Shift>();
-
         List<ShiftListOtherTime> shiftListOtherTimes = new ArrayList<ShiftListOtherTime>();
 
         List<OverTimeRequest> overTimeRequestMonth = new ArrayList<OverTimeRequest>();
@@ -733,7 +731,6 @@ public class RequestServiceTest
         when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(shift);
         when(stringToLocalDateTime.stringToLocalDateTime(requestBeginOverTime)).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestBeginOverTime,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
         when(stringToLocalDateTime.stringToLocalDateTime(requestEndOverTime)).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestEndOverTime,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
-        when(shiftService.shiftOverLapping(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(shifts);
         when(shiftListOtherTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOtherTimes);
         when(legalTimeService.findFirstByOrderByBeginDesc()).thenReturn(legalTime);
         when(stringToDuration.stringToDuration(legalTime.getMonthlyOverWorkTime())).thenReturn(Duration.ofHours(Long.parseLong(monthlyOverTime.split(":")[0])).plusMinutes(Long.parseLong(monthlyOverTime.split(":")[1])).plusSeconds(Long.parseLong(monthlyOverTime.split(":")[2])));
@@ -771,8 +768,6 @@ public class RequestServiceTest
         shift.setEndWork(LocalDateTime.parse(LocalDateTime.parse(shiftEnd,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
 
         List<OverTimeRequest> overTimeRequests = new ArrayList<OverTimeRequest>();
-
-        List<Shift> shifts = new ArrayList<Shift>();
 
         List<ShiftListOtherTime> shiftListOtherTimes = new ArrayList<ShiftListOtherTime>();
 
@@ -831,7 +826,6 @@ public class RequestServiceTest
         when(shiftService.findByAccountIdAndShiftId(any(Account.class), anyLong())).thenReturn(shift);
         when(stringToLocalDateTime.stringToLocalDateTime(requestBeginOverTime)).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestBeginOverTime,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
         when(stringToLocalDateTime.stringToLocalDateTime(requestEndOverTime)).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestEndOverTime,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
-        when(shiftService.shiftOverLapping(any(Account.class), any(LocalDateTime.class), any(LocalDateTime.class))).thenReturn(shifts);
         when(shiftListOtherTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOtherTimes);
         when(legalTimeService.findFirstByOrderByBeginDesc()).thenReturn(legalTime);
         when(stringToDuration.stringToDuration(legalTime.getMonthlyOverWorkTime())).thenReturn(Duration.ofHours(Long.parseLong(monthlyOverTime.split(":")[0])).plusMinutes(Long.parseLong(monthlyOverTime.split(":")[1])).plusSeconds(Long.parseLong(monthlyOverTime.split(":")[2])));
@@ -2086,4 +2080,90 @@ public class RequestServiceTest
         assertEquals(1, result);
     }
 
+
+    @Test
+    void approvalShiftSuccess()
+    {
+
+    }
+
+    @Test
+    void approvalShiftChangeSuccess()
+    {
+
+    }
+
+    @Test
+    void approvalStampSuccess()
+    {
+
+    }
+
+    @Test
+    void approvalVacationSuccess()
+    {
+
+    }
+
+    @Test
+    void approvalOverTimeSuccess()
+    {
+
+    }
+
+    @Test
+    void approvalOtherTimeSuccess()
+    {
+
+    }
+
+    @Test
+    void approvalMonthlySuccess()
+    {
+
+    }
+
+    @Test
+    void getLateNightfirstSuccess()
+    {
+        LegalTime legalTime = new LegalTime();
+        legalTime.setLateNightWorkBegin(Time.valueOf("22:00:00"));
+        legalTime.setLateNightWorkEnd(Time.valueOf("05:00:00"));
+
+        LocalDateTime beginWork = LocalDateTime.parse("2025/12/31/22/34/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endWork = LocalDateTime.parse("2026/01/01/08/34/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime beginBreak = LocalDateTime.parse("2025/12/31/23/59/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endBreak = LocalDateTime.parse("2026/01/01/00/59/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+
+        when(legalTimeService.findFirstByOrderByBeginDesc()).thenReturn(legalTime);
+
+        Time result = requestService.getLateNight(beginWork, endWork, beginBreak, endBreak);
+
+        assertEquals(result, Time.valueOf("05:26:00"));
+    }
+
+        @Test
+    void getLateNightSecondSuccess()
+    {
+        LegalTime legalTime = new LegalTime();
+        legalTime.setLateNightWorkBegin(Time.valueOf("22:00:00"));
+        legalTime.setLateNightWorkEnd(Time.valueOf("05:00:00"));
+
+        LocalDateTime beginWork = LocalDateTime.parse("2025/12/31/23/00/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endWork = LocalDateTime.parse("2026/01/01/04/00/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime beginBreak = LocalDateTime.parse("2025/12/31/23/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endBreak = LocalDateTime.parse("2026/01/01/00/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+
+        when(legalTimeService.findFirstByOrderByBeginDesc()).thenReturn(legalTime);
+
+        Time result = requestService.getLateNight(beginWork, endWork, beginBreak, endBreak);
+
+        assertEquals(result, Time.valueOf("04:00:00"));
+    }
+
+    @Test
+    void getVacationSuccess()
+    {
+
+    }
 }

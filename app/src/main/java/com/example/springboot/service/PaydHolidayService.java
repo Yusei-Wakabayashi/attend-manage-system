@@ -52,4 +52,9 @@ public class PaydHolidayService
         List<PaydHoliday> paydHolidays = paydHolidayRepository.findByAccountIdAndLimitAfter(account, nowTime);
         return paydHolidays;
     }
+
+    public PaydHoliday save(PaydHoliday paydHoliday)
+    {
+        return paydHolidayRepository.save(paydHoliday);
+    }
 }

@@ -34,4 +34,9 @@ public class PaydHolidayUseService
         List<PaydHolidayUse> paydHolidayUses = paydHoildayUseRepository.findByAccountId(account);
         return paydHolidayUses;
     }
+
+    public PaydHolidayUse save(PaydHolidayUse paydHolidayUse)
+    {
+        return paydHoildayUseRepository.save(paydHolidayUse);
+    }
 }

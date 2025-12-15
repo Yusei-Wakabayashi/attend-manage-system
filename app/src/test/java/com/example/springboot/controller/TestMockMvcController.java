@@ -2143,8 +2143,8 @@ public class TestMockMvcController
         legalTime.setYearOverWorkTime(legalTimeYearOverWork);
         legalTime.setMaxOverWorkTime(legalTimeMaxOverWorkTime);
         legalTime.setMonthlyOverWorkAverage(legalTimeMonthlyOverWorkAverage);
-        legalTime.setLateNightWorkBegin(legalTimeLateNightWorkTimeBegin);
-        legalTime.setLateNightWorkEnd(legalTimeLateNightWorkTimeEnd);
+        legalTime.setLateNightWorkBegin(Time.valueOf(legalTimeLateNightWorkTimeBegin));
+        legalTime.setLateNightWorkEnd(Time.valueOf(legalTimeLateNightWorkTimeEnd));
         legalTime.setScheduleBreakTime(legalTimeScheduleBreakTime);
         legalTime.setWeeklyHoliday(legalTimeWeeklyHoliday);
 
@@ -2268,8 +2268,8 @@ public class TestMockMvcController
         legalTime.setYearOverWorkTime(legalTimeYearOverWork);
         legalTime.setMaxOverWorkTime(legalTimeMaxOverWorkTime);
         legalTime.setMonthlyOverWorkAverage(legalTimeMonthlyOverWorkAverage);
-        legalTime.setLateNightWorkBegin(legalTimeLateNightWorkTimeBegin);
-        legalTime.setLateNightWorkEnd(legalTimeLateNightWorkTimeEnd);
+        legalTime.setLateNightWorkBegin(Time.valueOf(legalTimeLateNightWorkTimeBegin));
+        legalTime.setLateNightWorkEnd(Time.valueOf(legalTimeLateNightWorkTimeEnd));
         legalTime.setScheduleBreakTime(legalTimeScheduleBreakTime);
         legalTime.setWeeklyHoliday(legalTimeWeeklyHoliday);
 
@@ -3289,4 +3289,83 @@ public class TestMockMvcController
         .andExpect(jsonPath("$.status").value(1));
     }
 
+    @Test
+    void approvalSuccess() throws Exception
+    {
+        int requestId = 29;
+        int requestType = 7;
+        String reqeustComment = "hogehoge";
+        String requestTime = "2025/12/13T00:00:00";
+        String json = String.format
+        (
+            """
+                {
+                    "requestId": "%s",
+                    "requestType": "%s",
+                    "requestComment": "%s",
+                    "requestTime": "%s"
+                }
+            """,
+            requestId, requestType, reqeustComment, requestTime
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.approval(any(Account.class), any(RequestJudgmentInput.class))).thenReturn(1);
+        mockMvc.perform
+        (
+            post("/api/send/approval")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
+
+    @Test
+    void approvalCancelSuccess() throws Exception
+    {
+        int requestId = 29;
+        int requestType = 7;
+        String reqeustComment = "hogehoge";
+        String requestTime = "2025/12/13T00:00:00";
+        String json = String.format
+        (
+            """
+                {
+                    "requestId": "%s",
+                    "requestType": "%s",
+                    "requestComment": "%s",
+                    "requestTime": "%s"
+                }
+            """,
+            requestId, requestType, reqeustComment, requestTime
+        );
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.approvalCancel(any(Account.class), any(RequestJudgmentInput.class))).thenReturn(1);
+        mockMvc.perform
+        (
+            post("/api/send/approvalcancel")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(json)
+            .with(csrf())
+            .with(user(generalAccountUsername))
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
+    }
 }

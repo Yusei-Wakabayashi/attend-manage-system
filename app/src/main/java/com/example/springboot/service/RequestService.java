@@ -42,6 +42,7 @@ import com.example.springboot.model.MonthlyRequest;
 import com.example.springboot.model.NewsList;
 import com.example.springboot.model.OverTimeRequest;
 import com.example.springboot.model.PaydHoliday;
+import com.example.springboot.model.PaydHolidayUse;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
 import com.example.springboot.model.ShiftListOtherTime;
@@ -80,6 +81,7 @@ public class RequestService
     private final AttendanceExceptionTypeService attendanceExceptionTypeService;
     private final LegalTimeService legalTimeService;
     private final AccountApproverService accountApproverService;
+    private final PaydHolidayUseService paydHolidayUseService;
 
     public RequestService
     (
@@ -106,7 +108,8 @@ public class RequestService
         StringToDuration stringToDuration,
         AttendanceExceptionTypeService attendanceExceptionTypeService,
         LegalTimeService legalTimeService,
-        AccountApproverService accountApproverService
+        AccountApproverService accountApproverService,
+        PaydHolidayUseService paydHolidayUseService
     )
     {
         this.shiftRequestService = shiftRequestService;
@@ -133,6 +136,7 @@ public class RequestService
         this.attendanceExceptionTypeService = attendanceExceptionTypeService;
         this.legalTimeService = legalTimeService;
         this.accountApproverService = accountApproverService;
+        this.paydHolidayUseService = paydHolidayUseService;
     }
 
     @Transactional
@@ -909,6 +913,7 @@ public class RequestService
         for(Vacation vacation : vacations)
         {
             monthPaydHolidayTime = monthPaydHolidayTime.plus(Duration.between(vacation.getBeginVacation(), vacation.getEndVacation()));
+            monthPaydHolidayTime = getVacation(vacation.getBeginVacation(), vacation.getEndVacation(), null, null);
         }
         monthSpecialTime.minus(monthPaydHolidayTime);
         // 月次申請登録(サービス層で行うべき?)
@@ -1722,11 +1727,7 @@ public class RequestService
                 Duration stampBreakTime = Duration.between(stampRequest.getShiftId().getBeginBreak(), stampRequest.getShiftId().getEndBreak());
 
                 // 深夜労働を取得
-                Time stampBeginWork = Time.valueOf(stampRequest.getShiftId().getBeginWork().toLocalTime());
-                Time stampEndWork = Time.valueOf(stampRequest.getShiftId().getEndWork().toLocalTime());
-                Time stampBeginBreak = Time.valueOf(stampRequest.getShiftId().getBeginBreak().toLocalTime());
-                Time stampEndBreak = Time.valueOf(stampRequest.getShiftId().getEndBreak().toLocalTime());
-                Time stampLateNightWorkTime = getLateNight(stampBeginWork.toLocalTime(), stampBeginBreak.toLocalTime(), stampEndBreak.toLocalTime(), stampEndWork.toLocalTime());
+                Time stampLateNightWorkTime = getLateNight(stampRequest.getBeginWork(), stampRequest.getEndWork(), stampRequest.getBeginBreak(), stampRequest.getEndBreak());
 
                 // 休暇時間
                 Duration stampVacationTime = Duration.ZERO;
@@ -1737,14 +1738,18 @@ public class RequestService
                     if(stampShiftListVacation.getVacationId().getVacationTypeId().getVacationTypeId().intValue() == 3)
                     {
                         // 休暇申請が欠勤なら欠勤時間にプラス
-                        stampAbsenceTime = stampAbsenceTime.plus(Duration.between(stampShiftListVacation.getVacationId().getBeginVacation(), stampShiftListVacation.getVacationId().getEndVacation()));
+                        stampAbsenceTime = getVacation(stampShiftListVacation.getVacationId().getBeginVacation(), stampShiftListVacation.getVacationId().getEndVacation(), stampShiftListVacation.getShiftId().getBeginBreak(), stampShiftListVacation.getShiftId().getEndBreak());
                     }
                     else
                     {
                         // その他なら休暇時間にプラス
-                        stampVacationTime = stampVacationTime.plus(Duration.between(stampShiftListVacation.getVacationId().getBeginVacation(), stampShiftListVacation.getVacationId().getEndVacation()));
+                        stampVacationTime = getVacation(stampShiftListVacation.getVacationId().getBeginVacation(), stampShiftListVacation.getVacationId().getEndVacation(), stampShiftListVacation.getShiftId().getBeginBreak(), stampShiftListVacation.getShiftId().getEndBreak());
                     }
                 }
+
+                // 労働時間から休暇時間と欠勤時間を減算
+                stampWorkTime = stampWorkTime.minus(stampVacationTime);
+                stampWorkTime = stampWorkTime.minus(stampAbsenceTime);
 
                 // 残業時間
                 Duration stampOverTime = Duration.ZERO;
@@ -1843,6 +1848,7 @@ public class RequestService
                 {
                     return 1;
                 }
+
             // 休暇申請
             case 4:
                 VacationRequest vacationRequest = vacationRequestService.findById(requestJudgmentInput.getRequestId());
@@ -1850,11 +1856,65 @@ public class RequestService
                 {
                     return 3;
                 }
-                // シフトと休暇テーブル
-                ShiftListVacation vacationShiftListVacation;
-                // 休暇テーブル(計算の際に間に休憩が挟まっているもしくは休暇の前後に休憩が入っている場合休憩を除いて計算する必要がある)
+                Account vacationGeneralAccount = vacationRequest.getAccountId();
+                AccountApprover vacationAccountApprover = accountApproverService.findAccountAndApprover(vacationGeneralAccount, account);
+                if(Objects.isNull(vacationAccountApprover))
+                {
+                    return 3;
+                }
+                // 申請の状態を確認
+                VacationRequest resultVacationRequest = new VacationRequest();
+                if(vacationRequest.getRequestStatus() == 1)
+                {
+                    vacationRequest.setRequestStatus(2);
+                    vacationRequest.setApprover(account);
+                    vacationRequest.setApproverComment(requestJudgmentInput.getApprovalComment());
+                    vacationRequest.setApprovalTime(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime()));
+                    resultVacationRequest = vacationRequestService.save(vacationRequest);
+                    if(Objects.isNull(resultVacationRequest))
+                    {
+                        return 3;
+                    }
+                }
+                else
+                {
+                    return 3;
+                }
+                // シフトと休暇申請テーブル
+                ShiftListVacation vacationShiftListVacation = new ShiftListVacation();
+                vacationShiftListVacation.setShiftId(vacationRequest.getShiftId());
+                vacationShiftListVacation.setVacationId(vacationRequest);
+                ShiftListVacation resultVacationShiftListVacation = shiftListVacationService.save(vacationShiftListVacation);
+                if(Objects.isNull(resultVacationShiftListVacation))
+                {
+                    return 3;
+                }
+                // 休暇テーブル
+                Vacation vacation = new Vacation();
+                vacation.setAccountId(account);
+                vacation.setVacationId(resultVacationRequest);
+                vacation.setVacationTypeId(resultVacationRequest.getVacationTypeId());
+                vacation.setBeginVacation(resultVacationRequest.getBeginVacation());
+                vacation.setEndVacation(resultVacationRequest.getEndVacation());
+                Vacation resultVacation = vacationService.save(vacation);
+                if(Objects.isNull(resultVacation))
+                {
+                    return 3;
+                }
                 // 有給休暇消費テーブル
-                return 3;
+                PaydHolidayUse vacationPaydHolidayUse = new PaydHolidayUse();
+                vacationPaydHolidayUse.setAccountId(account);
+                vacationPaydHolidayUse.setVacationId(resultVacationRequest);
+                vacationPaydHolidayUse.setTime(new Time(Duration.between(resultVacationRequest.getBeginVacation(), resultVacationRequest.getEndVacation()).toSeconds()));
+                PaydHolidayUse resultVacationPaydHolidayUse = paydHolidayUseService.save(vacationPaydHolidayUse);
+                if(Objects.isNull(resultVacationPaydHolidayUse))
+                {
+                    return 3;
+                }
+                else
+                {
+                    return 1;
+                }
             // 残業申請
             case 5:
                 OverTimeRequest overTimeRequest = overTimeRequestService.findById(requestJudgmentInput.getRequestId());
@@ -1862,9 +1922,51 @@ public class RequestService
                 {
                     return 3;
                 }
+                Account overTimeGeneralAccount = overTimeRequest.getAccountId();
+                AccountApprover overTimeAccountApprover = accountApproverService.findAccountAndApprover(overTimeGeneralAccount, account);
+                if(Objects.isNull(overTimeAccountApprover))
+                {
+                    return 3;
+                }
+                // 申請の状態確認
+                OverTimeRequest resultOverTimeRequest = new OverTimeRequest();
+                if(overTimeRequest.getRequestStatus() == 1)
+                {
+                    overTimeRequest.setRequestStatus(2);
+                    overTimeRequest.setApprover(account);
+                    overTimeRequest.setApproverComment(requestJudgmentInput.getApprovalComment());
+                    overTimeRequest.setApprovalTime(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime()));
+                    resultOverTimeRequest = overTimeRequestService.save(overTimeRequest);
+                    if(Objects.isNull(resultOverTimeRequest))
+                    {
+                        return 3;
+                    }
+                }
+                else
+                {
+                    return 3;
+                }
                 // シフトの残業時間
+                Shift overTimeShift = overTimeRequest.getShiftId();
+                overTimeShift.setOverWork(Time.valueOf(overTimeRequest.getShiftId().getOverWork().toLocalTime().plus(Duration.between(overTimeRequest.getBeginWork(), overTimeRequest.getEndWork()))));
+                Shift resultOverTimeShift = shiftService.save(overTimeShift);
+                if(Objects.isNull(resultOverTimeShift))
+                {
+                    return 3;
+                }
                 // シフトと残業テーブル
-                return 3;
+                ShiftListOverTime overTimeShiftListOverTime = new ShiftListOverTime();
+                overTimeShiftListOverTime.setOverTimeId(resultOverTimeRequest);
+                overTimeShiftListOverTime.setShiftListId(resultOverTimeShift);
+                ShiftListOverTime resultOverTimeShiftListOverTime = shiftListOverTimeService.save(overTimeShiftListOverTime);
+                if(Objects.isNull(resultOverTimeShiftListOverTime))
+                {
+                    return 3;
+                }
+                else
+                {
+                    return 1;
+                }
             // 遅刻、早退、残業申請
             case 6:
                 AttendanceExceptionRequest attendanceExceptionRequest = attendanceExceptionRequestService.findById(requestJudgmentInput.getRequestId());
@@ -1872,10 +1974,63 @@ public class RequestService
                 {
                     return 3;
                 }
+                Account attendanceExceptionGeneralAccount = attendanceExceptionRequest.getAccountId();
+                AccountApprover attendanceExceptionAccountApprover = accountApproverService.findAccountAndApprover(attendanceExceptionGeneralAccount, account);
+                if(Objects.isNull(attendanceExceptionAccountApprover))
+                {
+                    return 3;
+                }
+                // 申請の状態確認
+                AttendanceExceptionRequest resultAttendanceExceptionRequest = new AttendanceExceptionRequest();
+                if(attendanceExceptionRequest.getRequestStatus() == 1)
+                {
+                    attendanceExceptionRequest.setRequestStatus(2);
+                    attendanceExceptionRequest.setApprover(account);
+                    attendanceExceptionRequest.setApproverComment(requestJudgmentInput.getApprovalComment());
+                    attendanceExceptionRequest.setApprovalTime(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime()));
+                    resultAttendanceExceptionRequest = attendanceExceptionRequestService.save(attendanceExceptionRequest);
+                    if(Objects.isNull(resultAttendanceExceptionRequest))
+                    {
+                        return 3;
+                    }
+                }
                 // シフトの遅刻時間、早退時間、外出時間
-                // シフト内で労働時間内にどれだけ外出しているか計算
+                Shift attendanceExceptionRequestShift = attendanceExceptionRequest.getShiftId();
+                switch (attendanceExceptionRequest.getAttendanceExceptionTypeId().getAttendanceExceptionTypeId().intValue())
+                {
+                    // 外出申請
+                    case 1:
+                        attendanceExceptionRequestShift.setOuting(Time.valueOf(attendanceExceptionRequest.getShiftId().getOuting().toLocalTime().plus(Duration.between(attendanceExceptionRequest.getBeginTime(), attendanceExceptionRequest.getEndTime()))));
+                        break;
+                    // 遅刻申請
+                    case 2:
+                        attendanceExceptionRequestShift.setLateness(Time.valueOf(attendanceExceptionRequest.getShiftId().getLateness().toLocalTime().plus(Duration.between(attendanceExceptionRequest.getBeginTime(), attendanceExceptionRequest.getEndTime()))));
+                        break;
+                    // 早退申請
+                    case 3:
+                        attendanceExceptionRequestShift.setLeaveEarly(Time.valueOf(attendanceExceptionRequest.getShiftId().getLeaveEarly().toLocalTime().plus(Duration.between(attendanceExceptionRequest.getBeginTime(), attendanceExceptionRequest.getEndTime()))));
+                        break;
+                    default:
+                        break;
+                }
+                Shift resultAttendanceExceptionShift = shiftService.save(attendanceExceptionRequestShift);
+                if(Objects.isNull(resultAttendanceExceptionShift))
+                {
+                    return 3;
+                }
                 // シフトと勤怠例外テーブル
-                return 3;
+                ShiftListOtherTime attendanceExceptionShiftListOtherTime = new ShiftListOtherTime();
+                attendanceExceptionShiftListOtherTime.setShiftId(resultAttendanceExceptionShift);
+                attendanceExceptionShiftListOtherTime.setAttendanceExceptionId(resultAttendanceExceptionRequest);
+                ShiftListOtherTime resultAttendanceExceptionShiftListOtherTime = shiftListOtherTimeService.save(attendanceExceptionShiftListOtherTime);
+                if(Objects.isNull(resultAttendanceExceptionShiftListOtherTime))
+                {
+                    return 3;
+                }
+                else
+                {
+                    return 1;
+                }
             // 月次申請
             case 7:
                 MonthlyRequest monthlyRequest = monthlyRequestService.findById(requestJudgmentInput.getRequestId());
@@ -1885,15 +2040,24 @@ public class RequestService
                 }
                 // 申請者の承認者か
                 Account monthGeneralAccount = monthlyRequest.getAccountId();
-                if(Objects.isNull(monthGeneralAccount))
+                AccountApprover monthAccountApprover = accountApproverService.findAccountAndApprover(monthGeneralAccount, account);
+                if(Objects.isNull(monthAccountApprover))
                 {
                     return 3;
                 }
                 // 申請の状態は?
+                MonthlyRequest resultMonthlyRequest = new MonthlyRequest();
                 if(monthlyRequest.getRequestStatus() == 1)
                 {
                     monthlyRequest.setRequestStatus(2);
-                    monthlyRequestService.save(monthlyRequest);
+                    monthlyRequest.setApprover(account);
+                    monthlyRequest.setApproverComment(requestJudgmentInput.getApprovalComment());
+                    monthlyRequest.setApprovalDate(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime()));
+                    resultMonthlyRequest = monthlyRequestService.save(monthlyRequest);
+                    if(Objects.isNull(resultMonthlyRequest))
+                    {
+                        return 3;
+                    }
                 }
                 else
                 {
@@ -2002,163 +2166,137 @@ public class RequestService
         return 1;
     }
 
-    public Time getLateNight(LocalTime beginWork, LocalTime beginBreak, LocalTime endBreak, LocalTime endWork)
+    public Time getLateNight(LocalDateTime beginWork, LocalDateTime endWork, LocalDateTime beginBreak, LocalDateTime endBreak)
     {
-        LocalTime firstLateNightStart  = LocalTime.of(22, 0);
-        LocalTime firstLateNightEnd    = LocalTime.MAX;
-        LocalTime secondLateNightStart = LocalTime.MIDNIGHT;
-        LocalTime secondLateNightEnd   = LocalTime.of(5, 0);
+        LegalTime legalTime = legalTimeService.findFirstByOrderByBeginDesc();
 
-        long totalMinutes = 0;
+        // 深夜労働開始の時間を設定
+        LocalDateTime beginLateNight = beginWork.withHour(legalTime.getLateNightWorkBegin().toLocalTime().getHour());
+        beginLateNight = beginLateNight.withMinute(legalTime.getLateNightWorkBegin().toLocalTime().getMinute());
+        beginLateNight = beginLateNight.withSecond(legalTime.getLateNightWorkBegin().toLocalTime().getSecond());
 
-        LocalTime workIntervalStart;
-        LocalTime workIntervalEnd;
-        LocalTime nightIntervalStart;
-        LocalTime nightIntervalEnd;
-        LocalTime overlapStart;
-        LocalTime overlapEnd;
+        // 深夜労働終了の時間を設定、シフト開始の翌日の5時のため1日加算してある
+        LocalDateTime endLateNight = beginWork.plusDays(1L).withHour(legalTime.getLateNightWorkEnd().toLocalTime().getHour());
+        endLateNight = endLateNight.withMinute(legalTime.getLateNightWorkEnd().toLocalTime().getMinute());
+        endLateNight = endLateNight.withSecond(legalTime.getLateNightWorkEnd().toLocalTime().getSecond());
 
-        workIntervalStart = beginWork;
-        workIntervalEnd   = beginBreak;
+        // 深夜労働時間
+        long totalSeconds = 0L;
 
-        nightIntervalStart = firstLateNightStart;
-        nightIntervalEnd   = firstLateNightEnd;
-
-        if(workIntervalStart.isBefore(nightIntervalEnd) && nightIntervalStart.isBefore(workIntervalEnd))
+        // 深夜前に労働が終了している場合
+        if(!endWork.isAfter(beginLateNight))
         {
-            if(workIntervalStart.isAfter(nightIntervalStart))
+            // 深夜前に労働が終了しているため計算しない
+        }
+        // 労働の開始が深夜の前かつ労働の終了が深夜間である場合(労働の開始が深夜の開始と同じ場合はfalse)
+        else if(beginWork.isBefore(beginLateNight) && !endWork.isBefore(beginLateNight) && !endWork.isAfter(endLateNight))
+        {
+            // 深夜労働の開始から労働の終了までが深夜労働時間のため加算
+            totalSeconds += Duration.between(beginLateNight, endWork).toSeconds();
+            // 休憩の開始が深夜の前かつ休憩の終了が深夜間である場合(休憩の開始が深夜の開始と同じ場合はfalse)
+            if(beginBreak.isBefore(beginLateNight) && !endBreak.isAfter(endLateNight))
             {
-                overlapStart = workIntervalStart;
+                // 深夜労働開始と休憩終了の時間分減算
+                totalSeconds -= Duration.between(beginLateNight, endBreak).toSeconds();
             }
-            else
+            // 休憩の開始と休憩の終了が深夜間である場合(休憩の終了が深夜の終了と同じ場合はtrue)
+            else if(!beginBreak.isBefore(beginLateNight) && !endBreak.isBefore(beginLateNight))
             {
-                overlapStart = nightIntervalStart;
+                // 休憩も必ず含まれるため減算
+                totalSeconds -= Duration.between(beginBreak, endBreak).toSeconds();
             }
-
-            if(workIntervalEnd.isBefore(nightIntervalEnd))
+            // 休憩の開始と休憩の終了が深夜の前である場合
+            else if(!beginBreak.isAfter(beginLateNight) && !endBreak.isAfter(beginLateNight))
             {
-                overlapEnd = workIntervalEnd;
+                // 深夜労働に休憩が含まれないため計算しない
             }
-            else
+        }
+        // 労働の開始が深夜間かつ労働の終了が深夜間である場合
+        else if(!beginWork.isBefore(beginLateNight) && !endWork.isAfter(endLateNight))
+        {
+            // 労働の開始から終了までが深夜労働のため加算
+            totalSeconds += Duration.between(beginWork, endWork).toSeconds();
+            // 休憩も必ず含まれるため減算
+            totalSeconds -= Duration.between(beginBreak, endBreak).toSeconds();
+        }
+        // 労働の開始が深夜間かつ労働の終了が深夜後である場合(労働の終了が深夜の後と同じ場合はfalse)
+        else if(!beginWork.isBefore(beginLateNight) && !beginWork.isAfter(endLateNight) && endWork.isAfter(endLateNight))
+        {
+            // 労働の開始から深夜労働の終了までが深夜労働時間のため加算
+            totalSeconds += Duration.between(beginWork, endLateNight).toSeconds();
+            // 休憩の終了が深夜間である場合
+            if(!endBreak.isAfter(endLateNight))
             {
-                overlapEnd = nightIntervalEnd;
+                // 休憩も必ず含まれるため減算
+                totalSeconds -= Duration.between(beginBreak, endBreak).toSeconds();
             }
-
-            if(overlapStart.isBefore(overlapEnd))
+            // 休憩の開始が深夜間かつ休憩の終了が深夜の後の場合(休憩の終了が深夜の後と同じ場合はfalse)
+            else if(!beginBreak.isAfter(endLateNight) && endBreak.isAfter(endLateNight))
             {
-                totalMinutes += Duration.between(overlapStart, overlapEnd).toMinutes();
+                // 休憩開始と深夜労働終了の時間分減算
+                totalSeconds -= Duration.between(beginBreak, endLateNight).toSeconds();
+            }
+            // 休憩の開始と休憩の終了が深夜の後である場合
+            else if(!beginBreak.isBefore(endLateNight) && !endBreak.isBefore(endLateNight))
+            {
+                // 深夜労働に休憩が含まれないため計算しない
+            }
+        }
+        // 労働の開始が深夜の前、労働の終了が深夜の後である場合
+        else if(!beginWork.isAfter(beginLateNight) && !endWork.isBefore(endLateNight))
+        {
+            // 深夜労働の開始から終了までが深夜労働時間
+            totalSeconds += Duration.between(beginLateNight, endLateNight).toSeconds();
+            // 深夜労働の開始前に休憩が終了している場合
+            if(!beginBreak.isAfter(beginLateNight))
+            {
+                // 計算しない
+            }
+            // 深夜労働の開始前に休憩が開始され深夜間に休憩が終了した場合
+            else if(!beginWork.isAfter(beginLateNight) && !endWork.isBefore(beginLateNight) &&!endWork.isAfter(endLateNight))
+            {
+                // 深夜の開始から休憩の終了まで減算
+                totalSeconds -= Duration.between(beginLateNight, endBreak).toSeconds();
+            }
+            // 休憩の開始と終了が深夜間の場合
+            else if(!beginBreak.isAfter(beginLateNight) && !endBreak.isBefore(endLateNight))
+            {
+                // 休憩時間分減算
+                totalSeconds -= Duration.between(beginBreak, endBreak).toSeconds();
+            }
+            // 休憩の開始が深夜間かつ休憩の終了が深夜労働終了後の場合
+            else if(!beginBreak.isBefore(beginLateNight) && !beginBreak.isAfter(endLateNight) && !endBreak.isBefore(endLateNight))
+            {
+                // 休憩の開始から深夜の終了まで減算
+                totalSeconds -= Duration.between(beginBreak, endLateNight).toSeconds();
+            }
+            // 深夜労働の終了後に休憩が開始している場合
+            else if(!endBreak.isBefore(endLateNight))
+            {
+                // 計算しない
             }
         }
 
-        nightIntervalStart = secondLateNightStart;
-        nightIntervalEnd   = secondLateNightEnd;
-
-        if(workIntervalStart.isBefore(nightIntervalEnd) && nightIntervalStart.isBefore(workIntervalEnd))
-        {
-            if(workIntervalStart.isAfter(nightIntervalStart))
-            {
-                overlapStart = workIntervalStart;
-            }
-            else
-            {
-                overlapStart = nightIntervalStart;
-            }
-
-            if(workIntervalEnd.isBefore(nightIntervalEnd))
-            {
-                overlapEnd = workIntervalEnd;
-            }
-            else
-            {
-                overlapEnd = nightIntervalEnd;
-            }
-
-            if(overlapStart.isBefore(overlapEnd))
-            {
-                totalMinutes += Duration.between(overlapStart, overlapEnd).toMinutes();
-            }
-        }
-
-        workIntervalStart = endBreak;
-        workIntervalEnd   = endWork;
-
-        nightIntervalStart = firstLateNightStart;
-        nightIntervalEnd   = firstLateNightEnd;
-
-        if(workIntervalStart.isBefore(nightIntervalEnd) && nightIntervalStart.isBefore(workIntervalEnd))
-        {
-            if(workIntervalStart.isAfter(nightIntervalStart))
-            {
-                overlapStart = workIntervalStart;
-            }
-            else
-            {
-                overlapStart = nightIntervalStart;
-            }
-
-            if(workIntervalEnd.isBefore(nightIntervalEnd))
-            {
-                overlapEnd = workIntervalEnd;
-            }
-            else
-            {
-                overlapEnd = nightIntervalEnd;
-            }
-
-            if(overlapStart.isBefore(overlapEnd))
-            {
-                totalMinutes += Duration.between(overlapStart, overlapEnd).toMinutes();
-            }
-        }
-
-        nightIntervalStart = secondLateNightStart;
-        nightIntervalEnd   = secondLateNightEnd;
-
-        if(workIntervalStart.isBefore(nightIntervalEnd) && nightIntervalStart.isBefore(workIntervalEnd))
-        {
-            if(workIntervalStart.isAfter(nightIntervalStart))
-            {
-                overlapStart = workIntervalStart;
-            }
-            else
-            {
-                overlapStart = nightIntervalStart;
-            }
-
-            if(workIntervalEnd.isBefore(nightIntervalEnd))
-            {
-                overlapEnd = workIntervalEnd;
-            }
-            else
-            {
-                overlapEnd = nightIntervalEnd;
-            }
-
-            if(overlapStart.isBefore(overlapEnd))
-            {
-                totalMinutes += Duration.between(overlapStart, overlapEnd).toMinutes();
-            }
-        }
-        LocalTime result = LocalTime.MIDNIGHT.plusMinutes(totalMinutes);
+        LocalTime result = LocalTime.MIDNIGHT.plusSeconds(totalSeconds);
         return Time.valueOf(result);
     }
 
-    public Time getVacation(LocalTime beginVacation, LocalTime endVacation, LocalTime beginBreak, LocalTime endBreak)
+    public Duration getVacation(LocalDateTime beginVacation, LocalDateTime endVacation, LocalDateTime beginBreak, LocalDateTime endBreak)
     {
-        long totalMinutes = 0;
+        Duration totalMinutes = Duration.ZERO;
 
         // 休暇が休憩の完全に外側(前または後)にある場合
         if (endVacation.isBefore(beginBreak) || beginVacation.isAfter(endBreak))
         {
             // 休憩とは一切重ならないため、休暇時間をそのまま加算
-            totalMinutes += Duration.between(beginVacation, endVacation).toMinutes();
+            totalMinutes = Duration.between(beginVacation, endVacation);
         }
 
-        // 休暇が休憩を完全に含んでいる場合
+        // 休暇が休憩を完全に含んでいる場合(休暇の開始と休憩の開始が等しく休暇の終了と休憩の終了が等しい場合計算が起きるが0が減算されるだけなので許容)
         else if (!beginVacation.isAfter(beginBreak) && !endVacation.isBefore(endBreak))
         {
-            // 休暇全体から休憩時間を差し引く
-            totalMinutes += Duration.between(beginVacation, endVacation).minus(Duration.between(beginBreak, endBreak)).toMinutes();
+            // 休暇全体から休憩時間を減算
+            totalMinutes = Duration.between(beginVacation, endVacation).minus(Duration.between(beginBreak, endBreak));
         }
 
         // 休暇が完全に休憩の中に収まっている場合
@@ -2171,17 +2309,17 @@ public class RequestService
         else if (!beginVacation.isBefore(beginBreak) && beginVacation.isBefore(endBreak))
         {
             // 休暇のうち、休憩後の部分のみを加算
-            totalMinutes += Duration.between(endBreak, endVacation).toMinutes();
+            totalMinutes = Duration.between(endBreak, endVacation);
         }
 
         // 休暇の開始は休憩前、終了が休憩中の場合
         else if (beginVacation.isBefore(beginBreak) && !endVacation.isAfter(endBreak))
         {
             // 休暇のうち、休憩前の部分のみを加算
-            totalMinutes += Duration.between(beginVacation, beginBreak).toMinutes();
+            totalMinutes = Duration.between(beginVacation, beginBreak);
         }
 
-        return Time.valueOf(LocalTime.MIDNIGHT.plusMinutes(totalMinutes));
-
+        return totalMinutes;
     }
+
 }

@@ -68,4 +68,9 @@ public class VacationService
         List<Vacation> vacations = vacationRepository.findByAccountIdAndBeginVacationBetweenAndVacationTypeId(account, startPeriod, endPeriod, vacationType);
         return vacations;
     }
+
+    public Vacation save(Vacation vacation)
+    {
+        return vacationRepository.save(vacation);
+    }
 }
