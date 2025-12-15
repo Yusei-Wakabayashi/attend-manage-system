@@ -261,7 +261,9 @@ watch(viewType, () => {
               ? 'bg-green-500 text-white rounded'
               : 'bg-white border rounded',
 
-            viewType === 'attendance' ? 'hover:bg-green-200 hover:border-green-500' : '',
+            viewType === 'attendance'
+              ? 'hover:bg-green-200 hover:border-green-500'
+              : '',
           ]"
         >
           シフト
@@ -274,7 +276,9 @@ watch(viewType, () => {
               ? 'bg-blue-500 text-white rounded'
               : 'bg-white border rounded',
 
-            viewType === 'shift' ? 'hover:bg-blue-200 hover:border-blue-500' : '',
+            viewType === 'shift'
+              ? 'hover:bg-blue-200 hover:border-blue-500'
+              : '',
           ]"
         >
           出勤簿
@@ -303,7 +307,7 @@ watch(viewType, () => {
         <div
           v-for="(_, i) in emptyCells"
           :key="'empty-' + i"
-          class="h-28 bg-gray-200 border-r border-b"
+          class="aspect-square bg-gray-200 border-r border-b"
         ></div>
 
         <!-- 日付セル -->
@@ -311,7 +315,7 @@ watch(viewType, () => {
           v-for="day in calendarDays"
           :key="day"
           @click="openPopup(day)"
-          class="h-28 cursor-pointer border-r border-b border-gray-500 bg-white p-1 flex flex-col text-xs relative"
+          class="aspect-square cursor-pointer border-r border-b border-gray-500 bg-white p-1 flex flex-col text-xs relative"
           :class="[
             {
               'bg-yellow-100 border-yellow-500':
