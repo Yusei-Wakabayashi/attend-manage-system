@@ -27,15 +27,13 @@ public class AttendanceListSourceService
 
     public AttendanceListSource findByShiftId(Shift shift)
     {
-        return attendanceListSourceRepository.findByShiftId(shift)
-            .orElseThrow(() -> new RuntimeException("シフトに対応する勤怠情報が見つかりません"));
+        return attendanceListSourceRepository.findByShiftId(shift);
     }
     public AttendanceListSource findByShiftId(Long id)
     {
         Shift shift = new Shift();
         shift.setShiftId(id);
-        return attendanceListSourceRepository.findByShiftId(shift)
-            .orElseThrow(() -> new RuntimeException("シフトに対応する勤怠情報が見つかりません"));
+        return attendanceListSourceRepository.findByShiftId(shift);
     }
     public List<AttendanceListSource> findByShiftIdIn(List<Shift> shifts)
     {

@@ -54,14 +54,12 @@ public class StyleService
     {
         Account account = new Account();
         account.setId(id);
-        return styleRepository.findByAccountId(account)
-            .orElseThrow(() -> new RuntimeException("スタイルが見つかりません"));
+        return styleRepository.findByAccountId(account);
     }
 
     public Style findStyleByAccountId(Account id)
     {
-        return styleRepository.findByAccountId(id)
-            .orElseThrow(() -> new RuntimeException("スタイルが見つかりません"));
+        return styleRepository.findByAccountId(id);
     }
 
     public Style save(Style style)

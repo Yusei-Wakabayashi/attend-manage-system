@@ -1650,6 +1650,11 @@ public class RequestService
                 {
                     AttendanceExceptionRequest shiftChangeAttendanceExceptionRequest = shiftChangeShiftListOtherTime.getAttendanceExceptionId();
                     shiftChangeAttendanceExceptionRequest.setRequestStatus(3);
+                    AttendanceExceptionRequest resultShiftChangeAttendanceExceptionRequest = attendanceExceptionRequestService.save(shiftChangeAttendanceExceptionRequest);
+                    if(Objects.isNull(resultShiftChangeAttendanceExceptionRequest))
+                    {
+                        return 3;
+                    }
                     shiftListOtherTimeService.deleteByShiftListOtherTime(shiftChangeShiftListOtherTime);
                 }
                 List<ShiftListOverTime> shiftChangeShiftListOverTimes = shiftListOverTimeService.findByShiftId(resultShiftChangeRequestShift);
@@ -1657,6 +1662,11 @@ public class RequestService
                 {
                     OverTimeRequest shiftChangeOverTimeRequest = shiftChangeShiftListOverTime.getOverTimeId();
                     shiftChangeOverTimeRequest.setRequestStatus(3);
+                    OverTimeRequest resultShiftChangeOverTimeRequest = overTimeRequestService.save(shiftChangeOverTimeRequest);
+                    if(Objects.isNull(resultShiftChangeOverTimeRequest))
+                    {
+                        return 3;
+                    }
                     shiftListOverTimeService.deleteByShiftListOverTime(shiftChangeShiftListOverTime);
                 }
                 List<ShiftListVacation> shiftChangeShiftListVacations = shiftListVacationService.findByShiftId(resultShiftChangeRequestShift);
@@ -1664,6 +1674,11 @@ public class RequestService
                 {
                     VacationRequest shiftChangeVacationRequest = shiftChangeShiftListVacation.getVacationId();
                     shiftChangeVacationRequest.setRequestStatus(3);
+                    VacationRequest resultShiftChangeVacationRequest = vacationRequestService.save(shiftChangeVacationRequest);
+                    if(Objects.isNull(resultShiftChangeVacationRequest))
+                    {
+                        return 3;
+                    }
                     shiftListVacationService.deleteByShiftListVacationId(shiftChangeShiftListVacation);
                 }
                 return 1;
@@ -1713,21 +1728,21 @@ public class RequestService
                 // 勤怠テーブルに記録
                 // 遅刻時間、早退時間、外出時間、労働時間、休憩時間、残業時間、休日労働時間(法定時間より)、深夜労働時間(法定時間より取得した内容から計算)、休暇時間()、欠勤時間()
                 // 労働時間、休憩時間、休日労働時間、深夜労働時間
-                ShiftListShiftRequest stampShiftListShiftRequest = shiftListShiftRequestService.findByShiftId(stampRequest.getShiftId());
+                ShiftListShiftRequest stampShiftListShiftRequest = shiftListShiftRequestService.findByShiftId(resultStampRequest.getShiftId());
                 // 休暇時間、欠勤時間
-                List<ShiftListVacation> stampShiftListVacations = shiftListVacationService.findByShiftId(stampRequest.getShiftId());
+                List<ShiftListVacation> stampShiftListVacations = shiftListVacationService.findByShiftId(resultStampRequest.getShiftId());
                 // 残業時間
-                List<ShiftListOverTime> stampShiftListOverTimes = shiftListOverTimeService.findByShiftId(stampRequest.getShiftId());
+                List<ShiftListOverTime> stampShiftListOverTimes = shiftListOverTimeService.findByShiftId(resultStampRequest.getShiftId());
                 // 遅刻、早退、外出時間
-                List<ShiftListOtherTime> stampShiftListOtherTimes = shiftListOtherTimeService.findByShiftId(stampRequest.getShiftId());
+                List<ShiftListOtherTime> stampShiftListOtherTimes = shiftListOtherTimeService.findByShiftId(resultStampRequest.getShiftId());
 
                 // 労働時間を休憩前と休憩後で取得し足し算
-                Duration stampWorkTime = Duration.between(stampRequest.getShiftId().getBeginWork(), stampRequest.getShiftId().getBeginBreak()).plus(Duration.between(stampRequest.getShiftId().getEndBreak(), stampRequest.getShiftId().getEndWork()));
+                Duration stampWorkTime = Duration.between(resultStampRequest.getShiftId().getBeginWork(), resultStampRequest.getShiftId().getBeginBreak()).plus(Duration.between(resultStampRequest.getShiftId().getEndBreak(), resultStampRequest.getShiftId().getEndWork()));
                 // 休憩時間を取得
-                Duration stampBreakTime = Duration.between(stampRequest.getShiftId().getBeginBreak(), stampRequest.getShiftId().getEndBreak());
+                Duration stampBreakTime = Duration.between(resultStampRequest.getShiftId().getBeginBreak(), resultStampRequest.getShiftId().getEndBreak());
 
                 // 深夜労働を取得
-                Time stampLateNightWorkTime = getLateNight(stampRequest.getBeginWork(), stampRequest.getEndWork(), stampRequest.getBeginBreak(), stampRequest.getEndBreak());
+                Time stampLateNightWorkTime = getLateNight(resultStampRequest.getBeginWork(), resultStampRequest.getEndWork(), resultStampRequest.getBeginBreak(), resultStampRequest.getEndBreak(), stampShiftListVacations);
 
                 // 休暇時間
                 Duration stampVacationTime = Duration.ZERO;
@@ -1785,10 +1800,10 @@ public class RequestService
 
                 Attend stampAttend = new Attend();
                 stampAttend.setAccountId(stampGeneralAccount);
-                stampAttend.setBeginWork(stampRequest.getShiftId().getBeginWork());
-                stampAttend.setEndWork(stampRequest.getShiftId().getEndWork());
-                stampAttend.setBeginBreak(stampRequest.getShiftId().getBeginBreak());
-                stampAttend.setEndBreak(stampRequest.getShiftId().getEndBreak());
+                stampAttend.setBeginWork(resultStampRequest.getShiftId().getBeginWork());
+                stampAttend.setEndWork(resultStampRequest.getShiftId().getEndWork());
+                stampAttend.setBeginBreak(resultStampRequest.getShiftId().getBeginBreak());
+                stampAttend.setEndBreak(resultStampRequest.getShiftId().getEndBreak());
                 boolean isVacationWork = false;
                 if(Objects.isNull(stampShiftListShiftRequest.getShiftRequestId()) && Objects.isNull(stampShiftListShiftRequest.getShiftChangeRequestId()))
                 {
@@ -1882,8 +1897,8 @@ public class RequestService
                 }
                 // シフトと休暇申請テーブル
                 ShiftListVacation vacationShiftListVacation = new ShiftListVacation();
-                vacationShiftListVacation.setShiftId(vacationRequest.getShiftId());
-                vacationShiftListVacation.setVacationId(vacationRequest);
+                vacationShiftListVacation.setShiftId(resultVacationRequest.getShiftId());
+                vacationShiftListVacation.setVacationId(resultVacationRequest);
                 ShiftListVacation resultVacationShiftListVacation = shiftListVacationService.save(vacationShiftListVacation);
                 if(Objects.isNull(resultVacationShiftListVacation))
                 {
@@ -1947,8 +1962,8 @@ public class RequestService
                     return 3;
                 }
                 // シフトの残業時間
-                Shift overTimeShift = overTimeRequest.getShiftId();
-                overTimeShift.setOverWork(Time.valueOf(overTimeRequest.getShiftId().getOverWork().toLocalTime().plus(Duration.between(overTimeRequest.getBeginWork(), overTimeRequest.getEndWork()))));
+                Shift overTimeShift = resultOverTimeRequest.getShiftId();
+                overTimeShift.setOverWork(Time.valueOf(resultOverTimeRequest.getShiftId().getOverWork().toLocalTime().plus(Duration.between(resultOverTimeRequest.getBeginWork(), resultOverTimeRequest.getEndWork()))));
                 Shift resultOverTimeShift = shiftService.save(overTimeShift);
                 if(Objects.isNull(resultOverTimeShift))
                 {
@@ -1995,20 +2010,20 @@ public class RequestService
                     }
                 }
                 // シフトの遅刻時間、早退時間、外出時間
-                Shift attendanceExceptionRequestShift = attendanceExceptionRequest.getShiftId();
-                switch (attendanceExceptionRequest.getAttendanceExceptionTypeId().getAttendanceExceptionTypeId().intValue())
+                Shift attendanceExceptionRequestShift = resultAttendanceExceptionRequest.getShiftId();
+                switch (resultAttendanceExceptionRequest.getAttendanceExceptionTypeId().getAttendanceExceptionTypeId().intValue())
                 {
                     // 外出申請
                     case 1:
-                        attendanceExceptionRequestShift.setOuting(Time.valueOf(attendanceExceptionRequest.getShiftId().getOuting().toLocalTime().plus(Duration.between(attendanceExceptionRequest.getBeginTime(), attendanceExceptionRequest.getEndTime()))));
+                        attendanceExceptionRequestShift.setOuting(Time.valueOf(resultAttendanceExceptionRequest.getShiftId().getOuting().toLocalTime().plus(Duration.between(resultAttendanceExceptionRequest.getBeginTime(), resultAttendanceExceptionRequest.getEndTime()))));
                         break;
                     // 遅刻申請
                     case 2:
-                        attendanceExceptionRequestShift.setLateness(Time.valueOf(attendanceExceptionRequest.getShiftId().getLateness().toLocalTime().plus(Duration.between(attendanceExceptionRequest.getBeginTime(), attendanceExceptionRequest.getEndTime()))));
+                        attendanceExceptionRequestShift.setLateness(Time.valueOf(resultAttendanceExceptionRequest.getShiftId().getLateness().toLocalTime().plus(Duration.between(resultAttendanceExceptionRequest.getBeginTime(), resultAttendanceExceptionRequest.getEndTime()))));
                         break;
                     // 早退申請
                     case 3:
-                        attendanceExceptionRequestShift.setLeaveEarly(Time.valueOf(attendanceExceptionRequest.getShiftId().getLeaveEarly().toLocalTime().plus(Duration.between(attendanceExceptionRequest.getBeginTime(), attendanceExceptionRequest.getEndTime()))));
+                        attendanceExceptionRequestShift.setLeaveEarly(Time.valueOf(resultAttendanceExceptionRequest.getShiftId().getLeaveEarly().toLocalTime().plus(Duration.between(resultAttendanceExceptionRequest.getBeginTime(), resultAttendanceExceptionRequest.getEndTime()))));
                         break;
                     default:
                         break;
@@ -2074,12 +2089,12 @@ public class RequestService
     {
         // 申請を取得
         // 申請者の承認者であることを確認
-        // 申請の状態が申請待ち状態であることを確認
-
+        // 申請の状態が承認状態であることを確認
         int request = requestJudgmentInput.getRequestType();
         switch (request)
         {
             // シフト申請
+            // 勤怠情報が確定していれば行えない
             case 1:
                 ShiftRequest shiftRequest = shiftRequestService.findById(requestJudgmentInput.getRequestId());
                 if(Objects.isNull(shiftRequest))
@@ -2094,60 +2109,70 @@ public class RequestService
                 }
                 // シフトの削除
                 // シフトとシフトに関する申請テーブル
+                // 申請の状態変更
                 break;
             // シフト時間変更申請
+            // 勤怠情報が確定していれば行えない
             case 2:
                 ShiftChangeRequest shiftChangeRequest = shiftChangeRequestService.findById(requestJudgmentInput.getRequestId());
                 if(Objects.isNull(shiftChangeRequest))
                 {
                     return 3;
                 }
+                // シフトとシフトに関する申請テーブル
                 // 同じ日の承認済みの時間変更申請で更新日時が最も最近のものに変更
                 // 上記がなければ同じ日のシフトを取得、これもない場合シフトを削除
-                // シフトとシフトに関する申請テーブル
-
+                // 申請の状態変更
                 break;
             // 打刻漏れ申請
+            // 勤怠情報が確定していれば行えない
             case 3:
                 StampRequest stampRequest = stampRequestService.findById(requestJudgmentInput.getRequestId());
                 if(Objects.isNull(stampRequest))
                 {
                     return 3;
                 }
-                // 勤怠と勤怠に関する情報源テーブルを基に勤怠テーブルから削除
                 // 勤怠と勤怠に関する情報源テーブル
+                // 勤怠と勤怠に関する情報源テーブルを基に勤怠テーブルから削除
+                // 申請の状態変更
                 break;
             // 休暇申請
+            // 勤怠情報が確定していれば行えない
             case 4:
                 VacationRequest vacationRequest = vacationRequestService.findById(requestJudgmentInput.getRequestId());
                 if(Objects.isNull(vacationRequest))
                 {
                     return 3;
                 }
-                // シフトの休暇時間
                 // シフトと休暇テーブル
-                // 休暇テーブル
+                // シフトの休暇時間
+                // 休暇テーブルから削除
                 // 有給休暇消費テーブルから対象を削除
+                // 申請の状態変更
                 break;
             // 残業申請
+            // 勤怠情報が確定していれば行えない
             case 5:
                 OverTimeRequest overTimeRequest = overTimeRequestService.findById(requestJudgmentInput.getRequestId());
                 if(Objects.isNull(overTimeRequest))
                 {
                     return 3;
                 }
-                // シフトの残業時間
                 // シフトと残業テーブル
+                // シフトの残業時間
+                // 申請の状態変更
                 break;
             // 遅刻、早退、残業申請
+            // 勤怠情報が確定していれば行えない
             case 6:
                 AttendanceExceptionRequest attendanceExceptionRequest = attendanceExceptionRequestService.findById(requestJudgmentInput.getRequestId());
                 if(Objects.isNull(attendanceExceptionRequest))
                 {
                     return 3;
                 }
-                // シフトの遅刻時間、早退時間、外出時間
                 // シフトと勤怠例外テーブル
+                // シフトの遅刻時間、早退時間、外出時間
+                // 申請の状態変更
                 break;
             // 月次申請
             case 7:
@@ -2156,7 +2181,8 @@ public class RequestService
                 {
                     return 3;
                 }
-                // 月次申請の範囲の申請を承認に変更
+                // 月次申請の範囲の月次申請済みの申請を承認に変更
+                // 申請の状態変更
                 break;
 
             default:
@@ -2166,7 +2192,8 @@ public class RequestService
         return 1;
     }
 
-    public Time getLateNight(LocalDateTime beginWork, LocalDateTime endWork, LocalDateTime beginBreak, LocalDateTime endBreak)
+    // 休暇申請含む深夜労働時間
+    public Time getLateNight(LocalDateTime beginWork, LocalDateTime endWork, LocalDateTime beginBreak, LocalDateTime endBreak, List<ShiftListVacation> vacations)
     {
         LegalTime legalTime = legalTimeService.findFirstByOrderByBeginDesc();
 
@@ -2198,17 +2225,106 @@ public class RequestService
             {
                 // 深夜労働開始と休憩終了の時間分減算
                 totalSeconds -= Duration.between(beginLateNight, endBreak).toSeconds();
+                // 休暇計算
+                for(ShiftListVacation shiftListVacation : vacations)
+                {
+                    // 休憩終了前に休暇開始、休憩終了後から労働終了の間に休暇終了の場合
+                    if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(endBreak) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endBreak) && !shiftListVacation.getVacationId().getEndVacation().isAfter(endWork))
+                    {
+                        // 休憩終了から休暇終了の時間分減算
+                        totalSeconds -= Duration.between(endBreak, shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 休暇の開始と終了が休憩終了と労働終了の間の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(endBreak) && !shiftListVacation.getVacationId().getEndVacation().isAfter(endWork))
+                    {
+                        // 休暇の開始から終了の時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                }
             }
             // 休憩の開始と休憩の終了が深夜間である場合(休憩の終了が深夜の終了と同じ場合はtrue)
             else if(!beginBreak.isBefore(beginLateNight) && !endBreak.isBefore(beginLateNight))
             {
                 // 休憩も必ず含まれるため減算
                 totalSeconds -= Duration.between(beginBreak, endBreak).toSeconds();
+                // 休暇計算
+                for(ShiftListVacation shiftListVacation : vacations)
+                {
+                    // 深夜労働開始前に休暇開始、深夜労働開始から休暇開始の間に休暇の終了の場合
+                    if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isAfter(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(beginBreak))
+                    {
+                        // 深夜労働開始から休暇終了までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 深夜労働開始前に休暇開始、休憩の間に休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isAfter(beginBreak) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endBreak))
+                    {
+                        // 深夜労働開始から休憩開始までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, beginBreak).toSeconds();
+                    }
+                    // 深夜労働開始前に休暇開始、休憩終了後に休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endBreak))
+                    {
+                        // 深夜労働開始から休憩開始までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, beginBreak).toSeconds();
+                        // 休憩終了から休暇終了までの時間分減算
+                        totalSeconds -= Duration.between(endBreak, shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 深夜労働開始から休憩開始の間に休暇の開始と終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isAfter(beginBreak))
+                    {
+                        // 休暇の時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 深夜労働開始から休憩開始の間に休暇の開始、休憩の間に休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getBeginVacation().isAfter(beginBreak) &&
+                            !shiftListVacation.getVacationId().getEndVacation().isBefore(beginBreak) && !shiftListVacation.getVacationId().getEndVacation().isAfter(endBreak))
+                    {
+                        // 休暇の開始から休憩の開始までの時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), beginBreak).toSeconds();
+                    }
+                    // 深夜労働開始から休憩開始の間に休暇の開始、休憩終了後に休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getBeginVacation().isAfter(beginBreak) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endBreak))
+                    {
+                        // 休暇開始から休憩開始までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, endLateNight).toSeconds();
+                        // 休憩終了から休暇終了までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, endLateNight).toSeconds();
+                    }
+                    // 休憩の間に休暇の開始、休憩終了後に休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginBreak) && !shiftListVacation.getVacationId().getBeginVacation().isBefore(endBreak) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endBreak))
+                    {
+                        // 休憩終了から休暇終了までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, endLateNight).toSeconds();
+                    }
+                    // 休憩終了後に休暇の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(endBreak))
+                    {
+                        // 休暇の時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                }
             }
             // 休憩の開始と休憩の終了が深夜の前である場合
             else if(!beginBreak.isAfter(beginLateNight) && !endBreak.isAfter(beginLateNight))
             {
                 // 深夜労働に休憩が含まれないため計算しない
+                // 休暇計算
+                for(ShiftListVacation shiftListVacation : vacations)
+                {                    
+                    // 深夜労働開始前に休暇の開始、深夜労働間に休暇の終了の場合
+                    if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(beginLateNight))
+                    {
+                        // 深夜労働開始から休暇終了までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 深夜労働間に休暇の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginLateNight))
+                    {
+                        // 休暇の時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                }
             }
         }
         // 労働の開始が深夜間かつ労働の終了が深夜間である場合
@@ -2218,6 +2334,11 @@ public class RequestService
             totalSeconds += Duration.between(beginWork, endWork).toSeconds();
             // 休憩も必ず含まれるため減算
             totalSeconds -= Duration.between(beginBreak, endBreak).toSeconds();
+            // 休暇の計算
+            for(ShiftListVacation shiftListVacation : vacations)
+            {
+                totalSeconds -= getVacation(shiftListVacation.getVacationId().getBeginVacation(), shiftListVacation.getVacationId().getEndVacation(), shiftListVacation.getShiftId().getBeginBreak(), shiftListVacation.getShiftId().getEndBreak()).toSeconds();
+            }
         }
         // 労働の開始が深夜間かつ労働の終了が深夜後である場合(労働の終了が深夜の後と同じ場合はfalse)
         else if(!beginWork.isBefore(beginLateNight) && !beginWork.isAfter(endLateNight) && endWork.isAfter(endLateNight))
@@ -2229,17 +2350,113 @@ public class RequestService
             {
                 // 休憩も必ず含まれるため減算
                 totalSeconds -= Duration.between(beginBreak, endBreak).toSeconds();
+                for(ShiftListVacation shiftListVacation : vacations)
+                {
+                    // 労働の開始から休憩の開始の間に休暇の場合
+                    if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginWork) && !shiftListVacation.getVacationId().getEndVacation().isAfter(beginBreak))
+                    {
+                        // 休暇の時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 労働の開始から休憩の開始の間に休暇の開始、休憩の間に休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginWork) && !shiftListVacation.getVacationId().getBeginVacation().isBefore(beginBreak) &&
+                            !shiftListVacation.getVacationId().getEndVacation().isAfter(beginBreak) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endBreak))
+                    {
+                        // 休暇の開始から休憩の開始の時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), beginBreak).toSeconds();
+                    }
+                    // 労働の開始から休憩の開始の間に休暇の開始、休憩の終了から深夜労働の終了の間に休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginWork) && !shiftListVacation.getVacationId().getBeginVacation().isBefore(beginBreak) &&
+                            !shiftListVacation.getVacationId().getEndVacation().isAfter(endBreak) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endLateNight))
+                    {
+                        // 休暇の開始から休憩の開始までの時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), beginBreak).toSeconds();
+                        // 休憩の終了から休暇の終了までの時間分減算
+                        totalSeconds -= Duration.between(endBreak, shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 労働の開始から休憩の開始の間に休暇の開始、深夜労働の終了から労働の終了の間に休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginWork) && !shiftListVacation.getVacationId().getBeginVacation().isBefore(beginBreak) &&
+                            !shiftListVacation.getVacationId().getEndVacation().isAfter(endLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endWork))
+                    {
+                        // 休暇の開始から休憩の開始までの時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), beginBreak).toSeconds();
+                        // 休憩の終了から深夜労働の終了までの時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), endLateNight).toSeconds();
+                    }
+                    // 休憩の間に休暇の開始、休憩の終了から深夜労働の終了の間に休暇の終了
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginBreak) && !shiftListVacation.getVacationId().getBeginVacation().isBefore(endBreak) &&
+                            !shiftListVacation.getVacationId().getEndVacation().isAfter(endBreak) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endLateNight))
+                    {
+                        // 休憩の終了から休暇の終了までの時間分減算
+                        totalSeconds -= Duration.between(endBreak, shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 休憩の間に休暇の開始、深夜労働終了後に休暇の終了
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginBreak) && !shiftListVacation.getVacationId().getBeginVacation().isBefore(endBreak) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endLateNight))
+                    {
+                        // 休憩の終了から深夜労働終了までの時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getEndVacation(), endLateNight).toSeconds();
+                    }
+                    // 休憩の終了から深夜労働終了の間に休暇の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(endBreak) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endLateNight))
+                    {
+                        // 休暇の時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 休憩の終了から深夜労働終了の間に休暇の開始、深夜労働終了後に休暇の終了
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(endBreak) && !shiftListVacation.getVacationId().getBeginVacation().isAfter(endLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endLateNight))
+                    {
+                        // 休暇の開始から深夜労働終了までの時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), endLateNight).toSeconds();
+                    }
+                }
             }
             // 休憩の開始が深夜間かつ休憩の終了が深夜の後の場合(休憩の終了が深夜の後と同じ場合はfalse)
             else if(!beginBreak.isAfter(endLateNight) && endBreak.isAfter(endLateNight))
             {
                 // 休憩開始と深夜労働終了の時間分減算
                 totalSeconds -= Duration.between(beginBreak, endLateNight).toSeconds();
+                for(ShiftListVacation shiftListVacation : vacations)
+                {
+                    // 労働の開始と休憩の開始の間に休暇
+                    if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginWork) && !shiftListVacation.getVacationId().getEndVacation().isAfter(beginBreak))
+                    {
+                        // 休暇の時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 労働の開始と休憩の開始の間に休暇の開始、休憩の開始と深夜労働の終了の間に休暇の終了
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginWork) && !shiftListVacation.getVacationId().getBeginVacation().isAfter(beginBreak) &&
+                            !shiftListVacation.getVacationId().getEndVacation().isBefore(beginBreak) && !shiftListVacation.getVacationId().getEndVacation().isAfter(endLateNight))
+                    {
+                        // 休憩の開始から休暇の終了までの時間分減算
+                        totalSeconds -= Duration.between(beginBreak, shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 労働の開始と休憩の開始の間に休暇の開始、深夜労働の終了後に休暇の終了
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginWork) && !shiftListVacation.getVacationId().getBeginVacation().isAfter(beginBreak) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endLateNight))
+                    {
+                        // 休憩の開始から休暇の終了までの時間分減算
+                        totalSeconds -= Duration.between(beginBreak, shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                }
             }
             // 休憩の開始と休憩の終了が深夜の後である場合
             else if(!beginBreak.isBefore(endLateNight) && !endBreak.isBefore(endLateNight))
             {
                 // 深夜労働に休憩が含まれないため計算しない
+                for(ShiftListVacation shiftListVacation : vacations)
+                {
+                    // 労働開始と深夜労働終了の間に休暇の場合
+                    if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginWork) && !shiftListVacation.getVacationId().getEndVacation().isAfter(endLateNight))
+                    {
+                        // 休暇の時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 労働開始と深夜労働終了の間に休暇の開始、深夜労働終了後に休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginWork) && !shiftListVacation.getVacationId().getBeginVacation().isAfter(endLateNight))
+                    {
+                        // 休暇の開始から深夜労働の終了までの時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), endLateNight).toSeconds();
+                    }
+                }
             }
         }
         // 労働の開始が深夜の前、労働の終了が深夜の後である場合
@@ -2251,30 +2468,226 @@ public class RequestService
             if(!beginBreak.isAfter(beginLateNight))
             {
                 // 計算しない
+                for(ShiftListVacation shiftListVacation : vacations)
+                {
+                    // 深夜労働の開始前に休暇の開始、深夜労働の間に休暇の終了
+                    if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isAfter(endLateNight))
+                    {
+                        // 深夜労働の開始から休暇の終了までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 深夜労働の開始前に休暇の開始、深夜労働の後に休暇の終了
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endLateNight))
+                    {
+                        // 深夜労働時間丸ごと休暇のため0にする
+                        totalSeconds = 0L;
+                    }
+                    // 深夜労働の間に休暇
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isAfter(endLateNight))
+                    {
+                        // 休暇時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 深夜労働の間に休暇の開始、深夜労働の後に休暇の終了
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getBeginVacation().isAfter(endLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endLateNight))
+                    {
+                        // 休暇の開始から深夜労働の終了までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, endLateNight).toSeconds();
+                    }
+                }
             }
             // 深夜労働の開始前に休憩が開始され深夜間に休憩が終了した場合
             else if(!beginWork.isAfter(beginLateNight) && !endWork.isBefore(beginLateNight) &&!endWork.isAfter(endLateNight))
             {
                 // 深夜の開始から休憩の終了まで減算
                 totalSeconds -= Duration.between(beginLateNight, endBreak).toSeconds();
+                for(ShiftListVacation shiftListVacation : vacations)
+                {
+                    // 休憩の終了前に休暇の開始、休憩の終了後から深夜労働の終了の間に休暇の終了の場合
+                    if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(endBreak) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endBreak) && !shiftListVacation.getVacationId().getEndVacation().isAfter(endLateNight))
+                    {
+                        // 休憩の終了から休暇の終了までの時間分減算
+                        totalSeconds -= Duration.between(endBreak, shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 休憩の終了前に休暇の開始、深夜労働の終了後に休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(endBreak) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endLateNight))
+                    {
+                        // 休暇の時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 休憩の終了後から深夜労働の終了の間に休暇の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(endBreak) && !shiftListVacation.getVacationId().getEndVacation().isAfter(endLateNight))
+                    {
+                        // 休暇の時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 休憩の終了後から深夜労働の終了の間に休暇の開始、深夜労働の終了後に休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(endBreak) && !shiftListVacation.getVacationId().getBeginVacation().isAfter(endLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endLateNight))
+                    {
+                        // 休暇の開始から深夜労働の終了までの時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), endLateNight).toSeconds();
+                    }
+                }
             }
             // 休憩の開始と終了が深夜間の場合
             else if(!beginBreak.isAfter(beginLateNight) && !endBreak.isBefore(endLateNight))
             {
                 // 休憩時間分減算
                 totalSeconds -= Duration.between(beginBreak, endBreak).toSeconds();
+                for(ShiftListVacation shiftListVacation : vacations)
+                {
+                    // 深夜労働の開始前に休暇開始、深夜労働の開始から休憩の開始までに休暇の終了の場合
+                    if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isAfter(beginBreak))
+                    {
+                        // 深夜労働の開始から休暇の終了までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 深夜労働の開始前に休暇開始、休憩の間に休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(beginBreak) && !shiftListVacation.getVacationId().getEndVacation().isAfter(endBreak))
+                    {
+                        // 深夜労働の開始から休憩の開始までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, beginBreak).toSeconds();
+                    }
+                    // 深夜労働の開始前に休暇開始、休憩終了後から深夜労働の終了までに休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endBreak) && !shiftListVacation.getVacationId().getEndVacation().isAfter(endLateNight))
+                    {
+                        // 深夜労働の開始から休憩開始までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, beginBreak).toSeconds();
+                        // 休憩終了から休暇の終了までの時間分減算
+                        totalSeconds -= Duration.between(endBreak, shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 深夜労働の開始前に休暇開始、深夜労働後に休暇終了
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endLateNight))
+                    {
+                        // 深夜労働の開始から休憩開始までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, beginBreak).toSeconds();
+                        // 休憩終了から深夜労働の終了までの時間分減算
+                        totalSeconds -= Duration.between(endLateNight, endBreak).toSeconds();
+                    }
+                    // 深夜労働の開始から休憩の開始までに休暇の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isAfter(beginBreak))
+                    {
+                        // 休暇の時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 深夜労働の開始から休憩の開始までに休暇の開始、休憩の間に休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getBeginVacation().isAfter(beginBreak) &&
+                            !shiftListVacation.getVacationId().getEndVacation().isBefore(beginBreak) && !shiftListVacation.getVacationId().getEndVacation().isAfter(endBreak))
+                    {
+                        // 休暇の開始から休憩の開始までの時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), endLateNight).toSeconds();
+                    }
+                    // 深夜労働の開始から休憩の開始までに休暇の開始、休憩終了後から深夜労働終了までに休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getBeginVacation().isAfter(beginBreak) &&
+                            !shiftListVacation.getVacationId().getEndVacation().isBefore(endBreak) && !shiftListVacation.getVacationId().getEndVacation().isAfter(endLateNight))
+                    {
+                        // 休暇の開始から休憩の開始までの時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), endLateNight).toSeconds();
+                        // 休憩の終了から休暇の終了までの時間分減算
+                        totalSeconds -= Duration.between(endBreak, shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 深夜労働の開始から休憩の開始までに休暇の開始、深夜労働終了後に休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getBeginVacation().isAfter(beginBreak) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endLateNight))
+                    {
+                        // 休暇の開始から休憩の開始までの時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), endBreak).toSeconds();
+                        // 休憩の終了から深夜労働の終了までの時間分減算
+                        totalSeconds -= Duration.between(endBreak, endLateNight).toSeconds();
+                    }
+                    // 休憩の間に休暇の開始、休憩の終了から深夜労働の終了までに休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginBreak) && !shiftListVacation.getVacationId().getBeginVacation().isAfter(endBreak) &&
+                            !shiftListVacation.getVacationId().getEndVacation().isBefore(endBreak) && !shiftListVacation.getCreatedDate().isAfter(endLateNight))
+                    {
+                        // 休憩の終了から休暇の終了までの時間分減算
+                        totalSeconds -= Duration.between(endBreak, shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 休憩の間に休暇の開始、深夜労働の終了後休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginBreak) && !shiftListVacation.getVacationId().getBeginVacation().isAfter(endBreak) &&
+                            !shiftListVacation.getVacationId().getEndVacation().isBefore(endLateNight))
+                    {
+                        // 休憩終了から深夜労働の終了までの時間分減算
+                        totalSeconds -= Duration.between(endBreak, endLateNight).toSeconds();
+                    }
+                    // 休憩の終了から深夜労働の終了までに休暇の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(endBreak) && !shiftListVacation.getVacationId().getEndVacation().isAfter(endLateNight))
+                    {
+                        // 休暇の時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 休憩の終了から深夜労働の終了までに休暇の開始、深夜労働の終了後に休暇の終了
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(endBreak) && !shiftListVacation.getVacationId().getBeginVacation().isAfter(endLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endLateNight))
+                    {
+                        // 休暇の開始から深夜労働の終了までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, endLateNight).toSeconds();
+                    }
+                }
             }
             // 休憩の開始が深夜間かつ休憩の終了が深夜労働終了後の場合
             else if(!beginBreak.isBefore(beginLateNight) && !beginBreak.isAfter(endLateNight) && !endBreak.isBefore(endLateNight))
             {
                 // 休憩の開始から深夜の終了まで減算
                 totalSeconds -= Duration.between(beginBreak, endLateNight).toSeconds();
+                for(ShiftListVacation shiftListVacation : vacations)
+                {
+                    // 深夜労働開始前に休暇の開始、深夜労働開始から休憩の開始までの間に休暇の終了の場合
+                    if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isAfter(beginBreak))
+                    {
+                        // 深夜労働開始から休暇の終了までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 深夜労働開始前に休暇の開始、休憩開始後休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(beginBreak))
+                    {
+                        // 深夜労働の開始から休憩開始までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, endLateNight).toSeconds();
+                    }
+                    // 深夜労働開始から休憩開始までに休暇の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isAfter(beginBreak))
+                    {
+                        // 休暇の時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 深夜労働開始から休憩開始までに休暇の開始、休憩開始後休暇の終了の場合
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getBeginVacation().isAfter(beginBreak) && !shiftListVacation.getVacationId().getEndVacation().isBefore(beginBreak))
+                    {
+                        // 休暇の開始から休憩開始までの時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), beginBreak).toSeconds();
+                    }
+                }
             }
             // 深夜労働の終了後に休憩が開始している場合
             else if(!endBreak.isBefore(endLateNight))
             {
                 // 計算しない
+                for(ShiftListVacation shiftListVacation : vacations)
+                {
+                    // 深夜労働の開始前に休暇の開始、深夜労働の間に休暇の終了
+                    if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isAfter(endLateNight))
+                    {
+                        // 深夜労働の開始から休暇の終了までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 深夜労働の開始前に休暇の開始、深夜労働の後に休暇の終了
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isAfter(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endLateNight))
+                    {
+                        // 深夜労働時間丸ごと休暇のため0にする
+                        totalSeconds = 0L;
+                    }
+                    // 深夜労働の間に休暇
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getEndVacation().isAfter(endLateNight))
+                    {
+                        // 休暇時間分減算
+                        totalSeconds -= Duration.between(shiftListVacation.getVacationId().getBeginVacation(), shiftListVacation.getVacationId().getEndVacation()).toSeconds();
+                    }
+                    // 深夜労働の間に休暇の開始、深夜労働の後に休暇の終了
+                    else if(!shiftListVacation.getVacationId().getBeginVacation().isBefore(beginLateNight) && !shiftListVacation.getVacationId().getBeginVacation().isAfter(endLateNight) && !shiftListVacation.getVacationId().getEndVacation().isBefore(endLateNight))
+                    {
+                        // 休暇の開始から深夜労働の終了までの時間分減算
+                        totalSeconds -= Duration.between(beginLateNight, endLateNight).toSeconds();
+                    }
+                }
             }
+            // 休憩の間に深夜労働が含まれる場合計算しない
         }
 
         LocalTime result = LocalTime.MIDNIGHT.plusSeconds(totalSeconds);

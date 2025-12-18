@@ -68,8 +68,7 @@ public class AccountApproverService
 
     public AccountApprover findAccountApproverByAccount(Account account)
     {
-        return accountApproverRepository.findByAccountId(account)
-            .orElseThrow(() -> new RuntimeException("承認者が見つかりません"));
+        return accountApproverRepository.findByAccountId(account);
     }
 
     public List<AccountApprover> findByApproverId(Account approver)
@@ -83,30 +82,26 @@ public class AccountApproverService
         Account approver = new Account();
         account.setId(accountId);
         approver.setId(approverId);
-        return accountApproverRepository.findByAccountIdAndApproverId(account, approver)
-            .orElseThrow(() -> new RuntimeException("情報が見つかりません"));
+        return accountApproverRepository.findByAccountIdAndApproverId(account, approver);
     }
 
     public AccountApprover findAccountAndApprover(Account account, Long approverId)
     {
         Account approver = new Account();
         approver.setId(approverId);
-        return accountApproverRepository.findByAccountIdAndApproverId(account, approver)
-            .orElseThrow(() -> new RuntimeException("情報が見つかりません"));
+        return accountApproverRepository.findByAccountIdAndApproverId(account, approver);
     }
 
     public AccountApprover findAccountAndApprover(Long accountId, Account approver)
     {
         Account account = new Account();
         account.setId(accountId);
-        return accountApproverRepository.findByAccountIdAndApproverId(account, approver)
-            .orElseThrow(() -> new RuntimeException("情報が見つかりません"));
+        return accountApproverRepository.findByAccountIdAndApproverId(account, approver);
     }
 
     public AccountApprover findAccountAndApprover(Account account, Account approver)
     {
-        return accountApproverRepository.findByAccountIdAndApproverId(account, approver)
-            .orElseThrow(() -> new RuntimeException("情報が見つかりません"));
+        return accountApproverRepository.findByAccountIdAndApproverId(account, approver);
     }
 
     public AccountApprover save(AccountApprover accountApprover)

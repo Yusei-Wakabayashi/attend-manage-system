@@ -42,16 +42,14 @@ public class VacationRequestService
 
     public VacationRequest findByAccountIdAndVacationId(Account account, Long id)
     {
-        return vacationRequestRepository.findByAccountIdAndVacationId(account, id)
-            .orElseThrow(() -> new RuntimeException("休暇申請が見つかりません"));
+        return vacationRequestRepository.findByAccountIdAndVacationId(account, id);
     }
 
     public VacationRequest findByAccountIdAndVacationId(Long accountId, Long id)
     {
         Account account = new Account();
         account.setId(accountId);
-        return vacationRequestRepository.findByAccountIdAndVacationId(account, id)
-            .orElseThrow(() -> new RuntimeException("休暇申請が見つかりません"));
+        return vacationRequestRepository.findByAccountIdAndVacationId(account, id);
     }
 
     public List<VacationRequest> findByAccountIdAndShiftId(Long accountId, Long shiftId)

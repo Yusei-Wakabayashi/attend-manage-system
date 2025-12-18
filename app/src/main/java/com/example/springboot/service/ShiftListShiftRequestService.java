@@ -19,13 +19,11 @@ public class ShiftListShiftRequestService
     {
         Shift shift = new Shift();
         shift.setShiftId(id);
-        return shiftListShiftRequestRepository.findByShiftId(shift)
-            .orElseThrow(() -> new RuntimeException("シフト関連情報が見つかりません"));
+        return shiftListShiftRequestRepository.findByShiftId(shift);
     }
     public ShiftListShiftRequest findByShiftId(Shift shift)
     {
-        return shiftListShiftRequestRepository.findByShiftId(shift)
-            .orElseThrow(() -> new RuntimeException("シフト関連情報が見つかりません"));
+        return shiftListShiftRequestRepository.findByShiftId(shift);
     }    
 
     public List<ShiftListShiftRequest> findByShiftIdIn(List<Shift> shifts)

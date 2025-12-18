@@ -91,8 +91,7 @@ public class AccountService
     
     public Account findAccountByUsername(String username)
     {
-        return accountRepository.findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません"));
+        return accountRepository.findByUsername(username);
     }
 
     public List<Account> findAccountByRoleId(Long roleId)

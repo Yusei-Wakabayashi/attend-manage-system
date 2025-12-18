@@ -51,15 +51,13 @@ public class ShiftChangeRequestService
     }
     public ShiftChangeRequest findByAccountIdAndShiftChangeRequestId(Account account, Long id)
     {
-        return shiftChangeRequestRepository.findByAccountIdAndShiftChangeId(account, id)
-            .orElseThrow(() -> new RuntimeException("シフト時間変更申請が見つかりません"));
+        return shiftChangeRequestRepository.findByAccountIdAndShiftChangeId(account, id);
     }
     public ShiftChangeRequest findByAccountIdAndShiftChangeRequestId(Long accountId, Long id)
     {
         Account account = new Account();
         account.setId(accountId);
-        return shiftChangeRequestRepository.findByAccountIdAndShiftChangeId(account, id)
-            .orElseThrow(() -> new RuntimeException("シフト時間変更申請が見つかりません"));
+        return shiftChangeRequestRepository.findByAccountIdAndShiftChangeId(account, id);
     }
 
     public List<ShiftChangeRequest> findByAccountIdAndShiftIdAndRequestStatusWait(Account account, Long id)

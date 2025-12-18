@@ -46,14 +46,12 @@ public class AttendanceExceptionRequestService
     {
         Account account = new Account();
         account.setId(accountId);
-        return attendanceExceptionRequestRepsitory.findByAccountIdAndAttendanceExceptionId(account, id)
-            .orElseThrow(() -> new RuntimeException("勤怠例外申請が見つかりません"));
+        return attendanceExceptionRequestRepsitory.findByAccountIdAndAttendanceExceptionId(account, id);
     }
 
     public AttendanceExceptionRequest findByAccountIdAndAttendanceExceptionId(Account account, Long id)
     {
-        return attendanceExceptionRequestRepsitory.findByAccountIdAndAttendanceExceptionId(account, id)
-            .orElseThrow(() -> new RuntimeException("勤怠例外申請が見つかりません"));
+        return attendanceExceptionRequestRepsitory.findByAccountIdAndAttendanceExceptionId(account, id);
     }
 
     public List<AttendanceExceptionRequest> findByAccountId(Long accountId)

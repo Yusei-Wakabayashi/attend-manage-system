@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.sql.Time;
@@ -56,6 +58,7 @@ import com.example.springboot.model.MonthlyRequest;
 import com.example.springboot.model.NewsList;
 import com.example.springboot.model.OverTimeRequest;
 import com.example.springboot.model.PaydHoliday;
+import com.example.springboot.model.PaydHolidayUse;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftChangeRequest;
 import com.example.springboot.model.ShiftListOtherTime;
@@ -77,6 +80,7 @@ import com.example.springboot.service.MonthlyRequestService;
 import com.example.springboot.service.NewsListService;
 import com.example.springboot.service.OverTimeRequestService;
 import com.example.springboot.service.PaydHolidayService;
+import com.example.springboot.service.PaydHolidayUseService;
 import com.example.springboot.service.RequestService;
 import com.example.springboot.service.ShiftChangeRequestService;
 import com.example.springboot.service.ShiftListOtherTimeService;
@@ -169,6 +173,9 @@ public class RequestServiceTest
 
     @Mock
     AccountApproverService accountApproverService;
+
+    @Mock
+    PaydHolidayUseService paydHolidayUseService;
 
     @Test
     void ShiftRequestSuccess()
@@ -2080,51 +2087,671 @@ public class RequestServiceTest
         assertEquals(1, result);
     }
 
-
     @Test
     void approvalShiftSuccess()
     {
+        Account adminAccount = new Account();
+        Long adminAccountId = 34L;
+        String adminAccountUsername = "kanrisya";
+        adminAccount.setId(adminAccountId);
+        adminAccount.setUsername(adminAccountUsername);
 
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "nanasi";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        AccountApprover accountApprover = new AccountApprover();
+        accountApprover.setAccountId(generalAccount);
+        accountApprover.setApproverId(adminAccount);
+
+        RequestJudgmentInput requestJudgmentInput = new RequestJudgmentInput();
+        requestJudgmentInput.setRequestId(1L);
+        requestJudgmentInput.setRequestType(1);
+        requestJudgmentInput.setRequestTime("2025/06/06T19:00:00");
+        requestJudgmentInput.setApprovalComment("test");
+
+        ShiftRequest shiftRequest = new ShiftRequest();
+        shiftRequest.setAccountId(generalAccount);
+        shiftRequest.setRequestStatus(1);
+        shiftRequest.setBeginWork(LocalDateTime.parse("2025/12/25/08/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+
+        List<Shift> shifts = new ArrayList<Shift>();
+        Shift firstShift = new Shift();
+        Shift secondShift = new Shift();
+        Shift thirdShift = new Shift();
+        Shift fourthShift = new Shift();
+        Shift fifthShift = new Shift();
+        Shift sixth = new Shift();
+        shifts.add(firstShift);
+        shifts.add(secondShift);
+        shifts.add(thirdShift);
+        shifts.add(fourthShift);
+        shifts.add(fifthShift);
+        shifts.add(sixth);
+
+        ShiftRequest newShiftRequest = new ShiftRequest();
+
+        Shift shift = new Shift();
+        shift.setAccountId(generalAccount);
+        shift.setBeginWork(null);
+        shift.setEndWork(null);
+        shift.setBeginBreak(null);
+        shift.setEndBreak(null);
+        shift.setLateness(Time.valueOf("00:00:00"));
+        shift.setLeaveEarly(Time.valueOf("00:00:00"));
+        shift.setOuting(Time.valueOf("00:00:00"));
+        shift.setOverWork(Time.valueOf("00:00:00"));
+
+        Shift newShift = new Shift();
+
+        ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
+
+        when(shiftRequestService.findById(anyLong())).thenReturn(shiftRequest);
+        when(accountApproverService.findAccountAndApprover(any(Account.class), any(Account.class))).thenReturn(accountApprover);
+        when(stringToLocalDateTime.stringToLocalDateTime(anyString())).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestJudgmentInput.getRequestTime(),DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        when(shiftService.findByAccountIdAndBeginWorkBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(shifts);
+        when(shiftRequestService.save(any(ShiftRequest.class))).thenReturn(newShiftRequest);
+        when(shiftRequestService.shiftRequestToShift(any(ShiftRequest.class))).thenReturn(shift);
+        when(shiftService.save(any(Shift.class))).thenReturn(newShift);
+        when(shiftListShiftRequestService.save(any(ShiftListShiftRequest.class))).thenReturn(shiftListShiftRequest);
+
+        int result = requestService.approval(adminAccount, requestJudgmentInput);
+        assertEquals(1, result);
     }
 
     @Test
     void approvalShiftChangeSuccess()
     {
+        Account adminAccount = new Account();
+        Long adminAccountId = 34L;
+        String adminAccountUsername = "kanrisya";
+        adminAccount.setId(adminAccountId);
+        adminAccount.setUsername(adminAccountUsername);
 
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "nanasi";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        AccountApprover accountApprover = new AccountApprover();
+        accountApprover.setAccountId(generalAccount);
+        accountApprover.setApproverId(adminAccount);
+
+        RequestJudgmentInput requestJudgmentInput = new RequestJudgmentInput();
+        requestJudgmentInput.setRequestId(1L);
+        requestJudgmentInput.setRequestType(2);
+        requestJudgmentInput.setRequestTime("2025/06/06T19:00:00");
+        requestJudgmentInput.setApprovalComment("test");
+
+        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
+        shiftChangeRequest.setAccountId(generalAccount);
+        shiftChangeRequest.setShiftId(new Shift());
+        shiftChangeRequest.setRequestStatus(1);
+        shiftChangeRequest.setBeginWork(LocalDateTime.parse("2025/12/03/09/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+
+        List<Shift> shifts = new ArrayList<Shift>();
+
+        ShiftChangeRequest newShiftChangeRequest = new ShiftChangeRequest();
+
+        Shift shift = new Shift();
+        shift.setAccountId(generalAccount);
+        shift.setBeginWork(null);
+        shift.setEndWork(null);
+        shift.setBeginBreak(null);
+        shift.setEndBreak(null);
+        shift.setLateness(Time.valueOf("00:00:00"));
+        shift.setLeaveEarly(Time.valueOf("00:00:00"));
+        shift.setOuting(Time.valueOf("00:00:00"));
+        shift.setOverWork(Time.valueOf("00:00:00"));
+
+        Shift newShift = new Shift();
+
+        ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
+
+        ShiftListShiftRequest newShiftListShiftRequest = new ShiftListShiftRequest();
+
+        List<ShiftListOtherTime> shiftListOtherTimes = new ArrayList<ShiftListOtherTime>();
+        ShiftListOtherTime shiftListOtherTime = new ShiftListOtherTime();
+        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        shiftListOtherTime.setAttendanceExceptionId(attendanceExceptionRequest);
+        shiftListOtherTimes.add(shiftListOtherTime);
+
+        AttendanceExceptionRequest newAttendanceExceptionRequest = new AttendanceExceptionRequest();
+
+        List<ShiftListOverTime> shiftListOverTimes = new ArrayList<ShiftListOverTime>();
+        ShiftListOverTime shiftListOverTime = new ShiftListOverTime();
+        OverTimeRequest overTimeRequest = new OverTimeRequest();
+        shiftListOverTime.setOverTimeId(overTimeRequest);
+        shiftListOverTimes.add(shiftListOverTime);
+
+        OverTimeRequest newOverTimeRequest = new OverTimeRequest();
+
+        List<ShiftListVacation> shiftListVacations = new ArrayList<ShiftListVacation>();
+        ShiftListVacation shiftListVacation = new ShiftListVacation();
+        VacationRequest vacationRequest = new VacationRequest();
+        shiftListVacation.setVacationId(vacationRequest);
+        shiftListVacations.add(shiftListVacation);
+
+        VacationRequest newVacationRequest = new VacationRequest();
+
+        when(shiftChangeRequestService.findById(anyLong())).thenReturn(shiftChangeRequest);
+        when(accountApproverService.findAccountAndApprover(any(Account.class), any(Account.class))).thenReturn(accountApprover);
+        when(attendanceListSourceService.findByShiftId(any(Shift.class))).thenReturn(null);
+        when(stringToLocalDateTime.stringToLocalDateTime(anyString())).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestJudgmentInput.getRequestTime(),DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        when(shiftService.findByAccountIdAndBeginWorkBetweenWeek(any(Account.class), any(LocalDateTime.class))).thenReturn(shifts);
+        when(shiftChangeRequestService.save(any(ShiftChangeRequest.class))).thenReturn(newShiftChangeRequest);
+        when(shiftChangeRequestService.shiftChangeRequestToShift(any(ShiftChangeRequest.class))).thenReturn(shift);
+        when(shiftService.save(any(Shift.class))).thenReturn(newShift);
+        when(shiftListShiftRequestService.findByShiftId(any(Shift.class))).thenReturn(shiftListShiftRequest);
+        when(shiftListShiftRequestService.save(any(ShiftListShiftRequest.class))).thenReturn(newShiftListShiftRequest);
+        when(shiftListOtherTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOtherTimes);
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(newAttendanceExceptionRequest);
+        when(shiftListOverTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOverTimes);
+        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn(newOverTimeRequest);
+        when(shiftListVacationService.findByShiftId(any(Shift.class))).thenReturn(shiftListVacations);
+        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn(newVacationRequest);
+
+
+        int result = requestService.approval(adminAccount, requestJudgmentInput);
+        assertEquals(1, result);
+
+        verify(shiftListOtherTimeService).deleteByShiftListOtherTime(any(ShiftListOtherTime.class));
+        verify(shiftListOverTimeService).deleteByShiftListOverTime(any(ShiftListOverTime.class));
+        verify(shiftListVacationService).deleteByShiftListVacationId(any(ShiftListVacation.class));
     }
 
     @Test
     void approvalStampSuccess()
     {
+        Account adminAccount = new Account();
+        Long adminAccountId = 34L;
+        String adminAccountUsername = "kanrisya";
+        adminAccount.setId(adminAccountId);
+        adminAccount.setUsername(adminAccountUsername);
 
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "nanasi";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        AccountApprover accountApprover = new AccountApprover();
+        accountApprover.setAccountId(generalAccount);
+        accountApprover.setApproverId(adminAccount);
+
+        RequestJudgmentInput requestJudgmentInput = new RequestJudgmentInput();
+        requestJudgmentInput.setRequestId(1L);
+        requestJudgmentInput.setRequestType(3);
+        requestJudgmentInput.setRequestTime("2025/06/06T19:00:00");
+        requestJudgmentInput.setApprovalComment("test");
+
+        StampRequest stampRequest = new StampRequest();
+        Shift shift = new Shift();
+        shift.setShiftId(2L);
+        shift.setBeginWork(LocalDateTime.parse("2025/12/25/15/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setEndWork(LocalDateTime.parse("2025/12/26/00/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setBeginBreak(LocalDateTime.parse("2025/12/25/18/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setEndBreak(LocalDateTime.parse("2025/12/25/19/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        stampRequest.setShiftId(shift);
+        stampRequest.setAccountId(generalAccount);
+        stampRequest.setRequestStatus(1);
+
+        StampRequest newStampRequest = new StampRequest();
+        newStampRequest.setAccountId(generalAccount);
+        newStampRequest.setBeginWork(LocalDateTime.parse("2025/12/25/15/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        newStampRequest.setEndWork(LocalDateTime.parse("2025/12/26/00/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        newStampRequest.setBeginBreak(LocalDateTime.parse("2025/12/25/18/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        newStampRequest.setEndBreak(LocalDateTime.parse("2025/12/26/19/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        newStampRequest.setShiftId(shift);
+
+        ShiftListShiftRequest shiftListShiftRequest = new ShiftListShiftRequest();
+        ShiftRequest shiftRequest = new ShiftRequest();
+        shiftRequest.setVacationWork(false);
+        shiftListShiftRequest.setShiftId(shift);
+        shiftListShiftRequest.setShiftRequestId(shiftRequest);
+    
+        List<ShiftListVacation> shiftListVacations = new ArrayList<ShiftListVacation>();
+
+        ShiftListVacation absenceShiftListVacation = new ShiftListVacation();
+        VacationRequest absenceVacationRequest = new VacationRequest();
+        VacationType absenceVacationType = new VacationType();
+        absenceVacationType.setVacationTypeId(3L);
+        absenceVacationRequest.setVacationTypeId(absenceVacationType);
+        absenceVacationRequest.setBeginVacation(LocalDateTime.parse("2025/12/25/20/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        absenceVacationRequest.setEndVacation(LocalDateTime.parse("2025/12/25/21/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        absenceShiftListVacation.setVacationId(absenceVacationRequest);
+        absenceShiftListVacation.setShiftId(shift);
+
+        ShiftListVacation vacationShiftListVacation = new ShiftListVacation();
+        VacationRequest vacationVacationRequest = new VacationRequest();
+        VacationType vacationVacationType = new VacationType();
+        vacationVacationType.setVacationTypeId(2L);
+        vacationVacationRequest.setVacationTypeId(vacationVacationType);
+        vacationVacationRequest.setBeginVacation(LocalDateTime.parse("2025/12/25/17/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        vacationVacationRequest.setEndVacation(LocalDateTime.parse("2025/12/25/18/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        vacationShiftListVacation.setVacationId(vacationVacationRequest);
+        vacationShiftListVacation.setShiftId(shift);
+        shiftListVacations.add(absenceShiftListVacation);
+        shiftListVacations.add(vacationShiftListVacation);
+    
+        List<ShiftListOverTime> shiftListOverTimes = new ArrayList<ShiftListOverTime>();
+
+        ShiftListOverTime beforeShiftListOverTime = new ShiftListOverTime();
+        OverTimeRequest beforeOverTimeRequest = new OverTimeRequest();
+        beforeOverTimeRequest.setBeginWork(LocalDateTime.parse("2025/12/25/08/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        beforeOverTimeRequest.setEndWork(LocalDateTime.parse("2025/12/25/15/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        beforeShiftListOverTime.setOverTimeId(beforeOverTimeRequest);
+
+        ShiftListOverTime afterShiftListOverTime = new ShiftListOverTime();
+        OverTimeRequest afterOverTimeRequest = new OverTimeRequest();
+        afterOverTimeRequest.setBeginWork(LocalDateTime.parse("2025/12/26/00/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        afterOverTimeRequest.setEndWork(LocalDateTime.parse("2025/12/26/09/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        afterShiftListOverTime.setOverTimeId(afterOverTimeRequest);
+        shiftListOverTimes.add(beforeShiftListOverTime);
+        shiftListOverTimes.add(afterShiftListOverTime);
+
+        List<ShiftListOtherTime> shiftListOtherTimes = new ArrayList<ShiftListOtherTime>();
+
+        ShiftListOtherTime outingShiftListOtherTime = new ShiftListOtherTime();
+        AttendanceExceptionRequest outingAttendanceExceptionRequest = new AttendanceExceptionRequest();
+        AttendanceExceptionType outingAttendanceExceptionType = new AttendanceExceptionType();
+        outingAttendanceExceptionType.setAttendanceExceptionTypeId(1L);
+        outingAttendanceExceptionRequest.setAttendanceExceptionTypeId(outingAttendanceExceptionType);
+        outingAttendanceExceptionRequest.setBeginTime(LocalDateTime.parse("2025/12/25/22/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        outingAttendanceExceptionRequest.setEndTime(LocalDateTime.parse("2025/12/25/23/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        outingShiftListOtherTime.setAttendanceExceptionId(outingAttendanceExceptionRequest);
+
+        ShiftListOtherTime latenessShiftListOtherTime = new ShiftListOtherTime();
+        AttendanceExceptionRequest latenessAttendanceExceptionRequest = new AttendanceExceptionRequest();
+        AttendanceExceptionType latenessAttendanceExceptionType = new AttendanceExceptionType();
+        latenessAttendanceExceptionType.setAttendanceExceptionTypeId(2L);
+        latenessAttendanceExceptionRequest.setAttendanceExceptionTypeId(latenessAttendanceExceptionType);
+        latenessAttendanceExceptionRequest.setBeginTime(LocalDateTime.parse("2025/12/25/15/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        latenessAttendanceExceptionRequest.setEndTime(LocalDateTime.parse("2025/12/25/16/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        latenessShiftListOtherTime.setAttendanceExceptionId(latenessAttendanceExceptionRequest);
+
+        ShiftListOtherTime leaveEarlyShiftListOtherTime = new ShiftListOtherTime();
+        AttendanceExceptionRequest leaveEarlyAttendanceExceptionRequest = new AttendanceExceptionRequest();
+        AttendanceExceptionType leaveEarlyAttendanceExceptionType = new AttendanceExceptionType();
+        leaveEarlyAttendanceExceptionType.setAttendanceExceptionTypeId(3L);
+        leaveEarlyAttendanceExceptionRequest.setAttendanceExceptionTypeId(leaveEarlyAttendanceExceptionType);
+        leaveEarlyAttendanceExceptionRequest.setBeginTime(LocalDateTime.parse("2025/12/25/23/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        leaveEarlyAttendanceExceptionRequest.setEndTime(LocalDateTime.parse("2025/12/26/00/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        leaveEarlyShiftListOtherTime.setAttendanceExceptionId(leaveEarlyAttendanceExceptionRequest);
+        shiftListOtherTimes.add(outingShiftListOtherTime);
+        shiftListOtherTimes.add(latenessShiftListOtherTime);
+        shiftListOtherTimes.add(leaveEarlyShiftListOtherTime);
+
+        Attend attend = new Attend();
+
+        AttendanceListSource attendanceListSource = new AttendanceListSource();
+
+        when(stampRequestService.findById(anyLong())).thenReturn(stampRequest);
+        when(accountApproverService.findAccountAndApprover(any(Account.class), any(Account.class))).thenReturn(accountApprover);
+        when(attendanceListSourceService.findByShiftId(any(Shift.class))).thenReturn(null);
+        when(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime())).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestJudgmentInput.getRequestTime(),DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        when(stampRequestService.save(any(StampRequest.class))).thenReturn(newStampRequest);
+        when(shiftListShiftRequestService.findByShiftId(any(Shift.class))).thenReturn(shiftListShiftRequest);
+        when(shiftListVacationService.findByShiftId(any(Shift.class))).thenReturn(shiftListVacations);
+        when(shiftListOverTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOverTimes);
+        when(shiftListOtherTimeService.findByShiftId(any(Shift.class))).thenReturn(shiftListOtherTimes);
+        when(attendService.save(any(Attend.class))).thenReturn(attend);
+        when(attendanceListSourceService.save(any(AttendanceListSource.class))).thenReturn(attendanceListSource);
+        
+        doReturn(Time.valueOf("02:00:00")).when(requestService).getLateNight(any(LocalDateTime.class), any(LocalDateTime.class), any(LocalDateTime.class), any(LocalDateTime.class), anyList());
+        doReturn(Duration.between(absenceShiftListVacation.getVacationId().getBeginVacation(), absenceShiftListVacation.getVacationId().getEndVacation())).when(requestService).getVacation(absenceShiftListVacation.getVacationId().getBeginVacation(), absenceShiftListVacation.getVacationId().getEndVacation(), absenceShiftListVacation.getShiftId().getBeginBreak(), absenceShiftListVacation.getShiftId().getEndBreak());
+        doReturn(Duration.between(vacationShiftListVacation.getVacationId().getBeginVacation(), vacationShiftListVacation.getVacationId().getEndVacation())).when(requestService).getVacation(vacationShiftListVacation.getVacationId().getBeginVacation(), vacationShiftListVacation.getVacationId().getEndVacation(), vacationShiftListVacation.getShiftId().getBeginBreak(), vacationShiftListVacation.getShiftId().getEndBreak());
+
+        int result = requestService.approval(generalAccount, requestJudgmentInput);
+        
+        assertEquals(1, result);
     }
 
     @Test
     void approvalVacationSuccess()
     {
+        Account adminAccount = new Account();
+        Long adminAccountId = 34L;
+        String adminAccountUsername = "kanrisya";
+        adminAccount.setId(adminAccountId);
+        adminAccount.setUsername(adminAccountUsername);
 
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "nanasi";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        AccountApprover accountApprover = new AccountApprover();
+        accountApprover.setAccountId(generalAccount);
+        accountApprover.setApproverId(adminAccount);
+
+        RequestJudgmentInput requestJudgmentInput = new RequestJudgmentInput();
+        requestJudgmentInput.setRequestId(1L);
+        requestJudgmentInput.setRequestType(4);
+        requestJudgmentInput.setRequestTime("2025/06/06T19:00:00");
+        requestJudgmentInput.setApprovalComment("test");
+
+        VacationRequest vacationRequest = new VacationRequest();
+        vacationRequest.setAccountId(generalAccount);
+        vacationRequest.setRequestStatus(1);
+
+        VacationRequest newVacationRequest = new VacationRequest();
+        newVacationRequest.setBeginVacation(LocalDateTime.parse("2025/12/25/16/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        newVacationRequest.setEndVacation(LocalDateTime.parse("2025/12/25/17/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        Shift shift = new Shift();
+        shift.setShiftId(2L);
+        shift.setBeginWork(LocalDateTime.parse("2025/12/25/15/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setEndWork(LocalDateTime.parse("2025/12/26/00/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setBeginBreak(LocalDateTime.parse("2025/12/25/18/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setEndBreak(LocalDateTime.parse("2025/12/25/19/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        VacationType vacationType = new VacationType();
+        vacationType.setVacationTypeId(1L);
+        newVacationRequest.setShiftId(shift);
+        newVacationRequest.setVacationTypeId(vacationType);
+
+        ShiftListVacation shiftListVacation = new ShiftListVacation();
+
+        Vacation vacation = new Vacation();
+
+        PaydHolidayUse paydHolidayUse = new PaydHolidayUse();
+
+        when(vacationRequestService.findById(anyLong())).thenReturn(vacationRequest);
+        when(accountApproverService.findAccountAndApprover(any(Account.class), any(Account.class))).thenReturn(accountApprover);
+        when(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime())).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestJudgmentInput.getRequestTime(),DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        when(vacationRequestService.save(any(VacationRequest.class))).thenReturn(newVacationRequest);
+        when(shiftListVacationService.save(any(ShiftListVacation.class))).thenReturn(shiftListVacation);
+        when(vacationService.save(any(Vacation.class))).thenReturn(vacation);
+        when(paydHolidayUseService.save(any(PaydHolidayUse.class))).thenReturn(paydHolidayUse);
+
+        int result = requestService.approval(generalAccount, requestJudgmentInput);
+        assertEquals(1, result);
     }
 
     @Test
     void approvalOverTimeSuccess()
     {
+        Account adminAccount = new Account();
+        Long adminAccountId = 34L;
+        String adminAccountUsername = "kanrisya";
+        adminAccount.setId(adminAccountId);
+        adminAccount.setUsername(adminAccountUsername);
 
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "nanasi";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        AccountApprover accountApprover = new AccountApprover();
+        accountApprover.setAccountId(generalAccount);
+        accountApprover.setApproverId(adminAccount);
+
+        RequestJudgmentInput requestJudgmentInput = new RequestJudgmentInput();
+        requestJudgmentInput.setRequestId(1L);
+        requestJudgmentInput.setRequestType(5);
+        requestJudgmentInput.setRequestTime("2025/06/06T19:00:00");
+        requestJudgmentInput.setApprovalComment("test");
+
+        OverTimeRequest overTimeRequest = new OverTimeRequest();
+        overTimeRequest.setAccountId(generalAccount);
+        overTimeRequest.setRequestStatus(1);
+
+        OverTimeRequest newOverTimeRequest = new OverTimeRequest();
+        newOverTimeRequest.setBeginWork(LocalDateTime.parse("2025/12/25/14/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        newOverTimeRequest.setEndWork(LocalDateTime.parse("2025/12/25/15/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        Shift shift = new Shift();
+        shift.setShiftId(2L);
+        shift.setBeginWork(LocalDateTime.parse("2025/12/25/15/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setEndWork(LocalDateTime.parse("2025/12/26/00/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setBeginBreak(LocalDateTime.parse("2025/12/25/18/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setEndBreak(LocalDateTime.parse("2025/12/25/19/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setOverWork(Time.valueOf("00:00:00"));
+        newOverTimeRequest.setShiftId(shift);
+
+        Shift newShift = new Shift();
+
+        ShiftListOverTime shiftListOverTime = new ShiftListOverTime();
+
+        when(overTimeRequestService.findById(anyLong())).thenReturn(overTimeRequest);
+        when(accountApproverService.findAccountAndApprover(any(Account.class), any(Account.class))).thenReturn(accountApprover);
+        when(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime())).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestJudgmentInput.getRequestTime(),DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        when(overTimeRequestService.save(any(OverTimeRequest.class))).thenReturn(newOverTimeRequest);
+        when(shiftService.save(any(Shift.class))).thenReturn(newShift);
+        when(shiftListOverTimeService.save(any(ShiftListOverTime.class))).thenReturn(shiftListOverTime);
+
+        int result = requestService.approval(generalAccount, requestJudgmentInput);
+        assertEquals(1, result);
     }
 
     @Test
-    void approvalOtherTimeSuccess()
+    void approvalOtherTimeOutingSuccess()
     {
+        Account adminAccount = new Account();
+        Long adminAccountId = 34L;
+        String adminAccountUsername = "kanrisya";
+        adminAccount.setId(adminAccountId);
+        adminAccount.setUsername(adminAccountUsername);
 
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "nanasi";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        AccountApprover accountApprover = new AccountApprover();
+        accountApprover.setAccountId(generalAccount);
+        accountApprover.setApproverId(adminAccount);
+
+        RequestJudgmentInput requestJudgmentInput = new RequestJudgmentInput();
+        requestJudgmentInput.setRequestId(1L);
+        requestJudgmentInput.setRequestType(6);
+        requestJudgmentInput.setRequestTime("2025/06/06T19:00:00");
+        requestJudgmentInput.setApprovalComment("test");
+
+        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        attendanceExceptionRequest.setAccountId(generalAccount);
+        attendanceExceptionRequest.setRequestStatus(1);
+
+        AttendanceExceptionRequest newAttendanceExceptionRequest = new AttendanceExceptionRequest();
+        newAttendanceExceptionRequest.setBeginTime(LocalDateTime.parse("2025/12/25/15/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        newAttendanceExceptionRequest.setEndTime(LocalDateTime.parse("2025/12/25/16/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        AttendanceExceptionType attendanceExceptionType = new AttendanceExceptionType();
+        attendanceExceptionType.setAttendanceExceptionTypeId(1L);
+        newAttendanceExceptionRequest.setAttendanceExceptionTypeId(attendanceExceptionType);
+        Shift shift = new Shift();
+        shift.setShiftId(2L);
+        shift.setBeginWork(LocalDateTime.parse("2025/12/25/15/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setEndWork(LocalDateTime.parse("2025/12/26/00/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setBeginBreak(LocalDateTime.parse("2025/12/25/18/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setEndBreak(LocalDateTime.parse("2025/12/25/19/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setOuting(Time.valueOf("00:00:00"));
+        shift.setLateness(Time.valueOf("00:00:00"));
+        shift.setLeaveEarly(Time.valueOf("00:00:00"));
+        newAttendanceExceptionRequest.setShiftId(shift);
+
+        Shift newShift =  new Shift();
+
+        ShiftListOtherTime shiftListOtherTime = new ShiftListOtherTime();
+
+        when(attendanceExceptionRequestService.findById(anyLong())).thenReturn(attendanceExceptionRequest);
+        when(accountApproverService.findAccountAndApprover(any(Account.class), any(Account.class))).thenReturn(accountApprover);
+        when(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime())).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestJudgmentInput.getRequestTime(),DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(newAttendanceExceptionRequest);
+        when(shiftService.save(any(Shift.class))).thenReturn(newShift);
+        when(shiftListOtherTimeService.save(any(ShiftListOtherTime.class))).thenReturn(shiftListOtherTime);
+
+        int result = requestService.approval(generalAccount, requestJudgmentInput);
+        assertEquals(1, result);
+    }
+
+        @Test
+    void approvalOtherTimeLatenessSuccess()
+    {
+        Account adminAccount = new Account();
+        Long adminAccountId = 34L;
+        String adminAccountUsername = "kanrisya";
+        adminAccount.setId(adminAccountId);
+        adminAccount.setUsername(adminAccountUsername);
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "nanasi";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        AccountApprover accountApprover = new AccountApprover();
+        accountApprover.setAccountId(generalAccount);
+        accountApprover.setApproverId(adminAccount);
+
+        RequestJudgmentInput requestJudgmentInput = new RequestJudgmentInput();
+        requestJudgmentInput.setRequestId(1L);
+        requestJudgmentInput.setRequestType(6);
+        requestJudgmentInput.setRequestTime("2025/06/06T19:00:00");
+        requestJudgmentInput.setApprovalComment("test");
+
+        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        attendanceExceptionRequest.setAccountId(generalAccount);
+        attendanceExceptionRequest.setRequestStatus(1);
+
+        AttendanceExceptionRequest newAttendanceExceptionRequest = new AttendanceExceptionRequest();
+        newAttendanceExceptionRequest.setBeginTime(LocalDateTime.parse("2025/12/25/15/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        newAttendanceExceptionRequest.setEndTime(LocalDateTime.parse("2025/12/25/16/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        AttendanceExceptionType attendanceExceptionType = new AttendanceExceptionType();
+        attendanceExceptionType.setAttendanceExceptionTypeId(2L);
+        newAttendanceExceptionRequest.setAttendanceExceptionTypeId(attendanceExceptionType);
+        Shift shift = new Shift();
+        shift.setShiftId(2L);
+        shift.setBeginWork(LocalDateTime.parse("2025/12/25/15/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setEndWork(LocalDateTime.parse("2025/12/26/00/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setBeginBreak(LocalDateTime.parse("2025/12/25/18/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setEndBreak(LocalDateTime.parse("2025/12/25/19/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setOuting(Time.valueOf("00:00:00"));
+        shift.setLateness(Time.valueOf("00:00:00"));
+        shift.setLeaveEarly(Time.valueOf("00:00:00"));
+        newAttendanceExceptionRequest.setShiftId(shift);
+
+        Shift newShift =  new Shift();
+
+        ShiftListOtherTime shiftListOtherTime = new ShiftListOtherTime();
+
+        when(attendanceExceptionRequestService.findById(anyLong())).thenReturn(attendanceExceptionRequest);
+        when(accountApproverService.findAccountAndApprover(any(Account.class), any(Account.class))).thenReturn(accountApprover);
+        when(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime())).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestJudgmentInput.getRequestTime(),DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(newAttendanceExceptionRequest);
+        when(shiftService.save(any(Shift.class))).thenReturn(newShift);
+        when(shiftListOtherTimeService.save(any(ShiftListOtherTime.class))).thenReturn(shiftListOtherTime);
+
+        int result = requestService.approval(generalAccount, requestJudgmentInput);
+        assertEquals(1, result);
+    }
+
+        @Test
+    void approvalOtherTimeLeaveEarlySuccess()
+    {
+        Account adminAccount = new Account();
+        Long adminAccountId = 34L;
+        String adminAccountUsername = "kanrisya";
+        adminAccount.setId(adminAccountId);
+        adminAccount.setUsername(adminAccountUsername);
+
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "nanasi";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        AccountApprover accountApprover = new AccountApprover();
+        accountApprover.setAccountId(generalAccount);
+        accountApprover.setApproverId(adminAccount);
+
+        RequestJudgmentInput requestJudgmentInput = new RequestJudgmentInput();
+        requestJudgmentInput.setRequestId(1L);
+        requestJudgmentInput.setRequestType(6);
+        requestJudgmentInput.setRequestTime("2025/06/06T19:00:00");
+        requestJudgmentInput.setApprovalComment("test");
+
+        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        attendanceExceptionRequest.setAccountId(generalAccount);
+        attendanceExceptionRequest.setRequestStatus(1);
+
+        AttendanceExceptionRequest newAttendanceExceptionRequest = new AttendanceExceptionRequest();
+        newAttendanceExceptionRequest.setBeginTime(LocalDateTime.parse("2025/12/25/15/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        newAttendanceExceptionRequest.setEndTime(LocalDateTime.parse("2025/12/25/16/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        AttendanceExceptionType attendanceExceptionType = new AttendanceExceptionType();
+        attendanceExceptionType.setAttendanceExceptionTypeId(3L);
+        newAttendanceExceptionRequest.setAttendanceExceptionTypeId(attendanceExceptionType);
+        Shift shift = new Shift();
+        shift.setShiftId(2L);
+        shift.setBeginWork(LocalDateTime.parse("2025/12/25/15/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setEndWork(LocalDateTime.parse("2025/12/26/00/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setBeginBreak(LocalDateTime.parse("2025/12/25/18/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setEndBreak(LocalDateTime.parse("2025/12/25/19/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shift.setOuting(Time.valueOf("00:00:00"));
+        shift.setLateness(Time.valueOf("00:00:00"));
+        shift.setLeaveEarly(Time.valueOf("00:00:00"));
+        newAttendanceExceptionRequest.setShiftId(shift);
+
+        Shift newShift =  new Shift();
+
+        ShiftListOtherTime shiftListOtherTime = new ShiftListOtherTime();
+
+        when(attendanceExceptionRequestService.findById(anyLong())).thenReturn(attendanceExceptionRequest);
+        when(accountApproverService.findAccountAndApprover(any(Account.class), any(Account.class))).thenReturn(accountApprover);
+        when(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime())).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestJudgmentInput.getRequestTime(),DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        when(attendanceExceptionRequestService.save(any(AttendanceExceptionRequest.class))).thenReturn(newAttendanceExceptionRequest);
+        when(shiftService.save(any(Shift.class))).thenReturn(newShift);
+        when(shiftListOtherTimeService.save(any(ShiftListOtherTime.class))).thenReturn(shiftListOtherTime);
+
+        int result = requestService.approval(generalAccount, requestJudgmentInput);
+        assertEquals(1, result);
     }
 
     @Test
     void approvalMonthlySuccess()
     {
+        Account adminAccount = new Account();
+        Long adminAccountId = 34L;
+        String adminAccountUsername = "kanrisya";
+        adminAccount.setId(adminAccountId);
+        adminAccount.setUsername(adminAccountUsername);
 
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "nanasi";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        AccountApprover accountApprover = new AccountApprover();
+        accountApprover.setAccountId(generalAccount);
+        accountApprover.setApproverId(adminAccount);
+
+        RequestJudgmentInput requestJudgmentInput = new RequestJudgmentInput();
+        requestJudgmentInput.setRequestId(1L);
+        requestJudgmentInput.setRequestType(7);
+        requestJudgmentInput.setRequestTime("2025/06/06T19:00:00");
+        requestJudgmentInput.setApprovalComment("test");
+
+        MonthlyRequest monthlyRequest = new MonthlyRequest();
+        monthlyRequest.setAccountId(generalAccount);
+        monthlyRequest.setRequestStatus(1);
+
+        MonthlyRequest newMonthlyRequest = new MonthlyRequest();
+        
+        when(monthlyRequestService.findById(anyLong())).thenReturn(monthlyRequest);
+        when(accountApproverService.findAccountAndApprover(any(Account.class), any(Account.class))).thenReturn(accountApprover);
+        when(stringToLocalDateTime.stringToLocalDateTime(requestJudgmentInput.getRequestTime())).thenReturn(LocalDateTime.parse(LocalDateTime.parse(requestJudgmentInput.getRequestTime(),DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        when(monthlyRequestService.save(any(MonthlyRequest.class))).thenReturn(newMonthlyRequest);
+
+        int result = requestService.approval(generalAccount, requestJudgmentInput);
+        assertEquals(1, result);
     }
 
     @Test
-    void getLateNightfirstSuccess()
+    void getLateNightVacationFirstSuccess()
     {
         LegalTime legalTime = new LegalTime();
         legalTime.setLateNightWorkBegin(Time.valueOf("22:00:00"));
@@ -2135,35 +2762,44 @@ public class RequestServiceTest
         LocalDateTime beginBreak = LocalDateTime.parse("2025/12/31/23/59/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
         LocalDateTime endBreak = LocalDateTime.parse("2026/01/01/00/59/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
 
-        when(legalTimeService.findFirstByOrderByBeginDesc()).thenReturn(legalTime);
-
-        Time result = requestService.getLateNight(beginWork, endWork, beginBreak, endBreak);
-
-        assertEquals(result, Time.valueOf("05:26:00"));
-    }
-
-        @Test
-    void getLateNightSecondSuccess()
-    {
-        LegalTime legalTime = new LegalTime();
-        legalTime.setLateNightWorkBegin(Time.valueOf("22:00:00"));
-        legalTime.setLateNightWorkEnd(Time.valueOf("05:00:00"));
-
-        LocalDateTime beginWork = LocalDateTime.parse("2025/12/31/23/00/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
-        LocalDateTime endWork = LocalDateTime.parse("2026/01/01/04/00/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
-        LocalDateTime beginBreak = LocalDateTime.parse("2025/12/31/23/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
-        LocalDateTime endBreak = LocalDateTime.parse("2026/01/01/00/30/00",DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        List<ShiftListVacation> shiftListVacations = new ArrayList<ShiftListVacation>();
+        ShiftListVacation shiftListVacation = new ShiftListVacation();
+        VacationRequest vacationRequest = new VacationRequest();
+        vacationRequest.setBeginVacation(LocalDateTime.parse("2025/12/31/22/50/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        vacationRequest.setEndVacation(LocalDateTime.parse("2025/12/31/23/50/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        shiftListVacation.setVacationId(vacationRequest);
+        shiftListVacations.add(shiftListVacation);
 
         when(legalTimeService.findFirstByOrderByBeginDesc()).thenReturn(legalTime);
 
-        Time result = requestService.getLateNight(beginWork, endWork, beginBreak, endBreak);
+        Time result = requestService.getLateNight(beginWork, endWork, beginBreak, endBreak, shiftListVacations);
 
-        assertEquals(result, Time.valueOf("04:00:00"));
+        assertEquals(result, Time.valueOf("04:26:00"));
     }
 
     @Test
-    void getVacationSuccess()
+    void getVacationFirstSuccess()
     {
+        LocalDateTime beginBreak = LocalDateTime.parse("2025/12/24/12/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endBreak = LocalDateTime.parse("2025/12/24/13/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime beginVacation = LocalDateTime.parse("2025/12/24/10/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endVacation = LocalDateTime.parse("2025/12/24/11/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
 
+        Duration result = requestService.getVacation(beginVacation, endVacation, beginBreak, endBreak);
+        assertEquals(Duration.between(beginVacation, endVacation), result);
     }
+
+    @Test
+    void getVacationSecondSuccess()
+    {
+        LocalDateTime beginBreak = LocalDateTime.parse("2025/12/24/12/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endBreak = LocalDateTime.parse("2025/12/24/13/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime beginVacation = LocalDateTime.parse("2025/12/24/09/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+        LocalDateTime endVacation = LocalDateTime.parse("2025/12/24/18/00/00", DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss"));
+
+        Duration result = requestService.getVacation(beginVacation, endVacation, beginBreak, endBreak);
+        assertEquals(Duration.between(beginVacation, endVacation).minus(Duration.between(beginBreak, endBreak)), result);
+    }
+
+
 }

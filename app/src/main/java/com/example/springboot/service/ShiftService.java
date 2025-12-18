@@ -54,8 +54,7 @@ public class ShiftService
 
     public Shift findByAccountIdAndShiftId(Account account, Long id)
     {
-        return shiftRepository.findByAccountIdAndShiftId(account, id)
-            .orElseThrow(() -> new RuntimeException("シフトが見つかりません"));
+        return shiftRepository.findByAccountIdAndShiftId(account, id);
     }
 
     public List<ShiftListResponse> findByShiftListFor(Account account, YearMonthInput request)
@@ -73,8 +72,7 @@ public class ShiftService
     {
         Account account = new Account();
         account.setId(accountId);
-        return shiftRepository.findByAccountIdAndShiftId(account, id)
-            .orElseThrow(() -> new RuntimeException("シフトが見つかりません"));
+        return shiftRepository.findByAccountIdAndShiftId(account, id);
     }
     
     // 一月ごとの取得

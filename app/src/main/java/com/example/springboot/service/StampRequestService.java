@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
-import java.util.Objects;
 
 import javax.transaction.Transactional;
 
@@ -43,16 +42,14 @@ public class StampRequestService
 
     public StampRequest findByAccountIdAndStampId(Account account, Long id)
     {
-        return stampRequestRepository.findByAccountIdAndStampId(account, id)
-            .orElseThrow(() -> new RuntimeException("打刻漏れ申請がありません"));
+        return stampRequestRepository.findByAccountIdAndStampId(account, id);
     }
 
     public StampRequest findByAccountIdAndStampId(Long accountId, Long id)
     {
         Account account = new Account();
         account.setId(accountId);
-        return stampRequestRepository.findByAccountIdAndStampId(account, id)
-            .orElseThrow(() -> new RuntimeException("打刻漏れ申請がありません"));
+        return stampRequestRepository.findByAccountIdAndStampId(account, id);
     }
 
     public List<StampRequest> findByShiftIdAndRequestStatusWait(Shift shift)
