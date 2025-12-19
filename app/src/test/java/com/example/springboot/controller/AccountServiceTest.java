@@ -31,6 +31,7 @@ import com.example.springboot.model.ApprovalSetting;
 import com.example.springboot.model.Department;
 import com.example.springboot.model.Role;
 import com.example.springboot.repository.AccountRepository;
+import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.DepartmentService;
@@ -55,6 +56,9 @@ public class AccountServiceTest
 
     @Mock
     DepartmentService departmentService;
+
+    @Mock
+    AccountApproverService accountApproverService;
 
     @AfterEach // 終了後に実行
     void tearDown()

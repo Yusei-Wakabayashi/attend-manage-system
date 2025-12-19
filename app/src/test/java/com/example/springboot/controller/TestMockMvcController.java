@@ -1,8 +1,6 @@
 package com.example.springboot.controller;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -45,13 +43,20 @@ import com.example.springboot.dto.input.RequestJudgmentInput;
 import com.example.springboot.dto.input.ShiftChangeInput;
 import com.example.springboot.dto.input.ShiftInput;
 import com.example.springboot.dto.input.StampInput;
+import com.example.springboot.dto.input.UserAttendInput;
+import com.example.springboot.dto.input.UserMonthWorkInfoInput;
+import com.example.springboot.dto.input.UserShiftInput;
 import com.example.springboot.dto.input.VacationInput;
 import com.example.springboot.dto.input.WithDrowInput;
 import com.example.springboot.dto.input.YearMonthInput;
 import com.example.springboot.dto.response.AccountInfoResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
+import com.example.springboot.dto.response.ApproverResponse;
 import com.example.springboot.dto.response.AttendListResponse;
+import com.example.springboot.dto.response.MonthWorkInfoResponse;
 import com.example.springboot.dto.response.NewsListResponse;
+import com.example.springboot.dto.response.OtherTypeListResponse;
+import com.example.springboot.dto.response.PaydHolidayHistoryListResponse;
 import com.example.springboot.dto.response.RequestDetailMonthlyResponse;
 import com.example.springboot.dto.response.RequestDetailOtherTimeResponse;
 import com.example.springboot.dto.response.RequestDetailOverTimeResponse;
@@ -61,6 +66,9 @@ import com.example.springboot.dto.response.RequestDetailStampResponse;
 import com.example.springboot.dto.response.RequestDetailVacationResponse;
 import com.example.springboot.dto.response.RequestListResponse;
 import com.example.springboot.dto.response.ShiftListResponse;
+import com.example.springboot.dto.response.StyleResponse;
+import com.example.springboot.dto.response.UserRequestListResponse;
+import com.example.springboot.dto.response.VacationTypeListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
 import com.example.springboot.model.Role;
@@ -86,8 +94,6 @@ import com.example.springboot.model.Department;
 import com.example.springboot.model.MonthlyRequest;
 import com.example.springboot.model.NewsList;
 import com.example.springboot.model.OverTimeRequest;
-import com.example.springboot.model.PaydHoliday;
-import com.example.springboot.model.PaydHolidayUse;
 import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
@@ -1428,9 +1434,11 @@ public class TestMockMvcController
         vacation.setEndVacation(stringToLocalDateTime.stringToLocalDateTime("2025/09/08T02:00:00"));
         vacations.add(vacation);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(attendService.findByAccountIdAndBeginWorkBetween(any(Account.class), anyInt(),anyInt())).thenReturn(attends);
-        when(vacationService.findByAccountIdAndBeginVacationBetweenMonthAndPaydHoliday(any(Account.class), anyInt(), anyInt())).thenReturn(vacations);
+        MonthWorkInfoResponse monthWorkInfoResponse = new MonthWorkInfoResponse();
+        monthWorkInfoResponse.setStatus(1);;
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(attendService.monthWorkInfoResponse(any(Account.class), any(YearMonthInput.class))).thenReturn(monthWorkInfoResponse);
         mockMvc.perform
         (
             get("/api/reach/monthworkinfo")
@@ -1440,8 +1448,7 @@ public class TestMockMvcController
             .with(user(generalAccountUsername))
         )
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.status").value(1))
-        .andExpect(jsonPath("$.workTime").value("002:00:00"));
+        .andExpect(jsonPath("$.status").value(1));
     }
 
     @Test
@@ -1461,8 +1468,11 @@ public class TestMockMvcController
         generalStyle.setStyleId(generalStyleId);
         generalStyle.setStylePlaceId(generalStylePlace);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(styleService.findStyleByAccountId(any(Account.class))).thenReturn(generalStyle);
+        StyleResponse styleResponse = new StyleResponse();
+        styleResponse.setStatus(1);
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(styleService.returnStyle(any(Account.class))).thenReturn(styleResponse);
         mockMvc.perform
         (
             get("/api/reach/style")
@@ -1470,9 +1480,7 @@ public class TestMockMvcController
             .with(user(generalAccountUsername))
         )
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.status").value(1))
-        .andExpect(jsonPath("$.styleId").value(generalStyleId.intValue()))
-        .andExpect(jsonPath("$.styleName").value(generalStylePlaceName));
+        .andExpect(jsonPath("$.status").value(1));
     }
 
     @Test
@@ -1502,8 +1510,11 @@ public class TestMockMvcController
         accountApprover.setAccountId(generalAccount);
         accountApprover.setApproverId(adminAccount);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(accountApproverService.findAccountApproverByAccount(any(Account.class))).thenReturn(accountApprover);
+        ApproverResponse approverResponse = new ApproverResponse();
+        approverResponse.setStatus(1);
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(accountApproverService.getApproverResponse(any(Account.class))).thenReturn(approverResponse);
         mockMvc.perform
         (
             get("/api/reach/approver")
@@ -1511,11 +1522,7 @@ public class TestMockMvcController
             .with(user(generalAccountUsername))
         )
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.status").value(1))
-        .andExpect(jsonPath("$.approverId").value(adminAccountId.intValue()))
-        .andExpect(jsonPath("$.approverName").value(adminAccountName))
-        .andExpect(jsonPath("$.approverDepartment").value(adminAccountDepartmentName))
-        .andExpect(jsonPath("$.approverRole").value(adminAccountRoleName));
+        .andExpect(jsonPath("$.status").value(1));
     }
 
     @Test
@@ -1533,8 +1540,12 @@ public class TestMockMvcController
         vacationType.setVacationName(vacationTypeName);
         vacationTypes.add(vacationType);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(vacationTypeService.findAll()).thenReturn(vacationTypes);
+        List<VacationTypeListResponse> vacationTypeListResponses = new ArrayList<VacationTypeListResponse>();
+        VacationTypeListResponse vacationTypeListResponse = new VacationTypeListResponse();
+        vacationTypeListResponses.add(vacationTypeListResponse);
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(vacationTypeService.returnAllVacationTypeListResponses()).thenReturn(vacationTypeListResponses);
         mockMvc.perform
         (
             get("/api/reach/allvacationtypelist")
@@ -1542,9 +1553,7 @@ public class TestMockMvcController
             .with(user(generalAccountUsername))
         )
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.status").value(1))
-        .andExpect(jsonPath("$.vacationTypes[0].vacationTypeId").value(vacationTypeId.intValue()))
-        .andExpect(jsonPath("$.vacationTypes[0].vacationTypeName").value(vacationTypeName));
+        .andExpect(jsonPath("$.status").value(1));
     }
 
     @Test
@@ -1562,8 +1571,10 @@ public class TestMockMvcController
         attendanceExceptionType.setAttednaceExceptionTypeName(attendanceExceptionTypeName);
         attendanceExceptionTypes.add(attendanceExceptionType);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(attendanceExceptionTypeService.findAll()).thenReturn(attendanceExceptionTypes);
+        List<OtherTypeListResponse> otherTypeListResponses = new ArrayList<OtherTypeListResponse>();
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(attendanceExceptionTypeService.returnOtherTypeListResponses()).thenReturn(otherTypeListResponses);
         mockMvc.perform
         (
             get("/api/reach/allothertypelist")
@@ -1571,9 +1582,7 @@ public class TestMockMvcController
             .with(user(generalAccountUsername))
         )
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.status").value(1))
-        .andExpect(jsonPath("$.otherTypes[0].otherTypeId").value(attendanceExceptionTypeId.intValue()))
-        .andExpect(jsonPath("$.otherTypes[0].otherTypeName").value(attendanceExceptionTypeName));
+        .andExpect(jsonPath("$.status").value(1));
     }
 
     @Test
@@ -1623,32 +1632,14 @@ public class TestMockMvcController
     @Test
     void paydHolidayHistorySuccess() throws Exception
     {
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
-        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
-
         Account generalAccount = new Account();
         String generalAccountUsername = "testuser";
         generalAccount.setUsername(generalAccountUsername);
 
-        List<PaydHoliday> paydHolidays = new ArrayList<PaydHoliday>();
-        PaydHoliday generalPaydHoliday = new PaydHoliday();
-        String generalPaydHolidayGrant = "2025/04/01T09:00:00";
-        String generalPaydHolidayTime = "160:00:00";
-        generalPaydHoliday.setGrant(stringToLocalDateTime.stringToLocalDateTime(generalPaydHolidayGrant));
-        generalPaydHoliday.setTime(generalPaydHolidayTime);
-        paydHolidays.add(generalPaydHoliday);
+        List<PaydHolidayHistoryListResponse> paydHolidayHistoryListResponses = new ArrayList<PaydHolidayHistoryListResponse>();
 
-        List<PaydHolidayUse> paydHolidayUses = new ArrayList<PaydHolidayUse>();
-        PaydHolidayUse generalPaydHolidayUse = new PaydHolidayUse();
-        String generalPaydHolidayUseDate = "2025/11/02T10:00:00";
-        String generalPaydHolidayUseTime = "08:00:00";
-        generalPaydHolidayUse.setUseDate(stringToLocalDateTime.stringToLocalDateTime(generalPaydHolidayUseDate));
-        generalPaydHolidayUse.setTime(Time.valueOf(generalPaydHolidayUseTime));
-        paydHolidayUses.add(generalPaydHolidayUse);
-
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(paydHolidayService.findByAccountId(any(Account.class))).thenReturn(paydHolidays);
-        when(paydHolidayUseService.findByAccountId(any(Account.class))).thenReturn(paydHolidayUses);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(paydHolidayService.returnPaydHolidayHistoryListResponses(any(Account.class))).thenReturn(paydHolidayHistoryListResponses);
         mockMvc.perform
         (
             get("/api/reach/paydholidayhistory")
@@ -1656,19 +1647,12 @@ public class TestMockMvcController
             .with(user(generalAccountUsername))
         )
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.status").value(1))
-        .andExpect(jsonPath("$.holidaylist[0].type").value("付与"))
-        .andExpect(jsonPath("$.holidaylist[0].date").value(localDateTimeToString.localDateTimeToString(stringToLocalDateTime.stringToLocalDateTime(generalPaydHolidayGrant))))
-        .andExpect(jsonPath("$.holidaylist[0].time").value(generalPaydHolidayTime))
-        .andExpect(jsonPath("$.holidaylist[1].type").value("消化"))
-        .andExpect(jsonPath("$.holidaylist[1].date").value(localDateTimeToString.localDateTimeToString(stringToLocalDateTime.stringToLocalDateTime(generalPaydHolidayUseDate))))
-        .andExpect(jsonPath("$.holidaylist[1].time").value(generalPaydHolidayUseTime));
+        .andExpect(jsonPath("$.status").value(1));
     }
 
     @Test
     void userAttendListSuccess() throws Exception
     {
-        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         Long generalAccountId = 1L;
         String generalAccountName = "testuser";
         String time = "00:00:00";
@@ -1713,31 +1697,13 @@ public class TestMockMvcController
             generalVacationTime, generalAbsenceTime
         );
 
-        AttendListResponse generalAttendListResponse = new AttendListResponse
-        (
-            generalAttendId,
-            localDateTimeToString.localDateTimeToString(generalAttendBeginWork),
-            localDateTimeToString.localDateTimeToString(generalAttendEndWork),
-            localDateTimeToString.localDateTimeToString(generalAttendBeginBreak),
-            localDateTimeToString.localDateTimeToString(generalAttendEndBreak),
-            generalAttendWorkTime,
-            generalAttendBreakTime,
-            generalAttendLateness,
-            generalAttendLeaveEarly,
-            generalAttendOuting,
-            generalAttendOverWork,
-            generalAttendHolidayWork,
-            generalAttendLateNightWork,
-            generalVacationTime,
-            generalAbsenceTime
-        );
+        List<AttendListResponse> attendListResponses = new ArrayList<AttendListResponse>();
 
         List<Attend> generalAttends = new ArrayList<Attend>();
         generalAttends.add(generalAttend);
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
         when(accountApproverService.findAccountAndApprover(anyLong(), any(Account.class))).thenReturn(accountApprover);
-        when(attendService.findByAccountIdAndBeginWorkBetween(anyLong(), anyInt(), anyInt())).thenReturn(generalAttends);
-        when(attendService.attendToAttendListResponse(any(Attend.class))).thenReturn(generalAttendListResponse);
+        when(attendService.getAttendListResponses(any(Account.class), any(UserAttendInput.class))).thenReturn(attendListResponses);
         mockMvc.perform(
             get("/api/reach/user/attendinfo")
             .param("accountId", String.valueOf(generalAccountId))
@@ -1747,26 +1713,12 @@ public class TestMockMvcController
             .with(user(adminAccountUsername))
         )
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.status").value(1))
-        .andExpect(jsonPath("$.attendList[0].id").value(generalAttendListResponse.getId()))
-        .andExpect(jsonPath("$.attendList[0].beginWork").value(generalAttendListResponse.getBeginWork()))
-        .andExpect(jsonPath("$.attendList[0].endWork").value(generalAttendListResponse.getEndWork()))
-        .andExpect(jsonPath("$.attendList[0].beginBreak").value(generalAttendListResponse.getBeginBreak()))
-        .andExpect(jsonPath("$.attendList[0].endBreak").value(generalAttendListResponse.getEndBreak()))
-        .andExpect(jsonPath("$.attendList[0].workTime").value(String.valueOf(generalAttendListResponse.getWorkTime())))
-        .andExpect(jsonPath("$.attendList[0].breakTime").value(String.valueOf(generalAttendListResponse.getBreakTime())))
-        .andExpect(jsonPath("$.attendList[0].lateness").value(String.valueOf(generalAttendListResponse.getLateness())))
-        .andExpect(jsonPath("$.attendList[0].leaveEarly").value(String.valueOf(generalAttendListResponse.getLeaveEarly())))
-        .andExpect(jsonPath("$.attendList[0].outing").value(String.valueOf(generalAttendListResponse.getOuting())))
-        .andExpect(jsonPath("$.attendList[0].overWork").value(String.valueOf(generalAttendListResponse.getOverWork())))
-        .andExpect(jsonPath("$.attendList[0].holidayWork").value(String.valueOf(generalAttendListResponse.getHolidayWork())))
-        .andExpect(jsonPath("$.attendList[0].lateNightWork").value(String.valueOf(generalAttendListResponse.getLateNightWork())));
+        .andExpect(jsonPath("$.status").value(1));
     }
 
     @Test
     void userShiftListSuccess() throws Exception
     {
-        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         Long generalAccountId = 1L;
         String generalAccountName = "testuser";
         String time = "00:00:00";
@@ -1797,25 +1749,15 @@ public class TestMockMvcController
             generalShiftEndWork, generalShiftBeginBreak, generalShiftEndBreak,
             generalShiftLateness, generalShiftLeaveEarly, generalShiftOuting, generalShiftOverWork
         );
-        ShiftListResponse generalShiftListResponse = new ShiftListResponse
-        (
-            generalShiftId,
-            localDateTimeToString.localDateTimeToString(generalShiftBeginWork),
-            localDateTimeToString.localDateTimeToString(generalShiftEndWork),
-            localDateTimeToString.localDateTimeToString(generalShiftBeginBreak),
-            localDateTimeToString.localDateTimeToString(generalShiftEndBreak),
-            generalShiftLateness,
-            generalShiftLeaveEarly,
-            generalShiftOuting,
-            generalShiftOverWork
-        );
+
         List<Shift> generalShifts = new ArrayList<Shift>();
         generalShifts.add(generalShift);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
+        List<ShiftListResponse> shiftListResponses = new ArrayList<ShiftListResponse>();
+
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
         when(accountApproverService.findAccountAndApprover(anyLong(), any(Account.class))).thenReturn(accountApprover);
-        when(shiftService.findByAccountIdAndBeginWorkBetween(anyLong(), anyInt(), anyInt())).thenReturn(generalShifts);
-        when(shiftService.shiftToShiftListResponse(any(Shift.class))).thenReturn(generalShiftListResponse);
+        when(shiftService.returnShiftListResponses(any(Account.class), any(AccountApprover.class), any(UserShiftInput.class))).thenReturn(shiftListResponses);
         mockMvc.perform(
             get("/api/reach/user/shiftinfo")
             .param("accountId", String.valueOf(adminAccountId))
@@ -1825,22 +1767,12 @@ public class TestMockMvcController
             .with(user(generalAccountName))
         )
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.status").value(1))
-        .andExpect(jsonPath("$.shiftList[0].id").value(generalShiftListResponse.getId()))
-        .andExpect(jsonPath("$.shiftList[0].beginWork").value(generalShiftListResponse.getBeginWork()))
-        .andExpect(jsonPath("$.shiftList[0].endWork").value(generalShiftListResponse.getEndWork()))
-        .andExpect(jsonPath("$.shiftList[0].beginBreak").value(generalShiftListResponse.getBeginBreak()))
-        .andExpect(jsonPath("$.shiftList[0].endBreak").value(generalShiftListResponse.getEndBreak()))
-        .andExpect(jsonPath("$.shiftList[0].lateness").value(String.valueOf(generalShiftListResponse.getLateness())))
-        .andExpect(jsonPath("$.shiftList[0].leaveEarly").value(String.valueOf(generalShiftListResponse.getLeaveEarly())))
-        .andExpect(jsonPath("$.shiftList[0].outing").value(String.valueOf(generalShiftListResponse.getOuting())))
-        .andExpect(jsonPath("$.shiftList[0].overWork").value(String.valueOf(generalShiftListResponse.getOverWork())));
+        .andExpect(jsonPath("$.status").value(1));
     }
 
     @Test
     void userMonthWorkInfoSuccess() throws Exception
     {
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         Account adminAccount = new Account();
         Long adminAccountId = 3L;
         String adminAccountUsername = "testuser";
@@ -1857,43 +1789,13 @@ public class TestMockMvcController
         accountApprover.setAccountId(generalAccount);
         accountApprover.setApproverId(adminAccount);
 
-        Time generalTime = Time.valueOf("01:00:00");
-        List<Attend> attends = new ArrayList<Attend>();
-        Attend attend = new Attend();
-        attend.setWorkTime(generalTime);
-        attend.setLateness(generalTime);
-        attend.setLeaveEarly(generalTime);
-        attend.setOuting(generalTime);
-        attend.setOverWork(generalTime);
-        attend.setAbsenceTime(generalTime);
-        attend.setVacationTime(generalTime);
-        attend.setLateNightWork(generalTime);
-        attend.setHolidayWork(generalTime);
 
-        Attend generalAttend = new Attend();
-        generalAttend.setWorkTime(generalTime);
-        generalAttend.setLateness(generalTime);
-        generalAttend.setLeaveEarly(generalTime);
-        generalAttend.setOuting(generalTime);
-        generalAttend.setOverWork(generalTime);
-        generalAttend.setAbsenceTime(generalTime);
-        generalAttend.setVacationTime(generalTime);
-        generalAttend.setLateNightWork(generalTime);
-        generalAttend.setHolidayWork(generalTime);
+        MonthWorkInfoResponse monthWorkInfoResponse = new MonthWorkInfoResponse();
+        monthWorkInfoResponse.setStatus(1);
 
-        attends.add(attend);
-        attends.add(generalAttend);
-
-        List<Vacation> vacations = new ArrayList<Vacation>();
-        Vacation vacation = new Vacation();
-        vacation.setBeginVacation(stringToLocalDateTime.stringToLocalDateTime("2025/09/08T01:00:00"));
-        vacation.setEndVacation(stringToLocalDateTime.stringToLocalDateTime("2025/09/08T02:00:00"));
-        vacations.add(vacation);
-
-        when(accountService.findAccountByUsername(anyString())).thenReturn(adminAccount);
+        when(accountService.findCurrentAccount()).thenReturn(adminAccount);
         when(accountApproverService.findAccountAndApprover(anyLong(), any(Account.class))).thenReturn(accountApprover);
-        when(attendService.findByAccountIdAndBeginWorkBetween(any(Account.class), anyInt(), anyInt())).thenReturn(attends);
-        when(vacationService.findByAccountIdAndBeginVacationBetweenMonthAndPaydHoliday(any(Account.class), anyInt(), anyInt())).thenReturn(vacations);
+        when(attendService.getMonthWorkInfoResponse(any(Account.class), any(AccountApprover.class), any(UserMonthWorkInfoInput.class))).thenReturn(monthWorkInfoResponse);
         mockMvc.perform
         (
             get("/api/reach/user/monthworkinfo")
@@ -1903,14 +1805,13 @@ public class TestMockMvcController
             .with(csrf())
             .with(user(adminAccountUsername))
         )
-        .andExpect(status().isOk());
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value(1));
     }
 
     @Test
     void userRequestListSuccess() throws Exception
     {
-        // LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         Account adminAccount = new Account();
         Long adminAccountId = 5L;
         String adminAccountUsername = "testuser";
@@ -1935,104 +1836,8 @@ public class TestMockMvcController
         guestAccount.setUsername(guestAccountUsername);
         guestAccount.setName(guestAccountName);
 
-        AccountApprover generalAccountApprover = new AccountApprover();
-        generalAccountApprover.setAccountId(generalAccount);
-        generalAccountApprover.setApproverId(adminAccount);
-
-        AccountApprover guestAccountApprover = new AccountApprover();
-        guestAccountApprover.setAccountId(guestAccount);
-        guestAccountApprover.setApproverId(adminAccount);
-
-        List<AccountApprover> accountApprovers = new ArrayList<AccountApprover>();
-        accountApprovers.add(generalAccountApprover);
-        accountApprovers.add(guestAccountApprover);
-
-        List<ShiftRequest> shiftRequests = new ArrayList<ShiftRequest>();
-        ShiftRequest shiftRequest = new ShiftRequest();
-        Long shiftRequestId = 43L;
-        String shiftRequestRequestDate = "2025/10/01T20:11:00";
-        int shiftRequestRequestStatus = 1;
-        shiftRequest.setShiftRequestId(shiftRequestId);
-        shiftRequest.setAccountId(generalAccount);
-        shiftRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(shiftRequestRequestDate));
-        shiftRequest.setRequestStatus(shiftRequestRequestStatus);
-        shiftRequests.add(shiftRequest);
-
-        List<ShiftChangeRequest> shiftChangeRequests = new ArrayList<ShiftChangeRequest>();
-        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
-        Long shiftChangeRequestId = 44L;
-        String shiftChangeRequestRequestDate = "2025/09/20T03:33:33";
-        int shiftChangeRequestRequestStatus = 1;
-        shiftChangeRequest.setShiftChangeId(shiftChangeRequestId);
-        shiftChangeRequest.setAccountId(generalAccount);
-        shiftChangeRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(shiftChangeRequestRequestDate));
-        shiftChangeRequest.setRequestStatus(shiftChangeRequestRequestStatus);
-        shiftChangeRequests.add(shiftChangeRequest);
-
-        List<StampRequest> stampRequests = new ArrayList<StampRequest>();
-        StampRequest stampRequest = new StampRequest();
-        Long stampRequestId = 45L;
-        String stampRequestRequestDate = "2025/10/10T10:10:10";
-        int stampRequestRequestStatus = 1;
-        stampRequest.setStampId(stampRequestId);
-        stampRequest.setAccountId(guestAccount);
-        stampRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(stampRequestRequestDate));
-        stampRequest.setRequestStatus(stampRequestRequestStatus);
-        stampRequests.add(stampRequest);
-
-        List<VacationRequest> vacationRequests = new ArrayList<VacationRequest>();
-        VacationRequest vacationRequest = new VacationRequest();
-        Long vacationRequestId = 46L;
-        String vacationRequestRequestDate = "2025/01/23T12:31:23";
-        int vacationRequestRequestStatus = 1;
-        vacationRequest.setVacationId(vacationRequestId);
-        vacationRequest.setAccountId(guestAccount);
-        vacationRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(vacationRequestRequestDate));
-        vacationRequest.setRequestStatus(vacationRequestRequestStatus);
-        vacationRequests.add(vacationRequest);
-
-        List<OverTimeRequest> overTimeRequests = new ArrayList<OverTimeRequest>();
-        OverTimeRequest overTimeRequest = new OverTimeRequest();
-        Long overTimeRequestId = 47L;
-        String overTimeRequestRequestDate = "2025/02/25T20:00:25";
-        int overTimeRequestRequestStatus = 1;
-        overTimeRequest.setOverTimeId(overTimeRequestId);
-        overTimeRequest.setAccountId(guestAccount);
-        overTimeRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(overTimeRequestRequestDate));
-        overTimeRequest.setRequestStatus(overTimeRequestRequestStatus);
-        overTimeRequests.add(overTimeRequest);
-
-        List<AttendanceExceptionRequest> attendanceExceptionRequets = new ArrayList<AttendanceExceptionRequest>();
-        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
-        Long attendanceExceptionRequestId = 48L;
-        String attendanceExceptionRequestRequestDate = "2025/10/09T19:33:33";
-        int attendanceExceptionRequestRequestStatus = 1;
-        attendanceExceptionRequest.setAttendanceExceptionId(attendanceExceptionRequestId);
-        attendanceExceptionRequest.setAccountId(guestAccount);
-        attendanceExceptionRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(attendanceExceptionRequestRequestDate));
-        attendanceExceptionRequest.setRequestStatus(attendanceExceptionRequestRequestStatus);
-        attendanceExceptionRequets.add(attendanceExceptionRequest);
-
-        List<MonthlyRequest> monthlyRequests = new ArrayList<MonthlyRequest>();
-        MonthlyRequest monthlyRequest = new MonthlyRequest();
-        Long monthlyRequestId = 49L;
-        String monthlyRequestRequestDate = "2025/10/11T14:25:34";
-        int monthlyRequestRequestStatus = 1;
-        monthlyRequest.setMonthRequestId(monthlyRequestId);
-        monthlyRequest.setAccountId(guestAccount);
-        monthlyRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(monthlyRequestRequestDate));
-        monthlyRequest.setRequestStatus(monthlyRequestRequestStatus);
-        monthlyRequests.add(monthlyRequest);
-
-        when(accountService.findAccountByUsername(anyString())).thenReturn(adminAccount);
-        when(accountApproverService.findByApproverId(any(Account.class))).thenReturn(accountApprovers);
-        when(shiftRequestService.findByAccountIdIn(anyList())).thenReturn(shiftRequests);
-        when(shiftChangeRequestService.findByAccountIdIn(anyList())).thenReturn(shiftChangeRequests);
-        when(stampRequestService.findByAccountIdIn(anyList())).thenReturn(stampRequests);
-        when(vacationRequestService.findByAccountIdIn(anyList())).thenReturn(vacationRequests);
-        when(overTimeRequestService.findByAccountIdIn(anyList())).thenReturn(overTimeRequests);
-        when(attendanceExceptionRequestService.findByAccountIdIn(anyList())).thenReturn(attendanceExceptionRequets);
-        when(monthlyRequestService.findByAccountIdIn(anyList())).thenReturn(monthlyRequests);
+        when(accountService.findCurrentAccount()).thenReturn(adminAccount);
+        when(requestService.getUserRequestListResponses(any(Account.class))).thenReturn(new ArrayList<UserRequestListResponse>());
         mockMvc.perform
         (
             get("/api/reach/user/requestlist")

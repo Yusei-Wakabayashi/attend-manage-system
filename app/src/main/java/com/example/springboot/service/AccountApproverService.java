@@ -8,6 +8,7 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.springboot.dto.response.ApproverResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
 import com.example.springboot.model.ApprovalSetting;
@@ -108,6 +109,18 @@ public class AccountApproverService
     {
         return accountApproverRepository.save(accountApprover);
     }
+
+    public ApproverResponse getApproverResponse(Account account)
+    {
+        Account adminAccount = findAccountApproverByAccount(account).getApproverId();
+        ApproverResponse approverResponse = new ApproverResponse();
+        approverResponse.setStatus(1);
+        approverResponse.setApproverId(adminAccount.getId().intValue());
+        approverResponse.setApproverName(adminAccount.getName());
+        approverResponse.setApproverDepartment(adminAccount.getDepartmentId().getName());
+        approverResponse.setApproverRole(adminAccount.getRoleId().getName());
+        return approverResponse;
+    } 
 
     @Transactional
     public void resetAllTables()

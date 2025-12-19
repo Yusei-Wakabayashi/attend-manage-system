@@ -49,6 +49,7 @@ import com.example.springboot.dto.response.RequestDetailShiftResponse;
 import com.example.springboot.dto.response.RequestDetailStampResponse;
 import com.example.springboot.dto.response.RequestDetailVacationResponse;
 import com.example.springboot.dto.response.RequestListResponse;
+import com.example.springboot.dto.response.UserRequestListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
 import com.example.springboot.model.Attend;
@@ -1482,7 +1483,7 @@ public class RequestServiceTest
     }
 
     @Test
-    void returnRequestList()
+    void returnRequestListSuccess()
     {
         Account generalAccount = new Account();
         Long generalAccountId = 1L;
@@ -1568,7 +1569,140 @@ public class RequestServiceTest
         assertEquals(7, requestListResponses.size());
     }
 
+    @Test
+    void returnUserRequestListSuccess()
+    {
+        Account adminAccount = new Account();
+        Long adminAccountId = 5L;
+        String adminAccountUsername = "testuser";
+        String adminAccountName = "権平権平";
+        adminAccount.setId(adminAccountId);
+        adminAccount.setUsername(adminAccountUsername);
+        adminAccount.setName(adminAccountName);
 
+        Account generalAccount = new Account();
+        Long generalAccountId = 7L;
+        String generalAccountUsername = "hogehoge";
+        String generalAccountName = "キキ";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+        generalAccount.setName(generalAccountName);
+
+        Account guestAccount = new Account();
+        Long guestAccountId = 99L;
+        String guestAccountUsername = "nanasinogonbei";
+        String guestAccountName = "ララ";
+        guestAccount.setId(guestAccountId);
+        guestAccount.setUsername(guestAccountUsername);
+        guestAccount.setName(guestAccountName);
+
+        AccountApprover generalAccountApprover = new AccountApprover();
+        generalAccountApprover.setAccountId(generalAccount);
+        generalAccountApprover.setApproverId(adminAccount);
+
+        AccountApprover guestAccountApprover = new AccountApprover();
+        guestAccountApprover.setAccountId(guestAccount);
+        guestAccountApprover.setApproverId(adminAccount);
+
+        List<AccountApprover> accountApprovers = new ArrayList<AccountApprover>();
+        accountApprovers.add(generalAccountApprover);
+        accountApprovers.add(guestAccountApprover);
+
+        List<ShiftRequest> shiftRequests = new ArrayList<ShiftRequest>();
+        ShiftRequest shiftRequest = new ShiftRequest();
+        Long shiftRequestId = 43L;
+        String shiftRequestRequestDate = "2025/10/01T20:11:00";
+        int shiftRequestRequestStatus = 1;
+        shiftRequest.setShiftRequestId(shiftRequestId);
+        shiftRequest.setAccountId(generalAccount);
+        shiftRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(shiftRequestRequestDate));
+        shiftRequest.setRequestStatus(shiftRequestRequestStatus);
+        shiftRequests.add(shiftRequest);
+
+        List<ShiftChangeRequest> shiftChangeRequests = new ArrayList<ShiftChangeRequest>();
+        ShiftChangeRequest shiftChangeRequest = new ShiftChangeRequest();
+        Long shiftChangeRequestId = 44L;
+        String shiftChangeRequestRequestDate = "2025/09/20T03:33:33";
+        int shiftChangeRequestRequestStatus = 1;
+        shiftChangeRequest.setShiftChangeId(shiftChangeRequestId);
+        shiftChangeRequest.setAccountId(generalAccount);
+        shiftChangeRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(shiftChangeRequestRequestDate));
+        shiftChangeRequest.setRequestStatus(shiftChangeRequestRequestStatus);
+        shiftChangeRequests.add(shiftChangeRequest);
+
+        List<StampRequest> stampRequests = new ArrayList<StampRequest>();
+        StampRequest stampRequest = new StampRequest();
+        Long stampRequestId = 45L;
+        String stampRequestRequestDate = "2025/10/10T10:10:10";
+        int stampRequestRequestStatus = 1;
+        stampRequest.setStampId(stampRequestId);
+        stampRequest.setAccountId(guestAccount);
+        stampRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(stampRequestRequestDate));
+        stampRequest.setRequestStatus(stampRequestRequestStatus);
+        stampRequests.add(stampRequest);
+
+        List<VacationRequest> vacationRequests = new ArrayList<VacationRequest>();
+        VacationRequest vacationRequest = new VacationRequest();
+        Long vacationRequestId = 46L;
+        String vacationRequestRequestDate = "2025/01/23T12:31:23";
+        int vacationRequestRequestStatus = 1;
+        vacationRequest.setVacationId(vacationRequestId);
+        vacationRequest.setAccountId(guestAccount);
+        vacationRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(vacationRequestRequestDate));
+        vacationRequest.setRequestStatus(vacationRequestRequestStatus);
+        vacationRequests.add(vacationRequest);
+
+        List<OverTimeRequest> overTimeRequests = new ArrayList<OverTimeRequest>();
+        OverTimeRequest overTimeRequest = new OverTimeRequest();
+        Long overTimeRequestId = 47L;
+        String overTimeRequestRequestDate = "2025/02/25T20:00:25";
+        int overTimeRequestRequestStatus = 1;
+        overTimeRequest.setOverTimeId(overTimeRequestId);
+        overTimeRequest.setAccountId(guestAccount);
+        overTimeRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(overTimeRequestRequestDate));
+        overTimeRequest.setRequestStatus(overTimeRequestRequestStatus);
+        overTimeRequests.add(overTimeRequest);
+
+        List<AttendanceExceptionRequest> attendanceExceptionRequets = new ArrayList<AttendanceExceptionRequest>();
+        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        Long attendanceExceptionRequestId = 48L;
+        String attendanceExceptionRequestRequestDate = "2025/10/09T19:33:33";
+        int attendanceExceptionRequestRequestStatus = 1;
+        attendanceExceptionRequest.setAttendanceExceptionId(attendanceExceptionRequestId);
+        attendanceExceptionRequest.setAccountId(guestAccount);
+        attendanceExceptionRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(attendanceExceptionRequestRequestDate));
+        attendanceExceptionRequest.setRequestStatus(attendanceExceptionRequestRequestStatus);
+        attendanceExceptionRequets.add(attendanceExceptionRequest);
+
+        List<MonthlyRequest> monthlyRequests = new ArrayList<MonthlyRequest>();
+        MonthlyRequest monthlyRequest = new MonthlyRequest();
+        Long monthlyRequestId = 49L;
+        String monthlyRequestRequestDate = "2025/10/11T14:25:34";
+        int monthlyRequestRequestStatus = 1;
+        monthlyRequest.setMonthRequestId(monthlyRequestId);
+        monthlyRequest.setAccountId(guestAccount);
+        monthlyRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(monthlyRequestRequestDate));
+        monthlyRequest.setRequestStatus(monthlyRequestRequestStatus);
+        monthlyRequests.add(monthlyRequest);
+
+        when(accountApproverService.findByApproverId(any(Account.class))).thenReturn(accountApprovers);
+        when(shiftRequestService.findByAccountIdIn(anyList())).thenReturn(shiftRequests);
+        when(localDateTimeToString.localDateTimeToString(shiftRequest.getRequestDate())).thenReturn(shiftRequestRequestDate);
+        when(shiftChangeRequestService.findByAccountIdIn(anyList())).thenReturn(shiftChangeRequests);
+        when(localDateTimeToString.localDateTimeToString(shiftChangeRequest.getRequestDate())).thenReturn(shiftChangeRequestRequestDate);
+        when(stampRequestService.findByAccountIdIn(anyList())).thenReturn(stampRequests);
+        when(localDateTimeToString.localDateTimeToString(stampRequest.getRequestDate())).thenReturn(stampRequestRequestDate);
+        when(vacationRequestService.findByAccountIdIn(anyList())).thenReturn(vacationRequests);
+        when(localDateTimeToString.localDateTimeToString(vacationRequest.getRequestDate())).thenReturn(vacationRequestRequestDate);
+        when(overTimeRequestService.findByAccountIdIn(anyList())).thenReturn(overTimeRequests);
+        when(localDateTimeToString.localDateTimeToString(overTimeRequest.getRequestDate())).thenReturn(attendanceExceptionRequestRequestDate);
+        when(attendanceExceptionRequestService.findByAccountIdIn(anyList())).thenReturn(attendanceExceptionRequets);
+        when(localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getRequestDate())).thenReturn(monthlyRequestRequestDate);
+        when(monthlyRequestService.findByAccountIdIn(anyList())).thenReturn(monthlyRequests);
+
+        List<UserRequestListResponse> userRequestListResponses = requestService.getUserRequestListResponses(guestAccount);
+        assertEquals(7, userRequestListResponses.size());
+    }
 
     @Test
     void withdrowShiftSuccess()

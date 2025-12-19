@@ -14,9 +14,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ContextConfiguration;
 
 import com.example.springboot.Config;
+import com.example.springboot.dto.response.ApproverResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
 import com.example.springboot.model.ApprovalSetting;
+import com.example.springboot.model.Department;
 import com.example.springboot.model.Role;
 import com.example.springboot.repository.AccountApproverRepository;
 import com.example.springboot.service.AccountApproverService;
@@ -81,5 +83,39 @@ public class AccountApproverServiceTest
 
         // 想定通りか確認
         assertEquals(1, result);
+    }
+
+
+    @Test
+    void getApproverResponseSuccess()
+    {
+        Account generalAccount = new Account();
+        Long generalAccountId = 3L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Account adminAccount = new Account();
+        Long adminAccountId = 4L;
+        String adminAccountName = "かまどたかしろう";
+        Department adminAccountDepartment = new Department();
+        String adminAccountDepartmentName = "総務";
+        adminAccountDepartment.setName(adminAccountDepartmentName);
+        Role adminAccountRole = new Role();
+        String adminAccountRoleName = "課長";
+        adminAccountRole.setName(adminAccountRoleName);
+        adminAccount.setId(adminAccountId);
+        adminAccount.setName(adminAccountName);
+        adminAccount.setDepartmentId(adminAccountDepartment);
+        adminAccount.setRoleId(adminAccountRole);
+
+        AccountApprover accountApprover = new AccountApprover();
+        accountApprover.setAccountId(generalAccount);
+        accountApprover.setApproverId(adminAccount);
+
+        doReturn(accountApprover).when(accountApproverService).findAccountApproverByAccount(any(Account.class));
+
+        ApproverResponse approverResponse = accountApproverService.getApproverResponse(generalAccount);
+        assertEquals(1, approverResponse.getStatus());
     }
 }

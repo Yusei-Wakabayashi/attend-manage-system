@@ -17,9 +17,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.springboot.dto.change.LocalDateTimeToString;
+import com.example.springboot.dto.input.UserShiftInput;
 import com.example.springboot.dto.input.YearMonthInput;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
+import com.example.springboot.model.AccountApprover;
 import com.example.springboot.model.Shift;
 import com.example.springboot.repository.ShiftRepository;
 
@@ -179,6 +181,17 @@ public class ShiftService
     public Shift save(Shift shift)
     {
         return shiftRepository.save(shift);
+    }
+
+    public List<ShiftListResponse> returnShiftListResponses(Account account, AccountApprover accountApprover, UserShiftInput request)
+    {
+        List<ShiftListResponse> shiftListResponses = new ArrayList<ShiftListResponse>();
+        List<Shift> shifts = findByAccountIdAndBeginWorkBetween(request.getAccountId(), request.getYear(), request.getMonth());
+        for(Shift shift : shifts)
+        {
+            shiftListResponses.add(shiftToShiftListResponse(shift));
+        }
+        return shiftListResponses;
     }
 
     @Transactional
