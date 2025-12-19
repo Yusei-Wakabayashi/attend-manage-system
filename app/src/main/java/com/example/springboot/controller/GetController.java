@@ -37,6 +37,7 @@ import com.example.springboot.dto.response.Response;
 import com.example.springboot.dto.ArrayResponse;
 import com.example.springboot.dto.change.DurationToString;
 import com.example.springboot.dto.change.LocalDateTimeToString;
+import com.example.springboot.dto.input.LegalCheckShiftChangeInput;
 import com.example.springboot.dto.input.LegalCheckShiftInput;
 import com.example.springboot.dto.input.RequestIdInput;
 import com.example.springboot.dto.input.UserAttendInput;
@@ -74,6 +75,7 @@ import com.example.springboot.service.AttendService;
 import com.example.springboot.service.AttendanceExceptionRequestService;
 import com.example.springboot.service.AttendanceExceptionTypeService;
 import com.example.springboot.service.DepartmentService;
+import com.example.springboot.service.LegalCheckService;
 import com.example.springboot.service.MonthlyRequestService;
 import com.example.springboot.service.NewsListService;
 import com.example.springboot.service.OverTimeRequestService;
@@ -165,6 +167,9 @@ public class GetController
 
     @Autowired
     RequestService requestService;
+
+    @Autowired
+    LegalCheckService legalCheckService;
 
     @GetMapping("/reach/approverlist")
     public ArrayResponse<ApproverListResponse> returnApproverList()
@@ -825,14 +830,24 @@ public class GetController
     @GetMapping("/reach/legalcheck/shift")
     public Response shiftLegalCheck(LegalCheckShiftInput legalCheckShiftInput)
     {
-        int result = 1;
+        Account account = accountService.findCurrentAccount();
+        if(Objects.isNull(account))
+        {
+            return new Response(3);
+        }
+        int result = legalCheckService.shiftLegalCheck(account, legalCheckShiftInput);
         return new Response(result);
     }
 
     @GetMapping("/reach/legalcheck/shiftchange")
-    public Response shiftChangeResponse(LegalCheckShiftInput legalCheckShiftInput)
+    public Response shiftChangeResponse(LegalCheckShiftChangeInput legalCheckShiftChangeInput)
     {
-        int result = 1;
+        Account account = accountService.findCurrentAccount();
+        if(Objects.isNull(account))
+        {
+            return new Response(3);
+        }
+        int result = legalCheckService.shiftChangeLegalCheck(account, legalCheckShiftChangeInput);
         return new Response(result);
     }
 }
