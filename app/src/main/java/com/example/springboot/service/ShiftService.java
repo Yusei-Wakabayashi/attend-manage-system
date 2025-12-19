@@ -192,4 +192,10 @@ public class ShiftService
     {
         
     }
+
+    @Transactional
+    public void delete(Shift shift)
+    {
+        shiftRepository.delete(shift);
+    }
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.springboot.model.AttendanceExceptionRequest;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.ShiftListOtherTime;
 import com.example.springboot.repository.ShiftListOtherTimeRepository;
@@ -14,6 +15,18 @@ public class ShiftListOtherTimeService
 {
     @Autowired
     private ShiftListOtherTimeRepository shiftListOtherTimeRepository;
+
+    public ShiftListOtherTime findByOtherTimeId(AttendanceExceptionRequest attendanceExceptionRequest)
+    {
+        return shiftListOtherTimeRepository.findByAttendanceExceptionId(attendanceExceptionRequest);
+    }
+
+    public ShiftListOtherTime findByOtherTimeId(Long id)
+    {
+        AttendanceExceptionRequest attendanceExceptionRequest = new AttendanceExceptionRequest();
+        attendanceExceptionRequest.setAttendanceExceptionId(id);
+        return shiftListOtherTimeRepository.findByAttendanceExceptionId(attendanceExceptionRequest);
+    }
 
     public List<ShiftListOtherTime> findByShiftId(Long shiftId)
     {

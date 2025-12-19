@@ -8,11 +8,14 @@ import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Vacation;
+import com.example.springboot.model.VacationRequest;
 import com.example.springboot.model.VacationType;
 import com.example.springboot.repository.VacationRepository;
 
@@ -21,6 +24,18 @@ public class VacationService
 {
     @Autowired
     private VacationRepository vacationRepository;
+
+    public Vacation findByVacation(VacationRequest vacationRequest)
+    {
+        return vacationRepository.findByVacationId(vacationRequest);
+    }
+
+    public Vacation findByVacation(Long id)
+    {
+        VacationRequest vacationRequest = new VacationRequest();
+        vacationRequest.setVacationId(id);
+        return vacationRepository.findByVacationId(vacationRequest);
+    }
     
     public List<Vacation> findByAccountIdAndBeginVacationBetweenWeek(Account account, LocalDateTime begin)
     {
@@ -69,8 +84,15 @@ public class VacationService
         return vacations;
     }
 
+    @Transactional
     public Vacation save(Vacation vacation)
     {
         return vacationRepository.save(vacation);
+    }
+
+    @Transactional
+    public void delete(Vacation vacation)
+    {
+        vacationRepository.delete(vacation);
     }
 }

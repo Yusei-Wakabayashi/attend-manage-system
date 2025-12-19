@@ -3,6 +3,8 @@ package com.example.springboot.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -54,8 +56,15 @@ public class AttendanceListSourceService
         return attendanceListSources;
     }
 
+    @Transactional
     public AttendanceListSource save(AttendanceListSource attendanceListSource)
     {
         return attendanceListSourceRepository.save(attendanceListSource);
+    }
+
+    @Transactional
+    public void delete(AttendanceListSource attendanceListSource)
+    {
+        attendanceListSourceRepository.delete(attendanceListSource);
     }
 }

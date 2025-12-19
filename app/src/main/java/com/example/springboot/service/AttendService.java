@@ -98,6 +98,7 @@ public class AttendService
         return attendListResponse;
     }
 
+    @Transactional
     public Attend save(Attend attend)
     {
         return attendRepository.save(attend);
@@ -108,5 +109,11 @@ public class AttendService
     {
         attendRepository.deleteAll();
         attendRepository.resetAutoIncrement();
+    }
+
+    @Transactional
+    public void delete(Attend attend)
+    {
+        attendRepository.delete(attend);
     }
 }

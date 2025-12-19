@@ -7,10 +7,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Vacation;
+import com.example.springboot.model.VacationRequest;
 import com.example.springboot.model.VacationType;
 
 public interface VacationRepository extends JpaRepository<Vacation, Long>
 {
+    Vacation findByVacationId(VacationRequest vacationRequestId);
     List<Vacation> findByAccountIdAndBeginVacationBetween(Account id, LocalDateTime startPeriod, LocalDateTime endPeriod);
     List<Vacation> findByAccountIdAndBeginVacationBetweenAndVacationTypeId(Account id, LocalDateTime startPeriod, LocalDateTime endPeriod, VacationType vacationTypeId);
 }
