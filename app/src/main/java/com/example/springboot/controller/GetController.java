@@ -56,7 +56,6 @@ import com.example.springboot.model.Attend;
 import com.example.springboot.model.AttendanceExceptionRequest;
 import com.example.springboot.model.AttendanceExceptionType;
 import com.example.springboot.model.MonthlyRequest;
-import com.example.springboot.model.NewsList;
 import com.example.springboot.model.OverTimeRequest;
 import com.example.springboot.model.PaydHoliday;
 import com.example.springboot.model.PaydHolidayUse;
@@ -339,80 +338,15 @@ public class GetController
     @GetMapping("/reach/requestlist")
     public ArrayResponse<RequestListResponse> returnRequestList(HttpSession session)
     {
-        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
-        int status = 0;
-        List<RequestListResponse> requestListResponse = new ArrayList<RequestListResponse>();
-        // そのアカウントの申請(シフト、シフト時間変更、打刻漏れ、勤怠例外、残業、休暇、月次)をそれぞれ取得し必要な情報だけを設定
-        for(ShiftRequest shiftRequest : shiftRequestService.findByAccountId(account))
+        Account account = accountService.findCurrentAccount();
+        if(Objects.isNull(account))
         {
-            RequestListResponse requestListResponseShiftRequest = new RequestListResponse();
-            requestListResponseShiftRequest.setId(shiftRequest.getShiftRequestId().intValue());
-            requestListResponseShiftRequest.setRequestType(1);
-            requestListResponseShiftRequest.setRequestDate(localDateTimeToString.localDateTimeToString(shiftRequest.getRequestDate()));
-            requestListResponseShiftRequest.setRequestStatus(shiftRequest.getRequestStatus());
-            requestListResponse.add(requestListResponseShiftRequest);
+            return new ArrayResponse<RequestListResponse>(3, Collections.emptyList(), "requestList");
         }
-        for(ShiftChangeRequest shiftChangeRequest : shiftChangeRequestService.findByAccountId(account))
-        {
-            RequestListResponse requestListResponseShiftChangeRequest = new RequestListResponse();
-            requestListResponseShiftChangeRequest.setId(shiftChangeRequest.getShiftChangeId().intValue());
-            requestListResponseShiftChangeRequest.setRequestType(2);
-            requestListResponseShiftChangeRequest.setRequestDate(localDateTimeToString.localDateTimeToString(shiftChangeRequest.getRequestDate()));
-            requestListResponseShiftChangeRequest.setRequestStatus(shiftChangeRequest.getRequestStatus());
-            requestListResponse.add(requestListResponseShiftChangeRequest);
-        }
-        for(StampRequest stampRequest : stampRequestService.findByAccountId(account))
-        {
-            RequestListResponse requestListResponseStampRequest = new RequestListResponse();
-            requestListResponseStampRequest.setId(stampRequest.getStampId().intValue());
-            requestListResponseStampRequest.setRequestType(2);
-            requestListResponseStampRequest.setRequestDate(localDateTimeToString.localDateTimeToString(stampRequest.getRequestDate()));
-            requestListResponseStampRequest.setRequestStatus(stampRequest.getRequestStatus());
-            requestListResponse.add(requestListResponseStampRequest);
-        }
-        for(AttendanceExceptionRequest attendanceExceptionRequest : attendanceExceptionRequestService.findByAccountId(account))
-        {
-            RequestListResponse requestListResponseAttendanceExceptionRequest = new RequestListResponse();
-            requestListResponseAttendanceExceptionRequest.setId(attendanceExceptionRequest.getAttendanceExceptionId().intValue());
-            requestListResponseAttendanceExceptionRequest.setRequestType(2);
-            requestListResponseAttendanceExceptionRequest.setRequestDate(localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getRequestDate()));
-            requestListResponseAttendanceExceptionRequest.setRequestStatus(attendanceExceptionRequest.getRequestStatus());
-            requestListResponse.add(requestListResponseAttendanceExceptionRequest);
-        }
-        for(OverTimeRequest overTimeRequest : overTimeRequestService.findByAccountId(account))
-        {
-            RequestListResponse requestListResponseOverTimeRequest = new RequestListResponse();
-            requestListResponseOverTimeRequest.setId(overTimeRequest.getOverTimeId().intValue());
-            requestListResponseOverTimeRequest.setRequestType(2);
-            requestListResponseOverTimeRequest.setRequestDate(localDateTimeToString.localDateTimeToString(overTimeRequest.getRequestDate()));
-            requestListResponseOverTimeRequest.setRequestStatus(overTimeRequest.getRequestStatus());
-            requestListResponse.add(requestListResponseOverTimeRequest);
-        }
-        for(VacationRequest vacationRequest : vacationRequestService.findByAccountId(account))
-        {
-            RequestListResponse requestListResponseVacationRequest = new RequestListResponse();
-            requestListResponseVacationRequest.setId(vacationRequest.getVacationId().intValue());
-            requestListResponseVacationRequest.setRequestType(2);
-            requestListResponseVacationRequest.setRequestDate(localDateTimeToString.localDateTimeToString(vacationRequest.getRequestDate()));
-            requestListResponseVacationRequest.setRequestStatus(vacationRequest.getRequestStatus());
-            requestListResponse.add(requestListResponseVacationRequest);
-        }
-        for(MonthlyRequest monthlyRequest : monthlyRequestService.findByAccountId(account))
-        {
-            RequestListResponse requestListResponseMonthRequest = new RequestListResponse();
-            requestListResponseMonthRequest.setId(monthlyRequest.getMonthRequestId().intValue());
-            requestListResponseMonthRequest.setRequestType(2);
-            requestListResponseMonthRequest.setRequestDate(localDateTimeToString.localDateTimeToString(monthlyRequest.getRequestDate()));
-            requestListResponseMonthRequest.setRequestStatus(monthlyRequest.getRequestStatus());
-            requestListResponse.add(requestListResponseMonthRequest);
-        }
-        // 申請日時を基にソート
-        requestListResponse.sort(Comparator.comparing(RequestListResponse::getRequestDate));
-        status = 1;
-        return new ArrayResponse<RequestListResponse>(status, requestListResponse, "requestList");
+        List<RequestListResponse> requestListResponse = requestService.getRequestList(account);
+        return new ArrayResponse<RequestListResponse>(1, requestListResponse, "requestList");
     }
+
     @GetMapping("/reach/monthworkinfo")
     public MonthWorkInfoResponse returnMonthWorkInfo(HttpSession session, YearMonthInput request)
     {
@@ -811,19 +745,12 @@ public class GetController
     @GetMapping("/reach/news")
     public ArrayResponse<NewsListResponse> returnNewsList(HttpSession session)
     {
-        String username = SecurityUtil.getCurrentUsername();
-        Account account = accountService.findAccountByUsername(username);
+        Account account = accountService.findCurrentAccount();
         if(Objects.isNull(account))
         {
-            throw new RuntimeException("アカウントが存在しません");
+            return new ArrayResponse<NewsListResponse>(3, Collections.emptyList(), "newsList");
         }
-        List<NewsList> newsLists = newsListService.findByAccountId(account);
-        List<NewsListResponse> newsListResponses = new ArrayList<NewsListResponse>();
-        for(NewsList newsList : newsLists)
-        {
-            NewsListResponse newsListResponse = newsListService.newsListToNewsListResponse(newsList);
-            newsListResponses.add(newsListResponse);
-        }
+        List<NewsListResponse> newsListResponses = newsListService.returnNewsList(account);
         return new ArrayResponse<NewsListResponse>(1, newsListResponses, "newsList");
     }
 
@@ -850,4 +777,5 @@ public class GetController
         int result = legalCheckService.shiftChangeLegalCheck(account, legalCheckShiftChangeInput);
         return new Response(result);
     }
+
 }

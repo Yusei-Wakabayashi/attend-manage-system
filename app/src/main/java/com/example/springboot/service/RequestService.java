@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -14,6 +15,7 @@ import javax.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import com.example.springboot.dto.change.DurationToString;
+import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.change.StringToDuration;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.input.MonthlyInput;
@@ -32,6 +34,7 @@ import com.example.springboot.dto.response.RequestDetailShiftChangeResponse;
 import com.example.springboot.dto.response.RequestDetailShiftResponse;
 import com.example.springboot.dto.response.RequestDetailStampResponse;
 import com.example.springboot.dto.response.RequestDetailVacationResponse;
+import com.example.springboot.dto.response.RequestListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
 import com.example.springboot.model.Attend;
@@ -82,6 +85,7 @@ public class RequestService
     private final LegalTimeService legalTimeService;
     private final AccountApproverService accountApproverService;
     private final PaydHolidayUseService paydHolidayUseService;
+    private final LocalDateTimeToString localDateTimeToString;
 
     public RequestService
     (
@@ -109,7 +113,8 @@ public class RequestService
         AttendanceExceptionTypeService attendanceExceptionTypeService,
         LegalTimeService legalTimeService,
         AccountApproverService accountApproverService,
-        PaydHolidayUseService paydHolidayUseService
+        PaydHolidayUseService paydHolidayUseService,
+        LocalDateTimeToString localDateTimeToString
     )
     {
         this.shiftRequestService = shiftRequestService;
@@ -137,6 +142,7 @@ public class RequestService
         this.legalTimeService = legalTimeService;
         this.accountApproverService = accountApproverService;
         this.paydHolidayUseService = paydHolidayUseService;
+        this.localDateTimeToString = localDateTimeToString;
     }
 
     @Transactional
@@ -986,6 +992,79 @@ public class RequestService
         MonthlyRequest monthlyRequest = monthlyRequestService.findByAccountIdAndMothlyRequestId(account, requestId);
         return monthlyRequestService.mapToDetailResponse(monthlyRequest);
     }
+
+    public List<RequestListResponse> getRequestList(Account account)
+    {
+        List<RequestListResponse> requestListResponse = new ArrayList<RequestListResponse>();
+        // そのアカウントの申請(シフト、シフト時間変更、打刻漏れ、勤怠例外、残業、休暇、月次)をそれぞれ取得し必要な情報だけを設定
+        for(ShiftRequest shiftRequest : shiftRequestService.findByAccountId(account))
+        {
+            RequestListResponse requestListResponseShiftRequest = new RequestListResponse();
+            requestListResponseShiftRequest.setId(shiftRequest.getShiftRequestId().intValue());
+            requestListResponseShiftRequest.setRequestType(1);
+            requestListResponseShiftRequest.setRequestDate(localDateTimeToString.localDateTimeToString(shiftRequest.getRequestDate()));
+            requestListResponseShiftRequest.setRequestStatus(shiftRequest.getRequestStatus());
+            requestListResponse.add(requestListResponseShiftRequest);
+        }
+        for(ShiftChangeRequest shiftChangeRequest : shiftChangeRequestService.findByAccountId(account))
+        {
+            RequestListResponse requestListResponseShiftChangeRequest = new RequestListResponse();
+            requestListResponseShiftChangeRequest.setId(shiftChangeRequest.getShiftChangeId().intValue());
+            requestListResponseShiftChangeRequest.setRequestType(2);
+            requestListResponseShiftChangeRequest.setRequestDate(localDateTimeToString.localDateTimeToString(shiftChangeRequest.getRequestDate()));
+            requestListResponseShiftChangeRequest.setRequestStatus(shiftChangeRequest.getRequestStatus());
+            requestListResponse.add(requestListResponseShiftChangeRequest);
+        }
+        for(StampRequest stampRequest : stampRequestService.findByAccountId(account))
+        {
+            RequestListResponse requestListResponseStampRequest = new RequestListResponse();
+            requestListResponseStampRequest.setId(stampRequest.getStampId().intValue());
+            requestListResponseStampRequest.setRequestType(2);
+            requestListResponseStampRequest.setRequestDate(localDateTimeToString.localDateTimeToString(stampRequest.getRequestDate()));
+            requestListResponseStampRequest.setRequestStatus(stampRequest.getRequestStatus());
+            requestListResponse.add(requestListResponseStampRequest);
+        }
+        for(AttendanceExceptionRequest attendanceExceptionRequest : attendanceExceptionRequestService.findByAccountId(account))
+        {
+            RequestListResponse requestListResponseAttendanceExceptionRequest = new RequestListResponse();
+            requestListResponseAttendanceExceptionRequest.setId(attendanceExceptionRequest.getAttendanceExceptionId().intValue());
+            requestListResponseAttendanceExceptionRequest.setRequestType(2);
+            requestListResponseAttendanceExceptionRequest.setRequestDate(localDateTimeToString.localDateTimeToString(attendanceExceptionRequest.getRequestDate()));
+            requestListResponseAttendanceExceptionRequest.setRequestStatus(attendanceExceptionRequest.getRequestStatus());
+            requestListResponse.add(requestListResponseAttendanceExceptionRequest);
+        }
+        for(OverTimeRequest overTimeRequest : overTimeRequestService.findByAccountId(account))
+        {
+            RequestListResponse requestListResponseOverTimeRequest = new RequestListResponse();
+            requestListResponseOverTimeRequest.setId(overTimeRequest.getOverTimeId().intValue());
+            requestListResponseOverTimeRequest.setRequestType(2);
+            requestListResponseOverTimeRequest.setRequestDate(localDateTimeToString.localDateTimeToString(overTimeRequest.getRequestDate()));
+            requestListResponseOverTimeRequest.setRequestStatus(overTimeRequest.getRequestStatus());
+            requestListResponse.add(requestListResponseOverTimeRequest);
+        }
+        for(VacationRequest vacationRequest : vacationRequestService.findByAccountId(account))
+        {
+            RequestListResponse requestListResponseVacationRequest = new RequestListResponse();
+            requestListResponseVacationRequest.setId(vacationRequest.getVacationId().intValue());
+            requestListResponseVacationRequest.setRequestType(2);
+            requestListResponseVacationRequest.setRequestDate(localDateTimeToString.localDateTimeToString(vacationRequest.getRequestDate()));
+            requestListResponseVacationRequest.setRequestStatus(vacationRequest.getRequestStatus());
+            requestListResponse.add(requestListResponseVacationRequest);
+        }
+        for(MonthlyRequest monthlyRequest : monthlyRequestService.findByAccountId(account))
+        {
+            RequestListResponse requestListResponseMonthRequest = new RequestListResponse();
+            requestListResponseMonthRequest.setId(monthlyRequest.getMonthRequestId().intValue());
+            requestListResponseMonthRequest.setRequestType(2);
+            requestListResponseMonthRequest.setRequestDate(localDateTimeToString.localDateTimeToString(monthlyRequest.getRequestDate()));
+            requestListResponseMonthRequest.setRequestStatus(monthlyRequest.getRequestStatus());
+            requestListResponse.add(requestListResponseMonthRequest);
+        }
+        // 申請日時を基にソート
+        requestListResponse.sort(Comparator.comparing(RequestListResponse::getRequestDate));
+        return requestListResponse;
+    }
+
 
     @Transactional
     public int withdrow(Account account, WithDrowInput withDrowInput)

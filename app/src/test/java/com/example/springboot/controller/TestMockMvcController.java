@@ -59,6 +59,7 @@ import com.example.springboot.dto.response.RequestDetailShiftChangeResponse;
 import com.example.springboot.dto.response.RequestDetailShiftResponse;
 import com.example.springboot.dto.response.RequestDetailStampResponse;
 import com.example.springboot.dto.response.RequestDetailVacationResponse;
+import com.example.springboot.dto.response.RequestListResponse;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
@@ -1362,81 +1363,18 @@ public class TestMockMvcController
     @Test
     void requestListResponseSuccess() throws Exception
     {
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
-        LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         Account generalAccount = new Account();
         Long generalAccountId = 1L;
         String generalAccountUsername = "testuser";
         generalAccount.setId(generalAccountId);
         generalAccount.setUsername(generalAccountUsername);
 
-        Long generalRequestId = 3L;
-        int generalRequestStatus = 1;
-        String generalLocalDateTimeShift = "2025/06/07T21:33:44";
-        String generalLocalDateTimeShiftChange = "2025/06/07T21:33:45";
-        String generalLocalDateTimeStamp = "2025/06/07T21:33:46";
-        String generalLocalDateTimeAttendanceException = "2025/06/07T21:33:47";
-        String generalLocalDateTimeOverTime = "2025/06/07T21:33:48";
-        String generalLocalDateTimeVacation = "2025/06/07T21:33:49";
-        String generalLocalDateTimeMonthly = "2025/06/07T21:33:50";
+        List<RequestListResponse> requestListResponses = new ArrayList<RequestListResponse>();
+        RequestListResponse requestListResponse = new RequestListResponse();
+        requestListResponses.add(requestListResponse);
 
-        List<ShiftRequest> shiftRequests = new ArrayList<ShiftRequest>();
-        ShiftRequest generalShiftRequest = new ShiftRequest();
-        generalShiftRequest.setShiftRequestId(generalRequestId);
-        generalShiftRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeShift));
-        generalShiftRequest.setRequestStatus(generalRequestStatus);
-        shiftRequests.add(generalShiftRequest);
-
-        List<ShiftChangeRequest> shiftChangeRequests = new ArrayList<ShiftChangeRequest>();
-        ShiftChangeRequest generalShiftChangeRequest = new ShiftChangeRequest();
-        generalShiftChangeRequest.setShiftChangeId(generalRequestId);
-        generalShiftChangeRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeShiftChange));
-        generalShiftChangeRequest.setRequestStatus(generalRequestStatus);
-        shiftChangeRequests.add(generalShiftChangeRequest);
-
-        List<StampRequest> stampRequests = new ArrayList<StampRequest>();
-        StampRequest generalStampRequest = new StampRequest();
-        generalStampRequest.setStampId(generalRequestId);
-        generalStampRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeStamp));
-        generalStampRequest.setRequestStatus(generalRequestStatus);
-        stampRequests.add(generalStampRequest);
-    
-        List<AttendanceExceptionRequest> attendanceExceptionRequests = new ArrayList<AttendanceExceptionRequest>();
-        AttendanceExceptionRequest generalAttendanceExceptionRequest = new AttendanceExceptionRequest();
-        generalAttendanceExceptionRequest.setAttendanceExceptionId(generalRequestId);
-        generalAttendanceExceptionRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeAttendanceException));
-        generalAttendanceExceptionRequest.setRequestStatus(generalRequestStatus);
-        attendanceExceptionRequests.add(generalAttendanceExceptionRequest);
-
-        List<VacationRequest> vacationRequests = new ArrayList<VacationRequest>();
-        VacationRequest generalVacationRequest = new VacationRequest();
-        generalVacationRequest.setVacationId(generalRequestId);
-        generalVacationRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeVacation));
-        generalVacationRequest.setRequestStatus(generalRequestStatus);
-        vacationRequests.add(generalVacationRequest);
-
-        List<OverTimeRequest> overTimeRequests = new ArrayList<OverTimeRequest>();
-        OverTimeRequest generalOverTimeRequest = new OverTimeRequest();
-        generalOverTimeRequest.setOverTimeId(generalRequestId);
-        generalOverTimeRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeOverTime));
-        generalOverTimeRequest.setRequestStatus(generalRequestStatus);
-        vacationRequests.add(generalVacationRequest);
-
-        List<MonthlyRequest> monthlyRequests = new ArrayList<MonthlyRequest>();
-        MonthlyRequest generalMonthlyRequest = new MonthlyRequest();
-        generalMonthlyRequest.setMonthRequestId(generalRequestId);
-        generalMonthlyRequest.setRequestDate(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeMonthly));
-        generalMonthlyRequest.setRequestStatus(generalRequestStatus);
-        monthlyRequests.add(generalMonthlyRequest);
-
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(shiftRequestService.findByAccountId(any(Account.class))).thenReturn(shiftRequests);
-        when(shiftChangeRequestService.findByAccountId(any(Account.class))).thenReturn(shiftChangeRequests);
-        when(stampRequestService.findByAccountId(any(Account.class))).thenReturn(stampRequests);
-        when(attendanceExceptionRequestService.findByAccountId(any(Account.class))).thenReturn(attendanceExceptionRequests);
-        when(vacationRequestService.findByAccountId(any(Account.class))).thenReturn(vacationRequests);
-        when(overTimeRequestService.findByAccountId(any(Account.class))).thenReturn(overTimeRequests);
-        when(monthlyRequestService.findByAccountId(any(Account.class))).thenReturn(monthlyRequests);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(requestService.getRequestList(generalAccount)).thenReturn(requestListResponses);
         mockMvc.perform
         (
             get("/api/reach/requestlist")
@@ -1444,8 +1382,7 @@ public class TestMockMvcController
             .with(user(generalAccountUsername))
         )
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.requestList[0].requestDate").value(localDateTimeToString.localDateTimeToString(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeShift))))
-        .andExpect(jsonPath("$.requestList[1].requestDate").value(localDateTimeToString.localDateTimeToString(stringToLocalDateTime.stringToLocalDateTime(generalLocalDateTimeShiftChange))));
+        .andExpect(jsonPath("$.status").value(1));
     }
 
     @Test 
@@ -2383,7 +2320,6 @@ public class TestMockMvcController
     @Test
     void newsListSuccess() throws Exception
     {
-        StringToLocalDateTime stringToLocalDateTime = new StringToLocalDateTime();
         Account generalAccount = new Account();
         Long generalAccountId = 3L;
         String generalAccountUserName = "testuser";
@@ -2397,17 +2333,18 @@ public class TestMockMvcController
         String newsDetil = "your stampRequest is not approved";
         newsList.setNewsId(newsId);
         newsList.setAccountId(generalAccount);
-        newsList.setDate(stringToLocalDateTime.stringToLocalDateTime(newsDate));
+        newsList.setDate(LocalDateTime.parse(LocalDateTime.parse(newsDate,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
         newsList.setNewsDetil(newsDetil);
         newsLists.add(newsList);
 
+        List<NewsListResponse> newsListResponses = new ArrayList<NewsListResponse>();
         NewsListResponse newsListResponse = new NewsListResponse();
         newsListResponse.setDate(newsDate);
         newsListResponse.setMessageDetil(newsDetil);
+        newsListResponses.add(newsListResponse);
 
-        when(accountService.findAccountByUsername(anyString())).thenReturn(generalAccount);
-        when(newsListService.findByAccountId(any(Account.class))).thenReturn(newsLists);
-        when(newsListService.newsListToNewsListResponse(any(NewsList.class))).thenReturn(newsListResponse);
+        when(accountService.findCurrentAccount()).thenReturn(generalAccount);
+        when(newsListService.returnNewsList(any(Account.class))).thenReturn(newsListResponses);
         mockMvc.perform
         (
             get("/api/reach/news")

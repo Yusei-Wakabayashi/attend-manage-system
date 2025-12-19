@@ -29,6 +29,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 import com.example.springboot.Config;
 import com.example.springboot.dto.change.DurationToString;
+import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.change.StringToDuration;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.input.MonthlyInput;
@@ -47,6 +48,7 @@ import com.example.springboot.dto.response.RequestDetailShiftChangeResponse;
 import com.example.springboot.dto.response.RequestDetailShiftResponse;
 import com.example.springboot.dto.response.RequestDetailStampResponse;
 import com.example.springboot.dto.response.RequestDetailVacationResponse;
+import com.example.springboot.dto.response.RequestListResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
 import com.example.springboot.model.Attend;
@@ -176,6 +178,9 @@ public class RequestServiceTest
 
     @Mock
     PaydHolidayUseService paydHolidayUseService;
+
+    @Mock
+    LocalDateTimeToString localDateTimeToString;
 
     @Test
     void ShiftRequestSuccess()
@@ -1477,6 +1482,95 @@ public class RequestServiceTest
     }
 
     @Test
+    void returnRequestList()
+    {
+        Account generalAccount = new Account();
+        Long generalAccountId = 1L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Long generalRequestId = 3L;
+        int generalRequestStatus = 1;
+        String generalLocalDateTimeShift = "2025/06/07T21:33:44";
+        String generalLocalDateTimeShiftChange = "2025/06/07T21:33:45";
+        String generalLocalDateTimeStamp = "2025/06/07T21:33:46";
+        String generalLocalDateTimeAttendanceException = "2025/06/07T21:33:47";
+        String generalLocalDateTimeOverTime = "2025/06/07T21:33:48";
+        String generalLocalDateTimeVacation = "2025/06/07T21:33:49";
+        String generalLocalDateTimeMonthly = "2025/06/07T21:33:50";
+
+        List<ShiftRequest> shiftRequests = new ArrayList<ShiftRequest>();
+        ShiftRequest generalShiftRequest = new ShiftRequest();
+        generalShiftRequest.setShiftRequestId(generalRequestId);
+        generalShiftRequest.setRequestDate(LocalDateTime.parse(LocalDateTime.parse(generalLocalDateTimeShift,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        generalShiftRequest.setRequestStatus(generalRequestStatus);
+        shiftRequests.add(generalShiftRequest);
+
+        List<ShiftChangeRequest> shiftChangeRequests = new ArrayList<ShiftChangeRequest>();
+        ShiftChangeRequest generalShiftChangeRequest = new ShiftChangeRequest();
+        generalShiftChangeRequest.setShiftChangeId(generalRequestId);
+        generalShiftChangeRequest.setRequestDate(LocalDateTime.parse(LocalDateTime.parse(generalLocalDateTimeShiftChange,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        generalShiftChangeRequest.setRequestStatus(generalRequestStatus);
+        shiftChangeRequests.add(generalShiftChangeRequest);
+
+        List<StampRequest> stampRequests = new ArrayList<StampRequest>();
+        StampRequest generalStampRequest = new StampRequest();
+        generalStampRequest.setStampId(generalRequestId);
+        generalStampRequest.setRequestDate(LocalDateTime.parse(LocalDateTime.parse(generalLocalDateTimeStamp,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        generalStampRequest.setRequestStatus(generalRequestStatus);
+        stampRequests.add(generalStampRequest);
+    
+        List<AttendanceExceptionRequest> attendanceExceptionRequests = new ArrayList<AttendanceExceptionRequest>();
+        AttendanceExceptionRequest generalAttendanceExceptionRequest = new AttendanceExceptionRequest();
+        generalAttendanceExceptionRequest.setAttendanceExceptionId(generalRequestId);
+        generalAttendanceExceptionRequest.setRequestDate(LocalDateTime.parse(LocalDateTime.parse(generalLocalDateTimeAttendanceException,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        generalAttendanceExceptionRequest.setRequestStatus(generalRequestStatus);
+        attendanceExceptionRequests.add(generalAttendanceExceptionRequest);
+
+        List<VacationRequest> vacationRequests = new ArrayList<VacationRequest>();
+        VacationRequest generalVacationRequest = new VacationRequest();
+        generalVacationRequest.setVacationId(generalRequestId);
+        generalVacationRequest.setRequestDate(LocalDateTime.parse(LocalDateTime.parse(generalLocalDateTimeVacation,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        generalVacationRequest.setRequestStatus(generalRequestStatus);
+        vacationRequests.add(generalVacationRequest);
+
+        List<OverTimeRequest> overTimeRequests = new ArrayList<OverTimeRequest>();
+        OverTimeRequest generalOverTimeRequest = new OverTimeRequest();
+        generalOverTimeRequest.setOverTimeId(generalRequestId);
+        generalOverTimeRequest.setRequestDate(LocalDateTime.parse(LocalDateTime.parse(generalLocalDateTimeOverTime,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        generalOverTimeRequest.setRequestStatus(generalRequestStatus);
+        overTimeRequests.add(generalOverTimeRequest);
+
+        List<MonthlyRequest> monthlyRequests = new ArrayList<MonthlyRequest>();
+        MonthlyRequest generalMonthlyRequest = new MonthlyRequest();
+        generalMonthlyRequest.setMonthRequestId(generalRequestId);
+        generalMonthlyRequest.setRequestDate(LocalDateTime.parse(LocalDateTime.parse(generalLocalDateTimeMonthly,DateTimeFormatter.ofPattern("yyyy/MM/dd'T'HH:mm:ss")).format(DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")),DateTimeFormatter.ofPattern("yyyy/MM/dd/HH/mm/ss")));
+        generalMonthlyRequest.setRequestStatus(generalRequestStatus);
+        monthlyRequests.add(generalMonthlyRequest);
+
+        when(shiftRequestService.findByAccountId(any(Account.class))).thenReturn(shiftRequests);
+        when(localDateTimeToString.localDateTimeToString(generalShiftRequest.getRequestDate())).thenReturn(generalShiftRequest.getRequestDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalShiftRequest.getRequestDate().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        when(shiftChangeRequestService.findByAccountId(any(Account.class))).thenReturn(shiftChangeRequests);
+        when(localDateTimeToString.localDateTimeToString(generalShiftChangeRequest.getRequestDate())).thenReturn(generalShiftChangeRequest.getRequestDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalShiftChangeRequest.getRequestDate().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        when(stampRequestService.findByAccountId(any(Account.class))).thenReturn(stampRequests);
+        when(localDateTimeToString.localDateTimeToString(generalStampRequest.getRequestDate())).thenReturn(generalStampRequest.getRequestDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalStampRequest.getRequestDate().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        when(attendanceExceptionRequestService.findByAccountId(any(Account.class))).thenReturn(attendanceExceptionRequests);
+        when(localDateTimeToString.localDateTimeToString(generalAttendanceExceptionRequest.getRequestDate())).thenReturn(generalAttendanceExceptionRequest.getRequestDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalAttendanceExceptionRequest.getRequestDate().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        when(vacationRequestService.findByAccountId(any(Account.class))).thenReturn(vacationRequests);
+        when(localDateTimeToString.localDateTimeToString(generalVacationRequest.getRequestDate())).thenReturn(generalVacationRequest.getRequestDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalVacationRequest.getRequestDate().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        when(overTimeRequestService.findByAccountId(any(Account.class))).thenReturn(overTimeRequests);
+        when(localDateTimeToString.localDateTimeToString(generalOverTimeRequest.getRequestDate())).thenReturn(generalOverTimeRequest.getRequestDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalOverTimeRequest.getRequestDate().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        when(monthlyRequestService.findByAccountId(any(Account.class))).thenReturn(monthlyRequests);
+        when(localDateTimeToString.localDateTimeToString(generalMonthlyRequest.getRequestDate())).thenReturn(generalMonthlyRequest.getRequestDate().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "T" + generalMonthlyRequest.getRequestDate().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+
+        List<RequestListResponse> requestListResponses = requestService.getRequestList(generalAccount);
+        assertEquals(7, requestListResponses.size());
+    }
+
+
+
+    @Test
     void withdrowShiftSuccess()
     {
         Long requestId = 1L;
@@ -2588,7 +2682,7 @@ public class RequestServiceTest
         assertEquals(1, result);
     }
 
-        @Test
+    @Test
     void approvalOtherTimeLatenessSuccess()
     {
         Account adminAccount = new Account();
@@ -2649,7 +2743,7 @@ public class RequestServiceTest
         assertEquals(1, result);
     }
 
-        @Test
+    @Test
     void approvalOtherTimeLeaveEarlySuccess()
     {
         Account adminAccount = new Account();
