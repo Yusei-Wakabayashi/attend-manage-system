@@ -8,7 +8,7 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.example.springboot.dto.AllStyleListResponse;
+import com.example.springboot.dto.response.AllStyleListResponse;
 import com.example.springboot.model.StylePlace;
 import com.example.springboot.repository.StylePlaceRepository;
 

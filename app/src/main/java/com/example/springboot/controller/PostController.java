@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.springboot.dto.response.Response;
+import com.example.springboot.dto.input.IdInput;
 import com.example.springboot.dto.input.LoginInput;
 import com.example.springboot.dto.input.MonthlyInput;
 import com.example.springboot.dto.input.OtherTimeInput;
@@ -28,7 +29,6 @@ import com.example.springboot.dto.input.ShiftInput;
 import com.example.springboot.dto.input.StampInput;
 import com.example.springboot.dto.input.VacationInput;
 import com.example.springboot.dto.input.WithDrowInput;
-import com.example.springboot.dto.IdData;
 import com.example.springboot.model.Account;
 import com.example.springboot.service.AccountApproverService;
 import com.example.springboot.service.AccountService;
@@ -100,7 +100,7 @@ public class PostController
     }
 
     @PostMapping("/send/approverset")
-    public Response approverSet(@RequestBody IdData idData)
+    public Response approverSet(@RequestBody IdInput idData)
     {
         Account account = accountService.findCurrentAccount();
         if(Objects.isNull(account))
@@ -112,7 +112,7 @@ public class PostController
     }
     
     @PostMapping("/send/style")
-    public Response styleSet(@RequestBody IdData idData)
+    public Response styleSet(@RequestBody IdInput idData)
     {
         Account account = accountService.findCurrentAccount();
         if(Objects.isNull(account))

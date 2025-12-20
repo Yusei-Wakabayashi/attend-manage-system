@@ -1,4 +1,4 @@
-package com.example.springboot.dto;
+package com.example.springboot.dto.response;
 
 import java.util.List;
 
@@ -19,7 +19,8 @@ public class ArrayResponse<T>
     private List<T> list;
     private String key;
 
-    public ArrayResponse(int status, List<T> list, String key) {
+    public ArrayResponse(int status, List<T> list, String key)
+    {
         this.status = status;
         this.list = list;
         this.key = key;

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.springboot.dto.YearMonthParam;
+import com.example.springboot.dto.input.YearMonthInput;
 
 @EnableJpaAuditing
 @RestController
@@ -31,7 +31,7 @@ public class Application
     }
 
     @GetMapping("/form")
-    public int StringResponse(@ModelAttribute YearMonthParam request)
+    public int StringResponse(@ModelAttribute YearMonthInput request)
     {
         return request.getYear();
     }

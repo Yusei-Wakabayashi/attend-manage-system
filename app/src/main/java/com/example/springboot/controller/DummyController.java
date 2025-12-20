@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.springboot.dto.ArrayResponse;
+import com.example.springboot.dto.response.ArrayResponse;
 import com.example.springboot.dto.response.AttendListResponse;
 import com.example.springboot.dto.response.RequestListResponse;
-import com.example.springboot.dto.YearMonthParam;
 import com.example.springboot.dto.change.LocalDateTimeToString;
+import com.example.springboot.dto.input.YearMonthInput;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Attend;
 import com.example.springboot.model.Shift;
@@ -28,7 +28,7 @@ import com.example.springboot.model.Shift;
 public class DummyController
 {
     @GetMapping("/reach/shiftlist")
-    public ArrayResponse<ShiftListResponse> returnShifts(@ModelAttribute  YearMonthParam request) throws Exception
+    public ArrayResponse<ShiftListResponse> returnShifts(@ModelAttribute  YearMonthInput request) throws Exception
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         int month = request.getMonth();
@@ -89,7 +89,7 @@ public class DummyController
     }
 
     @GetMapping("/reach/attendlist")
-    public ArrayResponse<AttendListResponse> returnAttends(@ModelAttribute YearMonthParam request) throws Exception
+    public ArrayResponse<AttendListResponse> returnAttends(@ModelAttribute YearMonthInput request) throws Exception
     {
         LocalDateTimeToString localDateTimeToString = new LocalDateTimeToString();
         int month = request.getMonth();

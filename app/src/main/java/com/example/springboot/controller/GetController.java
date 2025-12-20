@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.springboot.dto.AllStyleListResponse;
+import com.example.springboot.dto.response.AllStyleListResponse;
 import com.example.springboot.dto.response.ApproverListResponse;
 import com.example.springboot.dto.response.ApproverResponse;
 import com.example.springboot.dto.response.AttendListResponse;
@@ -30,7 +30,7 @@ import com.example.springboot.dto.response.RequestDetailStampResponse;
 import com.example.springboot.dto.response.RequestDetailVacationResponse;
 import com.example.springboot.dto.response.RequestListResponse;
 import com.example.springboot.dto.response.Response;
-import com.example.springboot.dto.ArrayResponse;
+import com.example.springboot.dto.response.ArrayResponse;
 import com.example.springboot.dto.input.LegalCheckShiftChangeInput;
 import com.example.springboot.dto.input.LegalCheckShiftInput;
 import com.example.springboot.dto.input.RequestIdInput;

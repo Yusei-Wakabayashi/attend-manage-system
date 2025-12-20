@@ -31,7 +31,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.springboot.Config;
-import com.example.springboot.dto.AllStyleListResponse;
+import com.example.springboot.dto.response.AllStyleListResponse;
 import com.example.springboot.dto.change.LocalDateTimeToString;
 import com.example.springboot.dto.change.StringToLocalDateTime;
 import com.example.springboot.dto.input.LegalCheckShiftChangeInput;
