@@ -57,8 +57,10 @@ public class VacationRequest extends BaseTimeEntity
     @JoinColumn(name = "shift_id", referencedColumnName = "shift_id", nullable = false)
     private Shift shiftId;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "vacationId", fetch = FetchType.LAZY)
     private PaydHolidayUse paydHolidayUseFromVacationRequest;
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "vacationId", fetch = FetchType.LAZY)
     private ShiftListVacation shiftListVacationFromVacationRequest;
+    @OneToOne(mappedBy = "vacationId", fetch = FetchType.LAZY)
+    private Vacation vacationFromVacationRequest;
 }

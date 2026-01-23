@@ -1,10 +1,12 @@
 package com.example.springboot.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.springboot.dto.response.VacationTypeListResponse;
 import com.example.springboot.model.VacationType;
 import com.example.springboot.repository.VacationTypeRepository;
 
@@ -18,6 +20,20 @@ public class VacationTypeService
     {
         return vacationTypeRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("休暇種類が見つかりません"));
+    }
+
+    public List<VacationTypeListResponse> returnAllVacationTypeListResponses()
+    {
+        List<VacationTypeListResponse> vacationTypeListResponses = new ArrayList<VacationTypeListResponse>();
+        List<VacationType> vacationTypes = findAll();
+        for(VacationType vacationType : vacationTypes)
+        {
+            VacationTypeListResponse vacationTypeListResponse = new VacationTypeListResponse();
+            vacationTypeListResponse.setVacationTypeId(vacationType.getVacationTypeId().intValue());
+            vacationTypeListResponse.setVacationTypeName(vacationType.getVacationName());
+            vacationTypeListResponses.add(vacationTypeListResponse);
+        }
+        return vacationTypeListResponses;
     }
 
     public List<VacationType> findAll()

@@ -1,8 +1,8 @@
-package com.example.springboot.dto;
+package com.example.springboot.dto.input;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 
-public class IdData
+public class IdInput
 {
     private Long id;
 

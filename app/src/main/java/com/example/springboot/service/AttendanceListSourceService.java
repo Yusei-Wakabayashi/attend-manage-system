@@ -3,6 +3,8 @@ package com.example.springboot.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,15 +29,13 @@ public class AttendanceListSourceService
 
     public AttendanceListSource findByShiftId(Shift shift)
     {
-        return attendanceListSourceRepository.findByShiftId(shift)
-            .orElseThrow(() -> new RuntimeException("シフトに対応する勤怠情報が見つかりません"));
+        return attendanceListSourceRepository.findByShiftId(shift);
     }
     public AttendanceListSource findByShiftId(Long id)
     {
         Shift shift = new Shift();
         shift.setShiftId(id);
-        return attendanceListSourceRepository.findByShiftId(shift)
-            .orElseThrow(() -> new RuntimeException("シフトに対応する勤怠情報が見つかりません"));
+        return attendanceListSourceRepository.findByShiftId(shift);
     }
     public List<AttendanceListSource> findByShiftIdIn(List<Shift> shifts)
     {
@@ -56,8 +56,15 @@ public class AttendanceListSourceService
         return attendanceListSources;
     }
 
+    @Transactional
     public AttendanceListSource save(AttendanceListSource attendanceListSource)
     {
         return attendanceListSourceRepository.save(attendanceListSource);
+    }
+
+    @Transactional
+    public void delete(AttendanceListSource attendanceListSource)
+    {
+        attendanceListSourceRepository.delete(attendanceListSource);
     }
 }

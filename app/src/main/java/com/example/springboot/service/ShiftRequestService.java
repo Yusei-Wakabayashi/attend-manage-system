@@ -87,16 +87,14 @@ public class ShiftRequestService
 
     public ShiftRequest findByAccountIdAndShiftRequestId(Account account, Long id)
     {
-        return shiftRequestRepository.findByAccountIdAndShiftRequestId(account, id)
-            .orElseThrow(() -> new RuntimeException("シフト申請が見つかりません"));
+        return shiftRequestRepository.findByAccountIdAndShiftRequestId(account, id);
     }
 
     public ShiftRequest findByAccountIdAndShiftRequestId(Long accountId, Long id)
     {
         Account account = new Account();
         account.setId(accountId);
-        return shiftRequestRepository.findByAccountIdAndShiftRequestId(account, id)
-            .orElseThrow(() -> new RuntimeException("シフト申請が見つかりません"));
+        return shiftRequestRepository.findByAccountIdAndShiftRequestId(account, id);
     }
 
     public List<ShiftRequest> findByAccountId(Long accountId)

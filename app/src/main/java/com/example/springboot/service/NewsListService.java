@@ -3,6 +3,7 @@ package com.example.springboot.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.transaction.Transactional;
@@ -21,6 +22,18 @@ public class NewsListService
 {
     @Autowired
     private NewsListRepository newsListRepository;
+
+    public List<NewsListResponse> returnNewsList(Account account)
+    {
+        List<NewsList> newsLists = findByAccountId(account);
+        List<NewsListResponse> newsListResponses = new ArrayList<NewsListResponse>();
+        for(NewsList newsList : newsLists)
+        {
+            NewsListResponse newsListResponse = newsListToNewsListResponse(newsList);
+            newsListResponses.add(newsListResponse);
+        }
+        return newsListResponses;
+    }
 
     public List<NewsList> findByAccountId(Long accountId)
     {

@@ -10,7 +10,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import com.example.springboot.BaseTimeEntity;
 
@@ -22,7 +24,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "vacation_list")
+@Table(name = "vacation_list", uniqueConstraints = {@UniqueConstraint(name = "vacation_requests", columnNames = {"vacation_id"})})
 public class Vacation extends BaseTimeEntity
 {
     @Id
@@ -32,6 +34,9 @@ public class Vacation extends BaseTimeEntity
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", referencedColumnName = "account_id", nullable = false)
     private Account accountId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vacation_id", referencedColumnName = "vacation_id", nullable = false)
+    private VacationRequest vacationId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vacation_type_id", referencedColumnName = "vacation_type_id", nullable = false)
     private VacationType vacationTypeId;

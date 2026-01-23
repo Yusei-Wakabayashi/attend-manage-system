@@ -17,9 +17,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.springboot.dto.change.LocalDateTimeToString;
+import com.example.springboot.dto.input.UserShiftInput;
 import com.example.springboot.dto.input.YearMonthInput;
 import com.example.springboot.dto.response.ShiftListResponse;
 import com.example.springboot.model.Account;
+import com.example.springboot.model.AccountApprover;
 import com.example.springboot.model.Shift;
 import com.example.springboot.repository.ShiftRepository;
 
@@ -54,8 +56,7 @@ public class ShiftService
 
     public Shift findByAccountIdAndShiftId(Account account, Long id)
     {
-        return shiftRepository.findByAccountIdAndShiftId(account, id)
-            .orElseThrow(() -> new RuntimeException("シフトが見つかりません"));
+        return shiftRepository.findByAccountIdAndShiftId(account, id);
     }
 
     public List<ShiftListResponse> findByShiftListFor(Account account, YearMonthInput request)
@@ -73,8 +74,7 @@ public class ShiftService
     {
         Account account = new Account();
         account.setId(accountId);
-        return shiftRepository.findByAccountIdAndShiftId(account, id)
-            .orElseThrow(() -> new RuntimeException("シフトが見つかりません"));
+        return shiftRepository.findByAccountIdAndShiftId(account, id);
     }
     
     // 一月ごとの取得
@@ -183,6 +183,17 @@ public class ShiftService
         return shiftRepository.save(shift);
     }
 
+    public List<ShiftListResponse> returnShiftListResponses(Account account, AccountApprover accountApprover, UserShiftInput request)
+    {
+        List<ShiftListResponse> shiftListResponses = new ArrayList<ShiftListResponse>();
+        List<Shift> shifts = findByAccountIdAndBeginWorkBetween(request.getAccountId(), request.getYear(), request.getMonth());
+        for(Shift shift : shifts)
+        {
+            shiftListResponses.add(shiftToShiftListResponse(shift));
+        }
+        return shiftListResponses;
+    }
+
     @Transactional
     public void resetAllTables()
     {
@@ -193,5 +204,11 @@ public class ShiftService
     public void init()
     {
         
+    }
+
+    @Transactional
+    public void delete(Shift shift)
+    {
+        shiftRepository.delete(shift);
     }
 }

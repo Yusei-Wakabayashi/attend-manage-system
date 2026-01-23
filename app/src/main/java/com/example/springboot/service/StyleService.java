@@ -7,6 +7,7 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.springboot.dto.response.StyleResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Style;
 import com.example.springboot.model.StylePlace;
@@ -50,18 +51,26 @@ public class StyleService
             .orElseThrow(() -> new RuntimeException("スタイルが見つかりません"));
     }
 
+    public StyleResponse returnStyle(Account account)
+    {
+        Style style = findStyleByAccountId(account);
+        StyleResponse response = new StyleResponse();
+        response.setStatus(1);
+        response.setStyleId(style.getStyleId().intValue());
+        response.setStyleName(style.getStylePlaceId().getName());
+        return response;
+    }
+
     public Style findStyleByAccountId(Long id)
     {
         Account account = new Account();
         account.setId(id);
-        return styleRepository.findByAccountId(account)
-            .orElseThrow(() -> new RuntimeException("スタイルが見つかりません"));
+        return styleRepository.findByAccountId(account);
     }
 
     public Style findStyleByAccountId(Account id)
     {
-        return styleRepository.findByAccountId(id)
-            .orElseThrow(() -> new RuntimeException("スタイルが見つかりません"));
+        return styleRepository.findByAccountId(id);
     }
 
     public Style save(Style style)

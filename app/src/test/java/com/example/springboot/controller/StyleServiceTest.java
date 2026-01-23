@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.ContextConfiguration;
 
 import com.example.springboot.Config;
+import com.example.springboot.dto.response.StyleResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.Style;
 import com.example.springboot.model.StylePlace;
@@ -73,4 +74,28 @@ public class StyleServiceTest
 
         assertEquals(1, result);
     }
+
+    @Test
+    void returnStyle()
+    {
+        Account generalAccount = new Account();
+        Long generalAccountId = 1L;
+        String generalAccountUsername = "testuser";
+        generalAccount.setId(generalAccountId);
+        generalAccount.setUsername(generalAccountUsername);
+
+        Style generalStyle = new Style();
+        Long generalStyleId = 2L;
+        StylePlace generalStylePlace = new StylePlace();
+        String generalStylePlaceName = "出勤";
+        generalStylePlace.setName(generalStylePlaceName);
+        generalStyle.setStyleId(generalStyleId);
+        generalStyle.setStylePlaceId(generalStylePlace);
+
+        doReturn(generalStyle).when(styleService).findStyleByAccountId(any(Account.class));
+
+        StyleResponse result = styleService.returnStyle(generalAccount);
+        assertEquals(1, result.getStatus());
+    }
+
 }

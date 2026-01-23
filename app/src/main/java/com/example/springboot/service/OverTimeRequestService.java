@@ -46,14 +46,12 @@ public class OverTimeRequestService
     {
         Account account = new Account();
         account.setId(accountId);
-        return overTimeRequestRepository.findByAccountIdAndOverTimeId(account, id)
-            .orElseThrow(() -> new RuntimeException("残業申請が見つかりません"));
+        return overTimeRequestRepository.findByAccountIdAndOverTimeId(account, id);
     }
 
     public OverTimeRequest findByAccountIdAndOverTimeRequestId(Account account, Long id)
     {
-        return overTimeRequestRepository.findByAccountIdAndOverTimeId(account, id)
-            .orElseThrow(() -> new RuntimeException("残業申請が見つかりません"));
+        return overTimeRequestRepository.findByAccountIdAndOverTimeId(account, id);
     }
 
     public List<OverTimeRequest> findByAccountIdAndShiftIdAndRequestStatusWait(Long accountId, Long shiftId)

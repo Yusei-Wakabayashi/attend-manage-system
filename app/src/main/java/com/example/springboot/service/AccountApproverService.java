@@ -8,6 +8,7 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.springboot.dto.response.ApproverResponse;
 import com.example.springboot.model.Account;
 import com.example.springboot.model.AccountApprover;
 import com.example.springboot.model.ApprovalSetting;
@@ -68,8 +69,7 @@ public class AccountApproverService
 
     public AccountApprover findAccountApproverByAccount(Account account)
     {
-        return accountApproverRepository.findByAccountId(account)
-            .orElseThrow(() -> new RuntimeException("承認者が見つかりません"));
+        return accountApproverRepository.findByAccountId(account);
     }
 
     public List<AccountApprover> findByApproverId(Account approver)
@@ -83,36 +83,44 @@ public class AccountApproverService
         Account approver = new Account();
         account.setId(accountId);
         approver.setId(approverId);
-        return accountApproverRepository.findByAccountIdAndApproverId(account, approver)
-            .orElseThrow(() -> new RuntimeException("情報が見つかりません"));
+        return accountApproverRepository.findByAccountIdAndApproverId(account, approver);
     }
 
     public AccountApprover findAccountAndApprover(Account account, Long approverId)
     {
         Account approver = new Account();
         approver.setId(approverId);
-        return accountApproverRepository.findByAccountIdAndApproverId(account, approver)
-            .orElseThrow(() -> new RuntimeException("情報が見つかりません"));
+        return accountApproverRepository.findByAccountIdAndApproverId(account, approver);
     }
 
     public AccountApprover findAccountAndApprover(Long accountId, Account approver)
     {
         Account account = new Account();
         account.setId(accountId);
-        return accountApproverRepository.findByAccountIdAndApproverId(account, approver)
-            .orElseThrow(() -> new RuntimeException("情報が見つかりません"));
+        return accountApproverRepository.findByAccountIdAndApproverId(account, approver);
     }
 
     public AccountApprover findAccountAndApprover(Account account, Account approver)
     {
-        return accountApproverRepository.findByAccountIdAndApproverId(account, approver)
-            .orElseThrow(() -> new RuntimeException("情報が見つかりません"));
+        return accountApproverRepository.findByAccountIdAndApproverId(account, approver);
     }
 
     public AccountApprover save(AccountApprover accountApprover)
     {
         return accountApproverRepository.save(accountApprover);
     }
+
+    public ApproverResponse getApproverResponse(Account account)
+    {
+        Account adminAccount = findAccountApproverByAccount(account).getApproverId();
+        ApproverResponse approverResponse = new ApproverResponse();
+        approverResponse.setStatus(1);
+        approverResponse.setApproverId(adminAccount.getId().intValue());
+        approverResponse.setApproverName(adminAccount.getName());
+        approverResponse.setApproverDepartment(adminAccount.getDepartmentId().getName());
+        approverResponse.setApproverRole(adminAccount.getRoleId().getName());
+        return approverResponse;
+    } 
 
     @Transactional
     public void resetAllTables()

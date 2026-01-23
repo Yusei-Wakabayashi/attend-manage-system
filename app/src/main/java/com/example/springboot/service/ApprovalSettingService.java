@@ -30,8 +30,7 @@ public class ApprovalSettingService
 
     public ApprovalSetting findApprovalSettingByAccountAndApprover(Role roleId, Role approverRoleId)
     {
-        return approvalSettingRepository.findByRoleIdAndApprovalId(roleId, approverRoleId)
-            .orElseThrow(() -> new RuntimeException("設定が見つかりません"));
+        return approvalSettingRepository.findByRoleIdAndApprovalId(roleId, approverRoleId);
     }
 
     public String save(ApprovalSetting approvalSetting)

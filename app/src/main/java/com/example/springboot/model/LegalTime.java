@@ -1,5 +1,6 @@
 package com.example.springboot.model;
 
+import java.sql.Time;
 import java.time.LocalDateTime;
 
 import javax.persistence.Column;
@@ -45,9 +46,9 @@ public class LegalTime extends BaseTimeEntity
     @Column(name = "monthly_over_work_average", nullable = false, length = 255)
     private String monthlyOverWorkAverage;
     @Column(name = "late_night_work_begin", nullable = false, length = 255)
-    private String lateNightWorkBegin;
+    private Time lateNightWorkBegin;
     @Column(name = "late_night_work_end", nullable = false, length = 255)
-    private String lateNightWorkEnd;
+    private Time lateNightWorkEnd;
     @Column(name = "schedule_break_time", nullable = false, length = 255)
     private String scheduleBreakTime;
     @Column(name = "weekly_holiday", nullable = false, length = 10)

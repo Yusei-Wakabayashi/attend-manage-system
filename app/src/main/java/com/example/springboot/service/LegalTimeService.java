@@ -16,8 +16,7 @@ public class LegalTimeService
 
     public LegalTime findFirstByOrderByBeginDesc()
     {
-        return legalTimeRepository.findFirstByOrderByBeginDesc()
-            .orElseThrow(() -> new RuntimeException("データが見つかりません"));
+        return legalTimeRepository.findFirstByOrderByBeginDesc();
     }
 
     public LegalTime findLegalTimeByLegalTimeId(Long id)

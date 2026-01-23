@@ -261,8 +261,8 @@ public class DataLoader implements CommandLineRunner
         legalTime.setYearOverWorkTime("360:00:00");
         legalTime.setMaxOverWorkTime("100:00:00");
         legalTime.setMonthlyOverWorkAverage("80:00:00");
-        legalTime.setLateNightWorkBegin("22:00:00");
-        legalTime.setLateNightWorkEnd("05:00:00");
+        legalTime.setLateNightWorkBegin(Time.valueOf("22:00:00"));
+        legalTime.setLateNightWorkEnd(Time.valueOf("05:00:00"));
         legalTime.setScheduleBreakTime("01:00:00");
         legalTime.setWeeklyHoliday(1);
         legalTimeService.save(legalTime);

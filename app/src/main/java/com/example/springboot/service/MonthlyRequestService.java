@@ -39,14 +39,12 @@ public class MonthlyRequestService
     {
         Account account = new Account();
         account.setId(accountId);
-        return monthlyRequestRepository.findByAccountIdAndMonthRequestId(account, id)
-            .orElseThrow(() -> new RuntimeException("月次申請が見つかりません"));
+        return monthlyRequestRepository.findByAccountIdAndMonthRequestId(account, id);
     }
 
     public MonthlyRequest findByAccountIdAndMothlyRequestId(Account account, Long id)
     {
-        return monthlyRequestRepository.findByAccountIdAndMonthRequestId(account, id)
-            .orElseThrow(() -> new RuntimeException("月次申請が見つかりません"));
+        return monthlyRequestRepository.findByAccountIdAndMonthRequestId(account, id);
     }
 
     public List<MonthlyRequest> findByAccountId(Long accountId)

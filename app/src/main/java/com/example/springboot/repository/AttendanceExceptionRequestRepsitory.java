@@ -2,7 +2,6 @@ package com.example.springboot.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -13,7 +12,7 @@ import com.example.springboot.model.Shift;
 
 public interface AttendanceExceptionRequestRepsitory extends JpaRepository<AttendanceExceptionRequest, Long>
 {
-    Optional<AttendanceExceptionRequest> findByAccountIdAndAttendanceExceptionId(Account accountId, Long id);
+    AttendanceExceptionRequest findByAccountIdAndAttendanceExceptionId(Account accountId, Long id);
     List<AttendanceExceptionRequest> findByAccountId(Account account);
     List<AttendanceExceptionRequest> findByAccountIdIn(List<Account> accounts);
     List<AttendanceExceptionRequest> findByAccountIdAndRequestStatusAndBeginTimeBetween(Account account, int requestStatus, LocalDateTime startPeriod, LocalDateTime endPeriod);
