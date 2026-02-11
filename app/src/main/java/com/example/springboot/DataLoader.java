@@ -1,5 +1,7 @@
 package com.example.springboot;
 
+import static org.mockito.ArgumentMatchers.nullable;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -24,6 +26,7 @@ import com.example.springboot.model.AttendanceExceptionType;
 import com.example.springboot.model.Shift;
 import com.example.springboot.model.Style;
 import com.example.springboot.model.StylePlace;
+import com.example.springboot.model.VacationType;
 import com.example.springboot.service.AccountService;
 import com.example.springboot.service.ApprovalSettingService;
 import com.example.springboot.service.AttendService;
@@ -39,6 +42,7 @@ import com.example.springboot.service.ShiftService;
 import com.example.springboot.service.StampRequestService;
 import com.example.springboot.service.StylePlaceService;
 import com.example.springboot.service.StyleService;
+import com.example.springboot.service.VacationTypeService;
 
 @Component
 public class DataLoader implements CommandLineRunner
@@ -90,6 +94,9 @@ public class DataLoader implements CommandLineRunner
 
     @Autowired
     NewsListService newsListService;
+
+    @Autowired
+    VacationTypeService vacationTypeService;
     
     public void run(String... args) throws Exception
     {
@@ -107,6 +114,26 @@ public class DataLoader implements CommandLineRunner
         departmentService.resetAllTables();
         stylePlaceService.resetAllTables();
         legalTimeService.resetAllTables();
+        vacationTypeService.resetAllTables();
+
+        String vacationTypePath = "csv/VacationTypeList.csv";
+        InputStream vacationTypeInputStream = getClass().getClassLoader().getResourceAsStream(vacationTypePath);
+        if(vacationTypeInputStream == null)
+        {
+            throw new FileNotFoundException("ファイルが見つかりません" + vacationTypePath);
+        }
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(vacationTypeInputStream)))
+        {
+            String vacationTypeLine;
+            while ((vacationTypeLine = br.readLine()) != null)
+            {
+                if (vacationTypeLine.startsWith("id,")) continue;
+                VacationType vacationType = new VacationType();
+                String[] vacationTypeList = vacationTypeLine.split(",");
+                vacationType.setVacationName(vacationTypeList[1]);
+                vacationTypeService.save(vacationType);
+            }
+        }
 
         String attendanceExceptionTypePath = "csv/AttendanceExceptionTypeList.csv";
         InputStream attendanceExceptionTypeInputStream = getClass().getClassLoader().getResourceAsStream(attendanceExceptionTypePath);
