@@ -3,10 +3,13 @@ package com.example.springboot.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.springboot.dto.response.VacationTypeListResponse;
+import com.example.springboot.model.Account;
 import com.example.springboot.model.VacationType;
 import com.example.springboot.repository.VacationTypeRepository;
 
@@ -34,6 +37,19 @@ public class VacationTypeService
             vacationTypeListResponses.add(vacationTypeListResponse);
         }
         return vacationTypeListResponses;
+    }
+
+    public String save(VacationType vacationType)
+    {
+        vacationTypeRepository.save(vacationType);
+        return "ok";
+    }
+
+    @Transactional
+    public void resetAllTables()
+    {
+        vacationTypeRepository.deleteAll();
+        vacationTypeRepository.resetAutoIncrement();
     }
 
     public List<VacationType> findAll()

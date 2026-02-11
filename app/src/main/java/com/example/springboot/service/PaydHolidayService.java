@@ -17,14 +17,25 @@ import com.example.springboot.repository.PaydHolidayRepository;
 @Service
 public class PaydHolidayService
 {
-    @Autowired
-    private PaydHolidayRepository paydHolidayRepository;
+    private final PaydHolidayRepository paydHolidayRepository;
 
     @Autowired
-    private PaydHolidayUseService paydHolidayUseService;
+    private final PaydHolidayUseService paydHolidayUseService;
 
     @Autowired
-    private LocalDateTimeToString localDateTimeToString;
+    private final LocalDateTimeToString localDateTimeToString;
+
+    public PaydHolidayService
+    (
+        PaydHolidayRepository paydHolidayRepository,
+        PaydHolidayUseService paydHolidayUseService,
+        LocalDateTimeToString localDateTimeToString
+    )
+    {
+        this.paydHolidayRepository = paydHolidayRepository;
+        this.paydHolidayUseService = paydHolidayUseService;
+        this.localDateTimeToString = localDateTimeToString;
+    }
 
     public PaydHoliday findByPaydHolidayId(Long id)
     {
