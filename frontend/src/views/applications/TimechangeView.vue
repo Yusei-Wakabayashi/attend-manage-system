@@ -51,6 +51,7 @@ const getShiftList = async () => {
     );
 
     shifts.value = response.data;
+    console.log(shifts.value)
   } catch (error) {
     console.error("シフトリスト取得エラー:", error);
   }

@@ -25,7 +25,7 @@ const changeText = () => {
     case "/missingstamping":
       return "打刻漏れ申請";
     case "/vacation":
-      //今後追加
+      return"休暇申請"
     case "/overtime":
       return "残業申請";
     case "/attendancerequest":

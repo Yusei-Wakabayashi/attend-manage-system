@@ -1,34 +1,43 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
-import { useRoute } from "vue-router";
-
-const route = useRoute()
+import { ref, watch } from "vue";
 
 const props = defineProps({
-  requests: Array,
-  selectedRequest: String,
+  requests: {
+    type: Array,
+    required: true
+  },
+  selectedRequest: Object
 });
 
 const emit = defineEmits(["update:selectedRequest"]);
 
-const localSelectedRequest = ref(props.selectedRequest);
+// select 用に vacationTypeId を管理
+const localSelectedId = ref(props.selectedRequest?.vacationTypeId || null);
 
-// 親コンポーネントから渡された値が変わったときに子の値を更新（親 → 子）
-watch(() => props.selectedRequest, (val) => (localSelectedRequest.value = val));
+// 親→子
+watch(
+  () => props.selectedRequest,
+  (val) => (localSelectedId.value = val?.vacationTypeId || null)
+);
 
-// 子コンポーネント内の値が変わったときに親に変更通知（子 → 親）
-watch(localSelectedRequest, (val) => emit("update:selectedRequest", val));
+// 子→親
+watch(localSelectedId, (val) => {
+  const selectedObj = props.requests.find(r => r.vacationTypeId === val) || null;
+  emit("update:selectedRequest", selectedObj);
+});
 </script>
+
 <template>
   <div>
-    <label class="block font-semibold md:mb-2">{{ route.path !== "/vacation" ? "遅刻、早退、外出選択" : "休暇種類選択" }}</label>
-    <select
-      v-model="localSelectedRequest"
-      class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-green-200 hover:ring hover:ring-green-200"
-    >
+    <label class="block font-semibold md:mb-2">休暇種類選択</label>
+    <select v-model="localSelectedId">
       <option disabled :value="null">選択してください</option>
-      <option v-for="(request, index) in requests" :key="index">
-        {{ request }}
+      <option
+        v-for="request in requests"
+        :key="request.vacationTypeId"
+        :value="request.vacationTypeId"
+      >
+        {{ request.vacationTypeName }}
       </option>
     </select>
   </div>

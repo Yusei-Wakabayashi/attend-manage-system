@@ -46,11 +46,11 @@ const getColorClass = (color) => {
   <div class="flex h-screen">
     <NavList />
     <main class="flex-1 p-6 bg-gray-100 overflow-auto pt-25 lg:ml-64 lg:pt-7">
-      <h1
+      <!-- <h1
         class="text-lg font-bold mb-6 bg-blue-200 text-blue-900 rounded-md p-5 text-center md:text-xl lg:text-2xl"
       >
         お知らせ（打刻漏れ申請をしていません）
-      </h1>
+      </h1> -->
 
       <div v-if="userStore.admin">
         <div

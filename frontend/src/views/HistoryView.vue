@@ -13,7 +13,7 @@ const historyData = ref([]); //申請一覧
 const getHistoryData = async () => {
   try {
     const response = await axios.get(
-      "http://localhost:8080/dummy/reach/requestlist",
+      "http://localhost:8080/api/reach/requestlist",
       {
         withCredentials: true,
       }

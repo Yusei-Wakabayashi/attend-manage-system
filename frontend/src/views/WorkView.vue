@@ -156,8 +156,8 @@ const getShiftData = async () => {
     });
 
     shiftData.value = mapped;
-    console.log("整形前 shiftData:", response.data);
-    console.log("整形後 shiftData:", shiftData.value);
+    // console.log("整形前 shiftData:", response.data);
+    // console.log("整形後 shiftData:", shiftData.value);
   } catch (error) {
     console.error("エラーが発生しました:", error);
   }
@@ -191,8 +191,8 @@ const getAttendanceData = async () => {
 
     attendanceData.value = mapped;
 
-    console.log("整形前 attendlistData:", response.data);
-    console.log("整形後 attendanceData:", attendanceData.value);
+    // console.log("整形前 attendlistData:", response.data);
+    // console.log("整形後 attendanceData:", attendanceData.value);
   } catch (error) {
     console.error("出勤簿取得エラー:", error);
   }
